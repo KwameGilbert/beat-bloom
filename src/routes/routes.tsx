@@ -14,22 +14,28 @@ import Upload from "../pages/Upload";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 
+import { Layout } from "../components/layout/Layout";
+
 export const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/beat/:id" element={<BeatDetail />} />
-      <Route path="/browse" element={<Browse />} />
-      <Route path="/charts" element={<Charts />} />
-      <Route path="/cart" element={<Cart />} />
-      <Route path="/checkout" element={<Checkout />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/liked" element={<Liked />} />
-      <Route path="/recent" element={<Recent />} />
-      <Route path="/purchases" element={<Purchases />} />
-      <Route path="/upload" element={<Upload />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      
+      <Route element={<Layout />}>
+        <Route path="/" element={<Index />} />
+        <Route path="/beat/:id" element={<BeatDetail />} />
+        <Route path="/browse" element={<Browse />} />
+        <Route path="/charts" element={<Charts />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/liked" element={<Liked />} />
+        <Route path="/recent" element={<Recent />} />
+        <Route path="/purchases" element={<Purchases />} />
+        <Route path="/upload" element={<Upload />} />
+      </Route>
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
