@@ -218,7 +218,10 @@ export const PlayerBar = () => {
                    max={duration || 100}
                    value={currentTime}
                    onChange={handleSeek}
-                   className="h-1 w-full cursor-pointer appearance-none rounded-full bg-zinc-800 accent-orange-500 hover:accent-orange-400"
+                   className="h-1 w-full cursor-pointer appearance-none rounded-full bg-zinc-800/50 accent-orange-500 hover:accent-orange-400"
+                   style={{
+                     background: `linear-gradient(to right, #f97316 ${(currentTime / (duration || 1)) * 100}%, #27272a ${(currentTime / (duration || 1)) * 100}%)`
+                   }}
                  />
                  <div className="flex justify-between text-xs text-zinc-500 font-medium">
                     <span>{formatTime(currentTime)}</span>
@@ -340,28 +343,35 @@ export const PlayerBar = () => {
                max={duration || 100}
                value={currentTime}
                onChange={handleSeek}
-               className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-800 accent-orange-500 hover:accent-orange-400"
+               className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-800/50 accent-orange-500 hover:accent-orange-400"
+               style={{
+                 background: `linear-gradient(to right, #f97316 ${(currentTime / (duration || 1)) * 100}%, #27272a ${(currentTime / (duration || 1)) * 100}%)`
+               }}
             />
             <span className="w-8 tabular-nums">{formatTime(duration)}</span>
           </div>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex flex-1 justify-end items-center gap-4 min-w-0">
-           {/* BPM Badge */}
-           <div className="flex items-center gap-2 hidden lg:flex">
-             <span className="rounded bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-300 pointer-events-none border border-white/5">
+        <div className="flex flex-1 justify-end items-center gap-2 md:gap-4 min-w-0">
+           {/* BPM Badge - Visible on larger screens */}
+           <div className="flex items-center gap-2 hidden lg:flex shrink-0">
+             <span className="rounded bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-300 pointer-events-none border border-white/5 whitespace-nowrap">
                {currentBeat.bpm} BPM
              </span>
-             <span className="rounded bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-300 pointer-events-none border border-white/5">
+             <span className="rounded bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-300 pointer-events-none border border-white/5 whitespace-nowrap">
                {currentBeat.key}
              </span>
            </div>
 
-           <div className="mx-2 h-6 w-px bg-zinc-800 hidden lg:block" />
+           <div className="mx-2 h-6 w-px bg-zinc-800 hidden lg:block shrink-0" />
            
-           <div className="flex items-center gap-2 w-24 group">
-             <Volume2 className="h-5 w-5 text-zinc-400 group-hover:text-white" />
+           <button className="text-zinc-400 hover:text-white transition-colors shrink-0">
+             <ListMusic className="h-5 w-5" />
+           </button>
+
+           <div className="flex items-center gap-2 w-24 lg:w-32 group shrink-0">
+             <Volume2 className="h-5 w-5 text-zinc-400 group-hover:text-white transition-colors" />
              <input
                type="range"
                min={0}
@@ -369,7 +379,10 @@ export const PlayerBar = () => {
                step={0.01}
                value={volume}
                onChange={handleVolumeChange}
-               className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-800 accent-white hover:accent-orange-500"
+               className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-800/50 accent-white hover:accent-orange-500"
+               style={{
+                 background: `linear-gradient(to right, white ${volume * 100}%, #27272a ${volume * 100}%)`
+               }}
              />
            </div>
         </div>
