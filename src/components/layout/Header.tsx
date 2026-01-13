@@ -7,7 +7,7 @@ interface HeaderProps {
 
 export const Header = ({ onMenuClick }: HeaderProps) => {
   return (
-    <header className="sticky top-0 z-50 flex h-16 items-center border-b border-white/10 px-4 backdrop-blur-3xl md:px-6">
+    <header className="sticky top-0 z-[60] flex h-16 items-center border-b border-white/10 px-4 backdrop-blur-3xl bg-white/0 md:px-6">
 
       {/* Mobile Menu Trigger */}
       <button 
