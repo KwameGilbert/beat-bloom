@@ -21,6 +21,7 @@ export interface Beat {
   duration: string; // e.g., "3:45"
   description: string;
   includedFiles: string[]; // e.g., ["MP3 + WAV Files", "Trackout Stems"]
+  plays: number; // Number of plays/streams
 }
 
 export interface Genre {
@@ -45,6 +46,7 @@ export const featuredBeats: Beat[] = [
     duration: "3:24",
     description: "A captivating trap beat with dark, melodic elements and hard-hitting 808s. Perfect for artists looking to create powerful tracks that resonate with listeners. Features carefully crafted sound design and professional mixing.",
     includedFiles: ["MP3 + WAV Files", "Trackout Stems"],
+    plays: 481000,
   },
   {
     id: "2",
@@ -60,6 +62,7 @@ export const featuredBeats: Beat[] = [
     duration: "4:12",
     description: "An energetic synthwave track with retro, upbeat vibes reminiscent of the 80s. Rich analog synths and driving basslines create a nostalgic yet modern sound perfect for any creative project.",
     includedFiles: ["MP3 + WAV Files", "Trackout Stems"],
+    plays: 156000,
   },
   {
     id: "3",
@@ -74,7 +77,8 @@ export const featuredBeats: Beat[] = [
     audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
     duration: "3:45",
     description: "Classic boom bap hip hop with gritty drums and soulful samples. This beat captures the essence of golden era hip hop while maintaining modern production quality. Perfect for conscious rap and storytelling.",
-    includedFiles: ["MP3 File", "Tagged WAV"]
+    includedFiles: ["MP3 File", "Tagged WAV"],
+    plays: 89000,
   },
 ];
 
@@ -92,7 +96,8 @@ export const trendingBeats: Beat[] = [
     audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
     duration: "3:58",
     description: "Futuristic electronic production meets soulful melodies in this unique blend. Lush synth pads, smooth bass, and intricate percussion create an atmosphere that's both modern and emotional.",
-    includedFiles: ["MP3 + WAV Files", "Trackout Stems", "MIDI Files"]
+    includedFiles: ["MP3 + WAV Files", "Trackout Stems", "MIDI Files"],
+    plays: 228000,
   },
   {
     id: "5",
@@ -107,7 +112,8 @@ export const trendingBeats: Beat[] = [
     audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
     duration: "4:20",
     description: "Smooth R&B instrumental with warm keys and silky drum patterns. The chill, laid-back vibe makes it perfect for late-night sessions or heartfelt lyrics. Features live instrumentation and polished production.",
-    includedFiles: ["MP3 + WAV Files", "Trackout Stems"]
+    includedFiles: ["MP3 + WAV Files", "Trackout Stems"],
+    plays: 81000,
   },
   {
     id: "6",
@@ -122,7 +128,8 @@ export const trendingBeats: Beat[] = [
     audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3",
     duration: "3:36",
     description: "Intense cyberpunk beat with industrial elements and heavy bass. Dystopian soundscapes meet aggressive percussion in this high-energy production. Perfect for creating dark, futuristic atmospheres.",
-    includedFiles: ["MP3 + WAV Files", "Trackout Stems"]
+    includedFiles: ["MP3 + WAV Files", "Trackout Stems"],
+    plays: 107000,
   },
   {
     id: "7",
@@ -137,7 +144,8 @@ export const trendingBeats: Beat[] = [
     audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3",
     duration: "2:48",
     description: "Relaxing lo-fi hip hop beat perfect for studying, working, or unwinding. Features dusty vinyl textures, jazzy chord progressions, and mellow drum loops that create a calming atmosphere.",
-    includedFiles: ["MP3 File"]
+    includedFiles: ["MP3 File"],
+    plays: 253000,
   },
   {
     id: "8",
@@ -152,7 +160,8 @@ export const trendingBeats: Beat[] = [
     audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
     duration: "4:05",
     description: "Emotional rap instrumental featuring beautiful piano melodies over crisp drums. This beat tells a story of struggle and triumph, perfect for deep, personal lyrics and introspective content.",
-    includedFiles: ["MP3 + WAV Files", "Trackout Stems", "MIDI Files"]
+    includedFiles: ["MP3 + WAV Files", "Trackout Stems", "MIDI Files"],
+    plays: 74000,
   },
   {
     id: "9",
@@ -167,7 +176,8 @@ export const trendingBeats: Beat[] = [
     audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3",
     duration: "3:18",
     description: "Hard-hitting drill beat with menacing 808 slides and dark atmospheric elements. Aggressive percussion and eerie melodies create an intense, street-ready sound perfect for authentic drill music.",
-    includedFiles: ["MP3 + WAV Files", "Trackout Stems"]
+    includedFiles: ["MP3 + WAV Files", "Trackout Stems"],
+    plays: 457000,
   },
 ];
 

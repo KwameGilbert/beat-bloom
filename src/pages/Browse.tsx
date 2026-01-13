@@ -30,6 +30,7 @@ const Browse = () => {
     allTags.forEach(tag => {
       counts[tag] = allBeats.filter(b => b.tags.includes(tag)).length;
     });
+    
     return counts;
   }, [allTags]);
 
@@ -166,7 +167,7 @@ const Browse = () => {
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-white/10 bg-white/5 py-16">
+              <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-16">
                 <p className="mb-2 text-lg font-bold text-foreground">No beats found</p>
                 <p className="mb-4 text-sm text-muted-foreground">
                   No beats match the "{selectedGenre}" genre.
