@@ -43,7 +43,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       {/* Mobile Backdrop */}
       <div 
         className={cn(
-          "fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm transition-opacity md:hidden",
+          "fixed inset-0 z-40 bg-black/80 backdrop-blur-sm transition-opacity md:hidden",
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         )}
         onClick={onClose}
@@ -52,7 +52,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       {/* Sidebar Container */}
       <aside 
         className={cn(
-          "fixed inset-y-0 left-0 z-[70] flex w-64 flex-col border-r border-white/10 bg-black px-6 py-8 text-white transition-transform duration-300 md:static md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-white/10 bg-black px-6 py-8 text-white transition-transform duration-300 md:static md:translate-x-0",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >

@@ -118,7 +118,7 @@ export const PlayerBar = () => {
       {/* ==================== MOBILE COMPACT PLAYER ==================== */}
       <div 
         onClick={() => setIsMobileOpen(true)}
-        className="fixed bottom-16 left-2 right-2 z-40 flex h-16 items-center justify-between rounded-lg bg-zinc-900/95 px-3 shadow-xl backdrop-blur-lg border border-white/5 md:hidden transition-transform active:scale-[0.98]"
+        className="fixed bottom-16 left-2 right-2 z-50 flex h-16 items-center justify-between rounded-lg bg-zinc-900/95 px-3 shadow-xl backdrop-blur-lg border border-white/5 md:hidden transition-transform active:scale-[0.98]"
       >
          {/* Simple Progress Bar on Top */}
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/10 overflow-hidden rounded-t-lg">
@@ -281,7 +281,7 @@ export const PlayerBar = () => {
 
 
       {/* ==================== DESKTOP PLAYER ==================== */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 hidden h-24 items-center justify-between border-t border-white/10 bg-black px-6 md:flex">
+      <div className="fixed bottom-0 left-0 right-0 z-[60] hidden h-24 items-center justify-between border-t border-white/10 bg-black px-6 md:flex">
         
         {/* Left: Info */}
         <div className="flex flex-1 items-center gap-4 min-w-0">
