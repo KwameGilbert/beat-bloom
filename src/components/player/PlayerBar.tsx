@@ -118,10 +118,10 @@ export const PlayerBar = () => {
       {/* ==================== MOBILE COMPACT PLAYER ==================== */}
       <div 
         onClick={() => setIsMobileOpen(true)}
-        className="fixed bottom-16 left-2 right-2 z-50 flex h-16 items-center justify-between rounded-lg bg-zinc-900/95 px-3 shadow-xl backdrop-blur-lg border border-white/5 md:hidden transition-transform active:scale-[0.98]"
+        className="fixed bottom-16 left-2 right-2 z-50 flex h-16 items-center justify-between rounded-lg bg-card/95 px-3 shadow-xl backdrop-blur-lg border border-border md:hidden transition-transform active:scale-[0.98]"
       >
          {/* Simple Progress Bar on Top */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/10 overflow-hidden rounded-t-lg">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-muted overflow-hidden rounded-t-lg">
             <div 
               className="h-full bg-orange-500 transition-all duration-100 ease-linear"
               style={{ width: `${(currentTime / duration) * 100}%` }}
@@ -129,7 +129,7 @@ export const PlayerBar = () => {
         </div>
 
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="h-10 w-10 shrink-0 overflow-hidden rounded bg-zinc-800">
+          <div className="h-10 w-10 shrink-0 overflow-hidden rounded bg-secondary">
              <img 
                src={currentBeat.cover} 
                alt={currentBeat.title}
@@ -137,15 +137,15 @@ export const PlayerBar = () => {
              />
           </div>
           <div className="flex flex-col overflow-hidden">
-            <span className="truncate text-sm font-bold text-white leading-tight">{currentBeat.title}</span>
-            <span className="truncate text-xs text-zinc-400">{currentBeat.producer}</span>
+            <span className="truncate text-sm font-bold text-foreground leading-tight">{currentBeat.title}</span>
+            <span className="truncate text-xs text-muted-foreground">{currentBeat.producer}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <button 
             onClick={(e) => { e.stopPropagation(); isPlaying ? pause() : resume(); }}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/10"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-foreground hover:bg-secondary"
           >
             {isLoading ? (
                <Loader2 className="h-5 w-5 animate-spin text-orange-500" />
@@ -162,16 +162,16 @@ export const PlayerBar = () => {
       {/* ==================== MOBILE FULL SCREEN PLAYER ==================== */}
       {/* Slide-up Container */}
       <div className={cn(
-        "fixed inset-0 z-[100] flex flex-col bg-zinc-950 transition-transform duration-300 ease-out md:hidden overflow-y-auto",
+        "fixed inset-0 z-[100] flex flex-col bg-background transition-transform duration-300 ease-out md:hidden overflow-y-auto",
         isMobileOpen ? "translate-y-0" : "translate-y-full"
       )}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-8">
-           <button onClick={() => setIsMobileOpen(false)} className="text-white">
+           <button onClick={() => setIsMobileOpen(false)} className="text-foreground">
              <ChevronDown className="h-8 w-8" />
            </button>
-           <span className="text-xs font-bold tracking-widest text-zinc-400 uppercase">Now Playing</span>
-           <button className="text-white">
+           <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase">Now Playing</span>
+           <button className="text-foreground">
              <MoreVertical className="h-6 w-6" />
            </button>
         </div>
@@ -180,7 +180,7 @@ export const PlayerBar = () => {
         <div className="flex-1 flex flex-col">
             {/* Art */}
             <div className="flex flex-1 items-center justify-center px-8 min-h-[300px]">
-               <div className="aspect-square w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl shadow-orange-500/10 border border-white/5">
+               <div className="aspect-square w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl shadow-orange-500/10 border border-border">
                   <img 
                     src={currentBeat.cover} 
                     alt={currentBeat.title}
@@ -194,13 +194,13 @@ export const PlayerBar = () => {
                {/* Title Row */}
                <div className="flex items-center justify-between mb-8">
                   <div className="overflow-hidden pr-4">
-                    <h2 className="text-2xl font-bold text-white mb-2 truncate">{currentBeat.title}</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-2 truncate">{currentBeat.title}</h2>
                     <div className="flex flex-wrap items-center gap-2">
-                       <p className="text-lg text-zinc-400 truncate mr-1">{currentBeat.producer}</p>
-                       <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300 pointer-events-none border border-white/5">
+                       <p className="text-lg text-muted-foreground truncate mr-1">{currentBeat.producer}</p>
+                       <span className="rounded bg-secondary px-2 py-0.5 text-xs font-medium text-foreground pointer-events-none border border-border">
                           {currentBeat.bpm} BPM
                        </span>
-                       <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300 pointer-events-none border border-white/5">
+                       <span className="rounded bg-secondary px-2 py-0.5 text-xs font-medium text-foreground pointer-events-none border border-border">
                           {currentBeat.key}
                        </span>
                     </div>
@@ -223,7 +223,7 @@ export const PlayerBar = () => {
                      background: `linear-gradient(to right, #f97316 ${(currentTime / (duration || 1)) * 100}%, #27272a ${(currentTime / (duration || 1)) * 100}%)`
                    }}
                  />
-                 <div className="flex justify-between text-xs text-zinc-500 font-medium">
+                 <div className="flex justify-between text-xs text-muted-foreground font-medium">
                     <span>{formatTime(currentTime)}</span>
                     <span>{formatTime(duration)}</span>
                  </div>
@@ -231,8 +231,8 @@ export const PlayerBar = () => {
 
                {/* Main Controls */}
                <div className="flex items-center justify-between mb-8">
-                  <button className="text-zinc-400 hover:text-white"><Shuffle className="h-6 w-6" /></button>
-                  <button className="text-zinc-200 hover:text-white"><SkipBack className="h-8 w-8 fill-current" /></button>
+                  <button className="text-muted-foreground hover:text-foreground"><Shuffle className="h-6 w-6" /></button>
+                  <button className="text-foreground hover:text-foreground"><SkipBack className="h-8 w-8 fill-current" /></button>
                   <button 
                     onClick={isPlaying ? pause : resume}
                     className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg active:scale-95 transition-transform"
@@ -245,13 +245,13 @@ export const PlayerBar = () => {
                        <Play className="h-8 w-8 fill-current ml-1" />
                      )}
                   </button>
-                  <button className="text-zinc-200 hover:text-white"><SkipForward className="h-8 w-8 fill-current" /></button>
-                  <button className="text-zinc-400 hover:text-white"><Repeat className="h-6 w-6" /></button>
+                  <button className="text-foreground hover:text-foreground"><SkipForward className="h-8 w-8 fill-current" /></button>
+                  <button className="text-muted-foreground hover:text-foreground"><Repeat className="h-6 w-6" /></button>
                </div>
 
                {/* Volume Control (Mobile) */}
                <div className="flex items-center gap-4 mb-8">
-                  <Volume2 className="h-5 w-5 text-zinc-400" />
+                  <Volume2 className="h-5 w-5 text-muted-foreground" />
                   <input
                      type="range"
                      min={0}
@@ -265,13 +265,13 @@ export const PlayerBar = () => {
 
                {/* Bottom Actions */}
                <div className="flex justify-between items-center">
-                  <button className="flex items-center gap-2 text-zinc-400 text-sm">
+                  <button className="flex items-center gap-2 text-muted-foreground text-sm">
                      <Share2 className="h-5 w-5" />
                   </button>
-                  <button className="w-full mx-4 py-3 rounded-full bg-white/10 text-white font-bold hover:bg-white/20 transition-colors">
+                  <button className="w-full mx-4 py-3 rounded-full bg-secondary text-foreground font-bold hover:bg-secondary/80 transition-colors">
                     Buy for ${currentBeat.price}
                   </button>
-                  <button className="flex items-center gap-2 text-zinc-400 text-sm">
+                  <button className="flex items-center gap-2 text-muted-foreground text-sm">
                      <ListMusic className="h-5 w-5" />
                   </button>
                </div>
@@ -281,11 +281,11 @@ export const PlayerBar = () => {
 
 
       {/* ==================== DESKTOP PLAYER ==================== */}
-      <div className="fixed bottom-0 left-0 right-0 z-[60] hidden h-24 items-center justify-between border-t border-white/10 bg-black px-6 md:flex">
+      <div className="fixed bottom-0 left-0 right-0 z-[60] hidden h-24 items-center justify-between border-t border-border bg-card px-6 md:flex">
         
         {/* Left: Info */}
         <div className="flex flex-1 items-center gap-4 min-w-0">
-          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md group relative border border-white/10">
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md group relative border border-border">
              <img 
                src={currentBeat.cover} 
                alt={currentBeat.title}
@@ -296,10 +296,10 @@ export const PlayerBar = () => {
              </div>
           </div>
           <div className="flex flex-col min-w-0">
-            <h4 className="text-sm font-bold text-white hover:underline cursor-pointer truncate">{currentBeat.title}</h4>
-            <span className="text-xs text-zinc-400 hover:underline cursor-pointer truncate">{currentBeat.producer}</span>
+            <h4 className="text-sm font-bold text-foreground hover:underline cursor-pointer truncate">{currentBeat.title}</h4>
+            <span className="text-xs text-muted-foreground hover:underline cursor-pointer truncate">{currentBeat.producer}</span>
           </div>
-          <button className="ml-2 text-zinc-400 hover:text-red-500 transition-colors shrink-0">
+          <button className="ml-2 text-muted-foreground hover:text-red-500 transition-colors shrink-0">
             <Heart className="h-4 w-4" />
           </button>
         </div>
@@ -307,16 +307,16 @@ export const PlayerBar = () => {
         {/* Center: Controls */}
         <div className="flex flex-1 max-w-xl flex-col items-center gap-2 px-8">
           <div className="flex items-center gap-6">
-            <button className="text-zinc-400 hover:text-white transition-colors">
+            <button className="text-muted-foreground hover:text-foreground transition-colors">
               <Shuffle className="h-4 w-4" />
             </button>
-            <button className="text-zinc-200 hover:text-white transition-colors">
+            <button className="text-foreground hover:text-foreground transition-colors">
               <SkipBack className="h-5 w-5 fill-current" />
             </button>
             
             <button 
               onClick={isPlaying ? pause : resume}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black hover:scale-105 active:scale-95 transition-all"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-foreground text-background hover:scale-105 active:scale-95 transition-all"
             >
               {isLoading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
@@ -327,15 +327,15 @@ export const PlayerBar = () => {
               )}
             </button>
 
-            <button className="text-zinc-200 hover:text-white transition-colors">
+            <button className="text-foreground hover:text-foreground transition-colors">
               <SkipForward className="h-5 w-5 fill-current" />
             </button>
-            <button className="text-zinc-400 hover:text-white transition-colors">
+            <button className="text-muted-foreground hover:text-foreground transition-colors">
               <Repeat className="h-4 w-4" />
             </button>
           </div>
           
-          <div className="flex w-full items-center gap-2 text-xs text-zinc-400 font-medium">
+          <div className="flex w-full items-center gap-2 text-xs text-muted-foreground font-medium">
             <span className="w-8 text-right tabular-nums">{formatTime(currentTime)}</span>
             <input
                type="range"
@@ -356,22 +356,22 @@ export const PlayerBar = () => {
         <div className="flex flex-1 justify-end items-center gap-2 md:gap-4 min-w-0">
            {/* BPM Badge - Visible on larger screens */}
            <div className="flex items-center gap-2 hidden lg:flex shrink-0">
-             <span className="rounded bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-300 pointer-events-none border border-white/5 whitespace-nowrap">
+             <span className="rounded bg-secondary px-2 py-1 text-xs font-medium text-foreground pointer-events-none border border-border whitespace-nowrap">
                {currentBeat.bpm} BPM
              </span>
-             <span className="rounded bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-300 pointer-events-none border border-white/5 whitespace-nowrap">
+             <span className="rounded bg-secondary px-2 py-1 text-xs font-medium text-foreground pointer-events-none border border-border whitespace-nowrap">
                {currentBeat.key}
              </span>
            </div>
 
-           <div className="mx-2 h-6 w-px bg-zinc-800 hidden lg:block shrink-0" />
+           <div className="mx-2 h-6 w-px bg-border hidden lg:block shrink-0" />
            
-           <button className="text-zinc-400 hover:text-white transition-colors shrink-0">
+           <button className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
              <ListMusic className="h-5 w-5" />
            </button>
 
            <div className="flex items-center gap-2 w-24 lg:w-32 group shrink-0">
-             <Volume2 className="h-5 w-5 text-zinc-400 group-hover:text-white transition-colors" />
+             <Volume2 className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
              <input
                type="range"
                min={0}

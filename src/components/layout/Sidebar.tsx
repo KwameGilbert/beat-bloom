@@ -43,7 +43,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       {/* Mobile Backdrop */}
       <div 
         className={cn(
-          "fixed inset-0 z-40 bg-black/80 backdrop-blur-sm transition-opacity md:hidden",
+          "fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm transition-opacity md:hidden",
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         )}
         onClick={onClose}
@@ -52,7 +52,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       {/* Sidebar Container */}
       <aside 
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-white/10 bg-black px-6 py-8 text-white transition-transform duration-300 md:static md:translate-x-0",
+          "fixed inset-y-0 left-0 z-[80] flex w-64 flex-col border-r border-border bg-background px-6 py-8 transition-transform duration-300 md:static md:translate-x-0",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -62,12 +62,12 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg shadow-orange-500/20">
               <Music2 className="h-6 w-6 text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight">BeatBloom</span>
+            <span className="text-xl font-bold tracking-tight text-foreground">BeatBloom</span>
           </div>
           
           <button 
             onClick={onClose}
-            className="rounded-full p-1 hover:bg-white/10 md:hidden"
+            className="rounded-full p-1 hover:bg-secondary md:hidden"
           >
             <X className="h-5 w-5 text-muted-foreground" />
           </button>
@@ -84,13 +84,13 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={onClose} // Close sidebar on nav click
+                  onClick={onClose}
                   className={cn(
-                    "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-white/5 hover:text-white",
-                    isActive ? "bg-white/10 text-white" : "text-muted-foreground"
+                    "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-secondary hover:text-foreground",
+                    isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
                   )}
                 >
-                  <Icon className={cn("h-5 w-5", isActive ? "text-orange-500" : "text-muted-foreground group-hover:text-white")} />
+                  <Icon className={cn("h-5 w-5", isActive ? "text-orange-500" : "text-muted-foreground group-hover:text-foreground")} />
                   {item.name}
                 </Link>
               );
@@ -113,11 +113,11 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                     to={item.path}
                     onClick={onClose}
                     className={cn(
-                      "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-white/5 hover:text-white",
-                      isActive ? "bg-white/10 text-white" : "text-muted-foreground"
+                      "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-secondary hover:text-foreground",
+                      isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
                     )}
                   >
-                    <Icon className={cn("h-5 w-5", isActive ? "text-orange-500" : "text-muted-foreground group-hover:text-white")} />
+                    <Icon className={cn("h-5 w-5", isActive ? "text-orange-500" : "text-muted-foreground group-hover:text-foreground")} />
                     {item.name}
                   </Link>
                 );
@@ -131,7 +131,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">
                 Playlists
               </h3>
-              <button className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5 transition-colors hover:bg-white/10">
+              <button className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-secondary/80">
                 <Plus className="h-4 w-4 text-muted-foreground" />
               </button>
             </div>
@@ -142,7 +142,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                   key={playlist.name}
                   to={playlist.path}
                   onClick={onClose}
-                  className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-white/5 hover:text-white"
+                  className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary hover:text-foreground"
                 >
                   <div className={cn("h-4 w-4 rounded shadow-sm", playlist.color)} />
                   {playlist.name}

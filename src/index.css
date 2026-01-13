@@ -1,11 +1,78 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  :root {
+  /* Light Mode (default) */
+  :root,
+  .light {
+    --background: 0 0% 98%;
+    --foreground: 240 10% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 10%;
+    --card-hover: 0 0% 96%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
+
+    --primary: 16 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 16 100% 50%;
+
+    --secondary: 240 5% 92%;
+    --secondary-foreground: 240 10% 10%;
+
+    --muted: 240 5% 85%;
+    --muted-foreground: 240 5% 45%;
+
+    --accent: 200 100% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 5% 85%;
+    --input: 240 5% 92%;
+    --ring: 16 100% 50%;
+
+    --radius: 0.75rem;
+
+    /* Custom tokens */
+    --surface-glass: 0 0% 100% / 0.8;
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(16 100% 50%),
+      hsl(35 100% 55%)
+    );
+    --gradient-accent: linear-gradient(
+      135deg,
+      hsl(200 100% 50%),
+      hsl(180 100% 45%)
+    );
+    --gradient-dark: linear-gradient(180deg, hsl(0 0% 98%), hsl(0 0% 94%));
+    --shadow-glow: 0 0 40px hsl(16 100% 50% / 0.2);
+    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.1);
+
+    --sidebar-background: 0 0% 96%;
+    --sidebar-foreground: 240 10% 10%;
+    --sidebar-primary: 16 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 92%;
+    --sidebar-accent-foreground: 240 10% 10%;
+    --sidebar-border: 240 5% 88%;
+    --sidebar-ring: 16 100% 50%;
+
+    --player-background: 0 0% 100%;
+    --player-progress: 16 100% 50%;
+    --waveform-active: 16 100% 50%;
+    --waveform-inactive: 240 5% 75%;
+  }
+
+  /* Dark Mode */
+  .dark {
     --background: 240 10% 4%;
     --foreground: 0 0% 98%;
 
@@ -36,12 +103,18 @@
     --input: 240 10% 12%;
     --ring: 16 100% 60%;
 
-    --radius: 0.75rem;
-
     /* Custom tokens */
     --surface-glass: 240 10% 8% / 0.8;
-    --gradient-primary: linear-gradient(135deg, hsl(16 100% 60%), hsl(35 100% 55%));
-    --gradient-accent: linear-gradient(135deg, hsl(200 100% 50%), hsl(180 100% 45%));
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(16 100% 60%),
+      hsl(35 100% 55%)
+    );
+    --gradient-accent: linear-gradient(
+      135deg,
+      hsl(200 100% 50%),
+      hsl(180 100% 45%)
+    );
     --gradient-dark: linear-gradient(180deg, hsl(240 10% 6%), hsl(240 10% 3%));
     --shadow-glow: 0 0 40px hsl(16 100% 50% / 0.3);
     --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
@@ -73,11 +146,21 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', sans-serif;
+  /* Smooth theme transition for all elements */
+  *, *::before, *::after {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.15s ease;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Space Grotesk", sans-serif;
   }
 }
 
@@ -172,7 +255,8 @@
 
 /* Animations */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -181,7 +265,8 @@
 }
 
 @keyframes waveform {
-  0%, 100% {
+  0%,
+  100% {
     height: 20%;
   }
   50% {

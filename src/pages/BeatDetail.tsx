@@ -70,10 +70,10 @@ const BeatDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Back Button */}
-      <div className="border-b border-white/10 px-3 sm:px-4 py-3 sm:py-4 md:px-8">
+      <div className="border-b border-border px-3 sm:px-4 py-3 sm:py-4 md:px-8">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-xs sm:text-sm text-zinc-400 transition-colors hover:text-white"
+          className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Discover
@@ -86,7 +86,7 @@ const BeatDetail = () => {
           {/* Left: Beat Cover & Waveform */}
           <div className="space-y-4 md:space-y-6 min-w-0">
             {/* Cover Image */}
-            <div className="group relative w-full aspect-[1/1] max-w-[100%] overflow-hidden rounded-xl md:rounded-2xl bg-zinc-900 shadow-2xl cursor-pointer">
+            <div className="group relative w-full aspect-[1/1] max-w-[100%] overflow-hidden rounded-xl md:rounded-2xl bg-secondary shadow-2xl cursor-pointer">
               <img
                 src={beat.cover}
                 alt={beat.title}
@@ -116,7 +116,7 @@ const BeatDetail = () => {
             </div>
 
             {/* Waveform Visualization */}
-            <div className="flex h-12 items-center justify-center rounded-xl bg-zinc-900/50 px-2">
+            <div className="flex h-12 items-center justify-center rounded-xl bg-secondary/50 px-2">
               <div className="flex h-[80%] w-full items-center justify-center gap-1">
                 {Array.from({ length: 60 }).map((_, i) => {
                   const height = Math.random() * 100;
@@ -126,7 +126,7 @@ const BeatDetail = () => {
                       key={i}
                       className={cn(
                         "w-1 rounded-full transition-all",
-                        isActive ? "bg-orange-500" : "bg-zinc-700"
+                        isActive ? "bg-orange-500" : "bg-muted"
                       )}
                       style={{ height: `${height}%` }}
                     />
@@ -147,16 +147,16 @@ const BeatDetail = () => {
 
             {/* Title & Producer */}
             <div>
-              <h1 className="mb-2 font-display text-2xl font-bold text-white break-words sm:text-3xl md:text-4xl lg:text-5xl">
+              <h1 className="mb-2 font-display text-2xl font-bold text-foreground break-words sm:text-3xl md:text-4xl lg:text-5xl">
                 {beat.title}
               </h1>
-              <p className="text-base sm:text-lg text-zinc-400">
-                by <span className="font-medium text-white hover:underline cursor-pointer">{beat.producer}</span>
+              <p className="text-base sm:text-lg text-muted-foreground">
+                by <span className="font-medium text-foreground hover:underline cursor-pointer">{beat.producer}</span>
               </p>
             </div>
 
             {/* Beat Specs */}
-            <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs sm:text-sm text-zinc-400">
+            <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs sm:text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Music2 className="h-4 w-4" />
                 <span>{beat.bpm} BPM</span>
@@ -198,33 +198,33 @@ const BeatDetail = () => {
               <button
                 onClick={() => setIsLiked(!isLiked)}
                 className={cn(
-                  "flex h-12 w-12 items-center justify-center rounded-full border border-white/10 transition-all",
-                  isLiked ? "bg-red-500 text-white" : "bg-white/5 text-zinc-400 hover:text-red-500"
+                  "flex h-12 w-12 items-center justify-center rounded-full border border-border transition-all",
+                  isLiked ? "bg-red-500 text-white" : "bg-secondary text-muted-foreground hover:text-red-500"
                 )}
               >
                 <Heart className={cn("h-5 w-5", isLiked && "fill-current")} />
               </button>
 
-              <button className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-zinc-400 transition-colors hover:text-white">
+              <button className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground">
                 <Share2 className="h-5 w-5" />
               </button>
             </div>
 
             {/* Description */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 md:p-6">
-              <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-zinc-400">
+            <div className="rounded-xl border border-border bg-card p-4 md:p-6">
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-muted-foreground">
                 Description
               </h3>
-              <p className="text-sm sm:text-base leading-relaxed text-zinc-300 break-words">
+              <p className="text-sm sm:text-base leading-relaxed text-foreground break-words">
                 {beat.description}
               </p>
             </div>
 
             {/* Price & Purchase */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="rounded-xl border border-border bg-card p-4">
               <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     Price
                   </h3>
                   <p className="mt-1 text-2xl sm:text-3xl font-bold text-orange-500">
@@ -233,7 +233,7 @@ const BeatDetail = () => {
                 </div>
                 <div className="text-right">
                   {beat.includedFiles.map((file, idx) => (
-                    <p key={idx} className="text-xs text-zinc-400">{file}</p>
+                    <p key={idx} className="text-xs text-muted-foreground">{file}</p>
                   ))}
                 </div>
               </div>
@@ -241,7 +241,7 @@ const BeatDetail = () => {
               {/* Action Buttons */}
               <div className="flex flex-col gap-2 sm:flex-row">
                 <AddToCartButton beat={beat} />
-                <button className="flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-white/10">
+                <button className="flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-full border border-border bg-secondary px-4 py-3 text-sm font-bold text-foreground transition-all hover:bg-secondary/80">
                   <Download className="h-4 w-4" />
                   Buy Now
                 </button>
@@ -254,7 +254,7 @@ const BeatDetail = () => {
         {producerBeats.length > 0 && (
           <div className="mt-12 md:mt-16">
             <div className="mb-4 md:mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="font-display text-xl font-bold text-white sm:text-2xl md:text-3xl">
+              <h2 className="font-display text-xl font-bold text-foreground sm:text-2xl md:text-3xl">
                 More from {beat.producer}
               </h2>
               <Link
@@ -275,10 +275,10 @@ const BeatDetail = () => {
         {/* About Producer */}
         {producer && (
           <div className="mt-8 md:mt-12">
-            <h2 className="mb-4 md:mb-6 font-display text-xl font-bold text-white sm:text-2xl md:text-3xl">
+            <h2 className="mb-4 md:mb-6 font-display text-xl font-bold text-foreground sm:text-2xl md:text-3xl">
               About Producer
             </h2>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 sm:p-6 md:p-8">
+            <div className="rounded-xl border border-border bg-card p-4 sm:p-6 md:p-8">
               <div className="flex flex-col gap-4 sm:gap-6 md:flex-row md:items-start md:gap-8">
                 {/* Producer Avatar */}
                 <div className="shrink-0 mx-auto md:mx-0">
@@ -300,7 +300,7 @@ const BeatDetail = () => {
                 <div className="flex-1 min-w-0 text-center md:text-left">
                   <div className="mb-4">
                     <div className="mb-2 flex items-center justify-center md:justify-start gap-3">
-                      <h3 className="font-display text-xl sm:text-2xl font-bold text-white">
+                      <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground">
                         {producer.name}
                       </h3>
                       {producer.verified && (
@@ -308,14 +308,14 @@ const BeatDetail = () => {
                       )}
                     </div>
                     {producer.location && (
-                      <div className="flex items-center justify-center md:justify-start gap-2 text-zinc-400">
+                      <div className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground">
                         <MapPin className="h-4 w-4" />
                         <span className="text-xs sm:text-sm">{producer.location}</span>
                       </div>
                     )}
                   </div>
 
-                  <p className="mb-4 sm:mb-6 text-sm sm:text-base leading-relaxed text-zinc-300">
+                  <p className="mb-4 sm:mb-6 text-sm sm:text-base leading-relaxed text-muted-foreground">
                     {producer.bio}
                   </p>
 
@@ -325,13 +325,13 @@ const BeatDetail = () => {
                       <p className="text-xl sm:text-2xl font-bold text-orange-500">
                         {producerBeats.length + 1}
                       </p>
-                      <p className="text-xs text-zinc-400">Beats</p>
+                      <p className="text-xs text-muted-foreground">Beats</p>
                     </div>
                     <div>
                       <p className="text-xl sm:text-2xl font-bold text-orange-500">
                         {producer.verified ? "Verified" : "New"}
                       </p>
-                      <p className="text-xs text-zinc-400">Status</p>
+                      <p className="text-xs text-muted-foreground">Status</p>
                     </div>
                   </div>
                 </div>
@@ -340,7 +340,7 @@ const BeatDetail = () => {
                 <div className="shrink-0 w-full md:w-auto">
                   <Link
                     to={`/producer/${beat.producerId}`}
-                    className="inline-flex w-full md:w-auto items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm sm:text-base font-bold text-white transition-all hover:bg-white/10"
+                    className="inline-flex w-full md:w-auto items-center justify-center gap-2 rounded-full border border-border bg-secondary px-6 py-3 text-sm sm:text-base font-bold text-foreground transition-all hover:bg-secondary/80"
                   >
                     View Profile
                   </Link>
@@ -356,13 +356,12 @@ const BeatDetail = () => {
 
 // Add to Cart Button Component
 const AddToCartButton = ({ beat }: { beat: Beat }) => {
-  const navigate = useNavigate();
-  const { addToCart, isInCart } = useCartStore();
+  const { addToCart, removeFromCart, isInCart } = useCartStore();
   const inCart = isInCart(beat.id);
 
   const handleClick = () => {
     if (inCart) {
-      navigate("/cart");
+      removeFromCart(beat.id);
     } else {
       addToCart(beat);
     }
@@ -374,12 +373,12 @@ const AddToCartButton = ({ beat }: { beat: Beat }) => {
       className={cn(
         "flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-bold shadow-lg transition-all active:scale-95",
         inCart
-          ? "bg-green-600 text-white hover:bg-green-700"
+          ? "bg-green-600 text-white hover:bg-red-500"
           : "bg-orange-500 text-white hover:bg-orange-600"
       )}
     >
       <ShoppingCart className="h-4 w-4" />
-      {inCart ? "View in Cart" : "Add to Cart"}
+      {inCart ? "Remove from Cart" : "Add to Cart"}
     </button>
   );
 };

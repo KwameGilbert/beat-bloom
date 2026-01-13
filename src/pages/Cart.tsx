@@ -34,10 +34,10 @@ const Cart = () => {
     return (
       <div className="min-h-screen bg-background">
         {/* Header */}
-        <div className="border-b border-white/10 px-4 py-4 md:px-8">
+        <div className="border-b border-border px-4 py-4 md:px-8">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-white"
+            className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -45,11 +45,11 @@ const Cart = () => {
         </div>
 
         <div className="flex flex-col items-center justify-center px-4 py-20">
-          <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-zinc-800">
-            <ShoppingCart className="h-12 w-12 text-zinc-600" />
+          <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-secondary">
+            <ShoppingCart className="h-12 w-12 text-muted-foreground" />
           </div>
-          <h1 className="mb-2 font-display text-2xl font-bold text-white">Your cart is empty</h1>
-          <p className="mb-6 text-center text-sm text-zinc-400">
+          <h1 className="mb-2 font-display text-2xl font-bold text-foreground">Your cart is empty</h1>
+          <p className="mb-6 text-center text-sm text-muted-foreground">
             Discover amazing beats and add them to your cart
           </p>
           <Link
@@ -67,11 +67,11 @@ const Cart = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-white/10 px-4 py-4 md:px-8">
+      <div className="border-b border-border px-4 py-4 md:px-8">
         <div className="mx-auto max-w-6xl">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-white"
+            className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Continue Shopping
@@ -82,10 +82,10 @@ const Cart = () => {
       <div className="mx-auto max-w-6xl px-4 py-8 md:px-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="font-display text-3xl font-bold text-white md:text-4xl">
+            <h1 className="font-display text-3xl font-bold text-foreground md:text-4xl">
               Shopping Cart
             </h1>
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="mt-1 text-sm text-muted-foreground">
               {items.length} {items.length === 1 ? "item" : "items"} in your cart
             </p>
           </div>
@@ -110,12 +110,12 @@ const Cart = () => {
                 return (
                   <div
                     key={item.beat.id}
-                    className="group rounded-xl border border-white/10 bg-white/5 p-4 transition-colors hover:bg-white/10"
+                    className="group rounded-xl border border-border bg-card p-4 transition-colors hover:bg-secondary/50"
                   >
                     <div className="flex gap-4">
                       {/* Cover Image with Play Button */}
                       <div 
-                        className="relative h-24 w-24 shrink-0 cursor-pointer overflow-hidden rounded-lg bg-zinc-800"
+                        className="relative h-24 w-24 shrink-0 cursor-pointer overflow-hidden rounded-lg bg-secondary"
                         onClick={() => handlePlayClick(item.beat)}
                       >
                         <img
@@ -144,22 +144,22 @@ const Cart = () => {
                         <div>
                           <Link 
                             to={`/beat/${item.beat.id}`}
-                            className="block truncate font-bold text-white hover:text-orange-500"
+                            className="block truncate font-bold text-foreground hover:text-orange-500"
                           >
                             {item.beat.title}
                           </Link>
-                          <p className="text-sm text-zinc-400">by {item.beat.producer}</p>
+                          <p className="text-sm text-muted-foreground">by {item.beat.producer}</p>
                           
                           {/* Tags & Specs */}
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             <span className="inline-block rounded bg-orange-500/20 px-2 py-0.5 text-xs font-medium text-orange-500">
                               {item.beat.tags[0]}
                             </span>
-                            <span className="flex items-center gap-1 text-xs text-zinc-500">
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Music2 className="h-3 w-3" />
                               {item.beat.bpm} BPM
                             </span>
-                            <span className="flex items-center gap-1 text-xs text-zinc-500">
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Clock className="h-3 w-3" />
                               {item.beat.duration}
                             </span>
@@ -167,7 +167,7 @@ const Cart = () => {
                         </div>
 
                         {/* Included Files */}
-                        <div className="mt-2 text-xs text-zinc-500">
+                        <div className="mt-2 text-xs text-muted-foreground">
                           Includes: {item.beat.includedFiles.join(", ")}
                         </div>
                       </div>
@@ -179,7 +179,7 @@ const Cart = () => {
                         </p>
                         <button
                           onClick={() => removeFromCart(item.beat.id)}
-                          className="flex items-center gap-1 text-xs text-zinc-500 transition-colors hover:text-red-500"
+                          className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-red-500"
                         >
                           <Trash2 className="h-3 w-3" />
                           Remove
@@ -194,34 +194,34 @@ const Cart = () => {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="sticky top-4 rounded-xl border border-white/10 bg-white/5 p-6">
-              <h2 className="mb-4 font-display text-lg font-bold text-white">
+            <div className="sticky top-4 rounded-xl border border-border bg-card p-6">
+              <h2 className="mb-4 font-display text-lg font-bold text-foreground">
                 Order Summary
               </h2>
 
-              <div className="space-y-3 border-b border-white/10 pb-4">
+              <div className="space-y-3 border-b border-border pb-4">
                 {items.map((item) => (
                   <div key={item.beat.id} className="flex justify-between text-sm">
-                    <span className="truncate text-zinc-400 pr-2">{item.beat.title}</span>
-                    <span className="text-white">${item.beat.price.toFixed(2)}</span>
+                    <span className="truncate text-muted-foreground pr-2">{item.beat.title}</span>
+                    <span className="text-foreground">${item.beat.price.toFixed(2)}</span>
                   </div>
                 ))}
               </div>
 
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-zinc-400">Subtotal</span>
-                  <span className="text-white">${total.toFixed(2)}</span>
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-foreground">${total.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-zinc-400">Processing Fee</span>
-                  <span className="text-zinc-500">$0.00</span>
+                  <span className="text-muted-foreground">Processing Fee</span>
+                  <span className="text-muted-foreground">$0.00</span>
                 </div>
               </div>
 
-              <div className="mt-4 border-t border-white/10 pt-4">
+              <div className="mt-4 border-t border-border pt-4">
                 <div className="flex justify-between">
-                  <span className="text-lg font-bold text-white">Total</span>
+                  <span className="text-lg font-bold text-foreground">Total</span>
                   <span className="text-2xl font-bold text-orange-500">${total.toFixed(2)}</span>
                 </div>
               </div>
@@ -231,12 +231,12 @@ const Cart = () => {
                 Proceed to Checkout
               </button>
 
-              <p className="mt-4 text-center text-xs text-zinc-500">
+              <p className="mt-4 text-center text-xs text-muted-foreground">
                 By completing your purchase you agree to our Terms of Service
               </p>
 
               {/* Trust Badges */}
-              <div className="mt-6 flex items-center justify-center gap-4 text-xs text-zinc-500">
+              <div className="mt-6 flex items-center justify-center gap-4 text-xs text-muted-foreground">
                 <span>🔒 Secure Checkout</span>
                 <span>💳 All Cards Accepted</span>
               </div>

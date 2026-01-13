@@ -11,7 +11,7 @@ interface BeatCardProps {
 
 export const BeatCard = ({ beat }: BeatCardProps) => {
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
-  const { addToCart, isInCart } = useCartStore();
+  const { addToCart, removeFromCart, isInCart } = useCartStore();
   
   const isCurrentBeat = currentBeat?.id === beat.id;
   const isPlayingCurrent = isCurrentBeat && isPlaying;
@@ -19,7 +19,7 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
   const inCart = isInCart(beat.id);
 
   const handlePlayClick = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigation
+    e.preventDefault();
     if (isCurrentBeat) {
       togglePlay();
     } else {
@@ -27,15 +27,17 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
     }
   };
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigation
-    if (!inCart) {
+  const handleCartClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (inCart) {
+      removeFromCart(beat.id);
+    } else {
       addToCart(beat);
     }
   };
 
   return (
-    <div className="group relative flex flex-col gap-3 rounded-lg p-2 transition-all hover:bg-white/5">
+    <div className="group relative flex flex-col gap-3 rounded-lg p-2 transition-all hover:bg-white/5 dark:hover:bg-white/5">
       {/* Cover Image Container */}
       <div className="relative aspect-square w-full overflow-hidden rounded-md bg-secondary/50">
         <img
@@ -93,13 +95,14 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
             <Heart className="h-4 w-4" />
           </button>
           <button 
-            onClick={handleAddToCart}
+            onClick={handleCartClick}
             className={cn(
               "rounded-full p-2 transition-colors",
               inCart 
-                ? "bg-green-600 text-white" 
+                ? "bg-green-600 text-white hover:bg-red-500" 
                 : "text-muted-foreground hover:bg-secondary hover:text-primary"
             )}
+            title={inCart ? "Remove from cart" : "Add to cart"}
           >
             {inCart ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
           </button>
