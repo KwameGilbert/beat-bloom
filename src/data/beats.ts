@@ -39,7 +39,7 @@ export const featuredBeats: Beat[] = [
     bpm: 140,
     key: "Am",
     price: 29.99,
-    cover: "https://images.unsplash.com/photo-1514525253440-b393452e8d26?w=800&q=80",
+    cover: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80",
     tags: ["Trap", "Dark", "Melodic"],
     audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
     duration: "3:24",
@@ -222,3 +222,13 @@ export const genres: Genre[] = [
   { id: "5", name: "Lo-Fi", count: 720, color: "bg-yellow-700/80 hover:bg-yellow-600/80" },
   { id: "6", name: "Pop", count: 980, color: "bg-pink-700/80 hover:bg-pink-600/80" },
 ];
+
+// Helper functions
+export const getProducerById = (id: string): Producer | undefined => {
+  return producers.find(p => p.id === id);
+};
+
+export const getBeatsByProducerId = (producerId: string): Beat[] => {
+  return [...featuredBeats, ...trendingBeats].filter(beat => beat.producerId === producerId);
+};
+
