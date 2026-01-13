@@ -67,12 +67,12 @@ const BeatDetail = () => {
     .slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Back Button */}
-      <div className="border-b border-white/10 px-4 py-4 md:px-8">
+      <div className="border-b border-white/10 px-3 sm:px-4 py-3 sm:py-4 md:px-8">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-white"
+          className="flex items-center gap-2 text-xs sm:text-sm text-zinc-400 transition-colors hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Discover
@@ -80,19 +80,38 @@ const BeatDetail = () => {
       </div>
 
       {/* Main Content */}
-      <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
+      <div className="mx-auto w-full max-w-7xl px-3 sm:px-4 py-6 sm:py-8 md:px-8">
         <div className="grid gap-6 md:gap-8 lg:grid-cols-2">
           {/* Left: Beat Cover & Waveform */}
           <div className="space-y-4 md:space-y-6">
             {/* Cover Image */}
-            <div className="group relative aspect-square w-full overflow-hidden rounded-xl md:rounded-2xl bg-zinc-900 shadow-2xl">
+            <div className="group relative aspect-square w-full max-w-full overflow-hidden rounded-xl md:rounded-2xl bg-zinc-900 shadow-2xl cursor-pointer">
               <img
                 src={beat.cover}
                 alt={beat.title}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
-              {/* Overlay on Hover */}
+              {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100 transition-opacity" />
+              
+              {/* Play Button Overlay */}
+              <div 
+                className={cn(
+                  "absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity duration-300",
+                  isPlayingCurrent || isLoadingCurrent ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                )}
+                onClick={handlePlayClick}
+              >
+                <button className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-orange-500 text-white shadow-2xl transition-transform hover:scale-110 active:scale-95">
+                  {isLoadingCurrent ? (
+                    <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 animate-spin" />
+                  ) : isPlayingCurrent ? (
+                    <Pause className="h-8 w-8 sm:h-10 sm:w-10 fill-current" />
+                  ) : (
+                    <Play className="ml-1 h-8 w-8 sm:h-10 sm:w-10 fill-current" />
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Waveform Visualization */}
