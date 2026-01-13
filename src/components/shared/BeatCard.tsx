@@ -1,7 +1,9 @@
-import { Play, Pause, Heart, ShoppingCart, Loader2 } from "lucide-react";
+import { Play, Pause, Heart, ShoppingCart, Loader2, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Beat } from "@/data/beats";
 import { usePlayerStore } from "@/store/playerStore";
+import { useCartStore } from "@/store/cartStore";
+import { cn } from "@/lib/utils";
 
 interface BeatCardProps {
   beat: Beat;
@@ -9,9 +11,12 @@ interface BeatCardProps {
 
 export const BeatCard = ({ beat }: BeatCardProps) => {
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
+  const { addToCart, isInCart } = useCartStore();
+  
   const isCurrentBeat = currentBeat?.id === beat.id;
   const isPlayingCurrent = isCurrentBeat && isPlaying;
   const isLoadingCurrent = isCurrentBeat && isLoading;
+  const inCart = isInCart(beat.id);
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigation
@@ -19,6 +24,13 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
       togglePlay();
     } else {
       playBeat(beat);
+    }
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigation
+    if (!inCart) {
+      addToCart(beat);
     }
   };
 
@@ -49,15 +61,18 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
           </button>
         </div>
 
-        {/* Top Right Badges */}
-        <div className="absolute right-2 top-2 flex flex-col gap-1">
-           {/* Add badges if needed */}
-        </div>
+        {/* In Cart Badge */}
+        {inCart && (
+          <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-green-600 px-2 py-1 text-xs font-bold text-white">
+            <Check className="h-3 w-3" />
+            In Cart
+          </div>
+        )}
       </div>
 
       {/* Info Section */}
       <div className="flex flex-col gap-1">
-        <Link to={`/beat/${beat.id}`} className="font-display font-bold text-foreground hover:underline">
+        <Link to={`/beat/${beat.id}`} className="font-display font-bold text-foreground hover:underline truncate">
           {beat.title}
         </Link>
         <span className="text-xs text-muted-foreground">{beat.producer}</span>
@@ -77,8 +92,16 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
           <button className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-red-500">
             <Heart className="h-4 w-4" />
           </button>
-          <button className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-primary">
-            <ShoppingCart className="h-4 w-4" />
+          <button 
+            onClick={handleAddToCart}
+            className={cn(
+              "rounded-full p-2 transition-colors",
+              inCart 
+                ? "bg-green-600 text-white" 
+                : "text-muted-foreground hover:bg-secondary hover:text-primary"
+            )}
+          >
+            {inCart ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
           </button>
         </div>
       </div>

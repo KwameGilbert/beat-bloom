@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { featuredBeats, trendingBeats, getProducerById, type Beat } from "@/data/beats";
 import { usePlayerStore } from "@/store/playerStore";
+import { useCartStore } from "@/store/cartStore";
 import { BeatCard } from "@/components/shared/BeatCard";
 import { cn } from "@/lib/utils";
 
@@ -67,7 +68,7 @@ const BeatDetail = () => {
     .slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="min-h-screen bg-background">
       {/* Back Button */}
       <div className="border-b border-white/10 px-3 sm:px-4 py-3 sm:py-4 md:px-8">
         <button
@@ -83,9 +84,9 @@ const BeatDetail = () => {
       <div className="mx-auto w-full max-w-7xl px-3 sm:px-4 py-6 sm:py-8 md:px-8">
         <div className="grid gap-6 md:gap-8 lg:grid-cols-2">
           {/* Left: Beat Cover & Waveform */}
-          <div className="space-y-4 md:space-y-6">
+          <div className="space-y-4 md:space-y-6 min-w-0">
             {/* Cover Image */}
-            <div className="group relative aspect-square w-full max-w-full overflow-hidden rounded-xl md:rounded-2xl bg-zinc-900 shadow-2xl cursor-pointer">
+            <div className="group relative w-full aspect-[1/1] max-w-[100%] overflow-hidden rounded-xl md:rounded-2xl bg-zinc-900 shadow-2xl cursor-pointer">
               <img
                 src={beat.cover}
                 alt={beat.title}
@@ -136,7 +137,7 @@ const BeatDetail = () => {
           </div>
 
           {/* Right: Beat Info & Purchase */}
-          <div className="flex flex-col space-y-4 md:space-y-6">
+          <div className="flex flex-col space-y-4 md:space-y-6 min-w-0">
             {/* Genre Tag */}
             <div>
               <span className="inline-block rounded-full bg-orange-500/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-orange-500">
@@ -146,7 +147,7 @@ const BeatDetail = () => {
 
             {/* Title & Producer */}
             <div>
-              <h1 className="mb-2 font-display text-3xl font-bold text-white sm:text-4xl md:text-5xl">
+              <h1 className="mb-2 font-display text-2xl font-bold text-white break-words sm:text-3xl md:text-4xl lg:text-5xl">
                 {beat.title}
               </h1>
               <p className="text-base sm:text-lg text-zinc-400">
@@ -214,7 +215,7 @@ const BeatDetail = () => {
               <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-zinc-400">
                 Description
               </h3>
-              <p className="text-sm sm:text-base leading-relaxed text-zinc-300">
+              <p className="text-sm sm:text-base leading-relaxed text-zinc-300 break-words">
                 {beat.description}
               </p>
             </div>
@@ -239,10 +240,7 @@ const BeatDetail = () => {
 
               {/* Action Buttons */}
               <div className="flex flex-col gap-2 sm:flex-row">
-                <button className="flex flex-1 items-center justify-center gap-2 rounded-full bg-orange-500 px-4 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-orange-600 active:scale-95">
-                  <ShoppingCart className="h-4 w-4" />
-                  Add to Cart
-                </button>
+                <AddToCartButton beat={beat} />
                 <button className="flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-white/10">
                   <Download className="h-4 w-4" />
                   Buy Now
@@ -299,9 +297,9 @@ const BeatDetail = () => {
                 </div>
 
                 {/* Producer Info */}
-                <div className="flex-1">
+                <div className="flex-1 min-w-0 text-center md:text-left">
                   <div className="mb-4">
-                    <div className="mb-2 flex items-center gap-3">
+                    <div className="mb-2 flex items-center justify-center md:justify-start gap-3">
                       <h3 className="font-display text-xl sm:text-2xl font-bold text-white">
                         {producer.name}
                       </h3>
@@ -310,7 +308,7 @@ const BeatDetail = () => {
                       )}
                     </div>
                     {producer.location && (
-                      <div className="flex items-center gap-2 text-zinc-400">
+                      <div className="flex items-center justify-center md:justify-start gap-2 text-zinc-400">
                         <MapPin className="h-4 w-4" />
                         <span className="text-xs sm:text-sm">{producer.location}</span>
                       </div>
@@ -322,7 +320,7 @@ const BeatDetail = () => {
                   </p>
 
                   {/* Producer Stats */}
-                  <div className="flex flex-wrap gap-4 sm:gap-6">
+                  <div className="flex flex-wrap justify-center md:justify-start gap-4 sm:gap-6">
                     <div>
                       <p className="text-xl sm:text-2xl font-bold text-orange-500">
                         {producerBeats.length + 1}
@@ -353,6 +351,36 @@ const BeatDetail = () => {
         )}
       </div>
     </div>
+  );
+};
+
+// Add to Cart Button Component
+const AddToCartButton = ({ beat }: { beat: Beat }) => {
+  const navigate = useNavigate();
+  const { addToCart, isInCart } = useCartStore();
+  const inCart = isInCart(beat.id);
+
+  const handleClick = () => {
+    if (inCart) {
+      navigate("/cart");
+    } else {
+      addToCart(beat);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        "flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-bold shadow-lg transition-all active:scale-95",
+        inCart
+          ? "bg-green-600 text-white hover:bg-green-700"
+          : "bg-orange-500 text-white hover:bg-orange-600"
+      )}
+    >
+      <ShoppingCart className="h-4 w-4" />
+      {inCart ? "View in Cart" : "Add to Cart"}
+    </button>
   );
 };
 
