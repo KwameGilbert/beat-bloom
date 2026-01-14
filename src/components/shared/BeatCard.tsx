@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { Beat } from "@/data/beats";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
+import { useLikesStore } from "@/store/likesStore";
 import { cn } from "@/lib/utils";
 
 interface BeatCardProps {
@@ -12,11 +13,13 @@ interface BeatCardProps {
 export const BeatCard = ({ beat }: BeatCardProps) => {
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
   const { addToCart, removeFromCart, isInCart } = useCartStore();
+  const { toggleLike, isLiked } = useLikesStore();
   
   const isCurrentBeat = currentBeat?.id === beat.id;
   const isPlayingCurrent = isCurrentBeat && isPlaying;
   const isLoadingCurrent = isCurrentBeat && isLoading;
   const inCart = isInCart(beat.id);
+  const liked = isLiked(beat.id);
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -34,6 +37,11 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
     } else {
       addToCart(beat);
     }
+  };
+
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    toggleLike(beat);
   };
 
   return (
@@ -91,8 +99,17 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
         <span className="text-sm font-bold text-primary">${beat.price}</span>
         
         <div className="flex items-center gap-2">
-          <button className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-red-500">
-            <Heart className="h-4 w-4" />
+          <button 
+            onClick={handleLikeClick}
+            className={cn(
+              "rounded-full p-2 transition-colors",
+              liked 
+                ? "text-red-500 hover:bg-secondary" 
+                : "text-muted-foreground hover:bg-secondary hover:text-red-500"
+            )}
+            title={liked ? "Remove from liked" : "Add to liked"}
+          >
+            <Heart className={cn("h-4 w-4", liked && "fill-current")} />
           </button>
           <button 
             onClick={handleCartClick}

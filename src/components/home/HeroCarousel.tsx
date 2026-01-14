@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, ShoppingCart, Heart, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Play, Pause, ShoppingCart, Heart, ChevronLeft, ChevronRight, Loader2, Check } from "lucide-react";
 import type { Beat } from "@/data/beats";
 import { usePlayerStore } from "@/store/playerStore";
+import { useLikesStore } from "@/store/likesStore";
+import { useCartStore } from "@/store/cartStore";
+import { cn } from "@/lib/utils";
 
 interface HeroCarouselProps {
   beats: Beat[];
@@ -11,6 +14,8 @@ interface HeroCarouselProps {
 export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
+  const { toggleLike, isLiked } = useLikesStore();
+  const { addToCart, removeFromCart, isInCart } = useCartStore();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -44,6 +49,21 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
           playBeat(currentFeaturedBeat);
       }
   };
+
+  const handleLikeClick = () => {
+      toggleLike(currentFeaturedBeat);
+  };
+
+  const handleCartClick = () => {
+      if (isInCart(currentFeaturedBeat.id)) {
+        removeFromCart(currentFeaturedBeat.id);
+      } else {
+        addToCart(currentFeaturedBeat);
+      }
+  };
+
+  const isCurrentLiked = isLiked(currentFeaturedBeat.id);
+  const isCurrentInCart = isInCart(currentFeaturedBeat.id);
 
   return (
     <div className="relative h-[400px] w-full overflow-hidden rounded-2xl bg-black">
@@ -127,12 +147,32 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
               )}
               {isFeaturedLoading ? "Loading..." : isFeaturedPlaying ? "Pause Preview" : "Play Preview"}
             </button>
-            <button className="group flex h-10 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 text-sm font-medium text-white transition-all hover:bg-white/10 hover:border-white/20 md:h-12 md:px-6 md:text-base">
-              <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
-              <span>${currentFeaturedBeat.price}</span>
+            <button 
+              onClick={handleCartClick}
+              className={cn(
+                "group flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium transition-all md:h-12 md:px-6 md:text-base",
+                isCurrentInCart
+                  ? "bg-green-600 text-white border-green-600"
+                  : "border-white/10 bg-white/5 text-white hover:bg-white/10 hover:border-white/20"
+              )}
+            >
+              {isCurrentInCart ? (
+                <Check className="h-4 w-4 md:h-5 md:w-5" />
+              ) : (
+                <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
+              )}
+              <span>{isCurrentInCart ? "In Cart" : `$${currentFeaturedBeat.price}`}</span>
             </button>
-            <button className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition-all hover:bg-white/10 hover:text-red-500 md:h-12 md:w-12">
-               <Heart className="h-4 w-4 md:h-5 md:w-5" />
+            <button 
+              onClick={handleLikeClick}
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-full border border-white/10 transition-all md:h-12 md:w-12",
+                isCurrentLiked 
+                  ? "bg-red-500 text-white border-red-500" 
+                  : "bg-white/5 text-white hover:bg-white/10 hover:text-red-500"
+              )}
+            >
+               <Heart className={cn("h-4 w-4 md:h-5 md:w-5", isCurrentLiked && "fill-current")} />
             </button>
           </div>
         </div>

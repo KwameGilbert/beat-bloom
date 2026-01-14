@@ -1,5 +1,4 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { 
   ArrowLeft, 
   Play, 
@@ -14,9 +13,11 @@ import {
   MapPin,
   CheckCircle
 } from "lucide-react";
+
 import { featuredBeats, trendingBeats, getProducerById, type Beat } from "@/data/beats";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
+import { useLikesStore } from "@/store/likesStore";
 import { BeatCard } from "@/components/shared/BeatCard";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +27,7 @@ const BeatDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
-  const [isLiked, setIsLiked] = useState(false);
+  const { toggleLike, isLiked } = useLikesStore();
 
   const beat = allBeats.find((b) => b.id === id);
 
@@ -70,10 +71,10 @@ const BeatDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Back Button */}
-      <div className="border-b border-border px-3 sm:px-4 py-3 sm:py-4 md:px-8">
+      <div className="relative z-10 border-b border-border px-3 sm:px-4 py-3 sm:py-4 md:px-8">
         <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground transition-colors hover:text-foreground"
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Discover
@@ -196,13 +197,13 @@ const BeatDetail = () => {
               </button>
 
               <button
-                onClick={() => setIsLiked(!isLiked)}
+                onClick={() => toggleLike(beat)}
                 className={cn(
                   "flex h-12 w-12 items-center justify-center rounded-full border border-border transition-all",
-                  isLiked ? "bg-red-500 text-white" : "bg-secondary text-muted-foreground hover:text-red-500"
+                  isLiked(beat.id) ? "bg-red-500 text-white" : "bg-secondary text-muted-foreground hover:text-red-500"
                 )}
               >
-                <Heart className={cn("h-5 w-5", isLiked && "fill-current")} />
+                <Heart className={cn("h-5 w-5", isLiked(beat.id) && "fill-current")} />
               </button>
 
               <button className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground">

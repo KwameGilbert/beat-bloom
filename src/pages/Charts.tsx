@@ -12,37 +12,34 @@ import {
 import { featuredBeats, trendingBeats, type Beat } from "@/data/beats";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
+import { useLikesStore } from "@/store/likesStore";
 import { cn } from "@/lib/utils";
 
-// Combine all beats and add mock plays data
+// Combine all beats
 const allBeats = [...featuredBeats, ...trendingBeats];
-
-// Generate mock plays for each beat (for demo purposes)
-const generatePlays = () => Math.floor(Math.random() * 500 + 50);
 
 type ChartTab = "top50" | "trending" | "hot";
 
 const Charts = () => {
   const [activeTab, setActiveTab] = useState<ChartTab>("top50");
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
-  const { addToCart, isInCart } = useCartStore();
+  const { addToCart, removeFromCart, isInCart } = useCartStore();
+  const { toggleLike, isLiked } = useLikesStore();
 
-  // Sort beats differently based on tab (simulated)
+  // Sort beats based on active tab using data from beats file
   const chartBeats = useMemo(() => {
-    const beatsWithPlays = allBeats.map((beat, index) => ({
-      ...beat,
-      plays: generatePlays() * (allBeats.length - index), // Higher plays for earlier beats
-    }));
-
     switch (activeTab) {
       case "top50":
-        return beatsWithPlays.sort((a, b) => b.plays - a.plays);
+        // Sort by plays (highest first)
+        return [...allBeats].sort((a, b) => b.plays - a.plays);
       case "trending":
-        return [...beatsWithPlays].sort((a, b) => b.price - a.price);
+        // Sort by price (premium first) - simulates trending as "premium picks"
+        return [...allBeats].sort((a, b) => b.price - a.price);
       case "hot":
-        return [...beatsWithPlays].reverse();
+        // Sort by BPM (faster beats = "hotter") 
+        return [...allBeats].sort((a, b) => b.bpm - a.bpm);
       default:
-        return beatsWithPlays;
+        return allBeats;
     }
   }, [activeTab]);
 
@@ -59,15 +56,20 @@ const Charts = () => {
     }
   };
 
-  const handleAddToCart = (beat: Beat, e: React.MouseEvent) => {
+  const handleCartToggle = (beat: Beat, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isInCart(beat.id)) {
+    if (isInCart(beat.id)) {
+      removeFromCart(beat.id);
+    } else {
       addToCart(beat);
     }
   };
 
   const formatPlays = (plays: number) => {
+    if (plays >= 1000000) {
+      return `${(plays / 1000000).toFixed(1)}M`;
+    }
     if (plays >= 1000) {
       return `${Math.floor(plays / 1000)}K`;
     }
@@ -214,112 +216,120 @@ const Charts = () => {
         </div>
 
         {/* Remaining Beats Table */}
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          {/* Table Header */}
-          <div className="hidden sm:grid grid-cols-12 gap-4 border-b border-border px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            <div className="col-span-1">#</div>
-            <div className="col-span-5">Beat</div>
-            <div className="col-span-2 text-center">Plays</div>
-            <div className="col-span-2 text-center">Price</div>
-            <div className="col-span-2"></div>
-          </div>
+        {remainingBeats.length > 0 && (
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
+            {/* Table Header */}
+            <div className="hidden sm:grid grid-cols-12 gap-4 border-b border-border px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <div className="col-span-1">#</div>
+              <div className="col-span-5">Beat</div>
+              <div className="col-span-2 text-center">Plays</div>
+              <div className="col-span-2 text-center">Price</div>
+              <div className="col-span-2"></div>
+            </div>
 
-          {/* Table Body */}
-          <div className="divide-y divide-border">
-            {remainingBeats.map((beat, index) => {
-              const rank = index + 4;
-              const isCurrentBeat = currentBeat?.id === beat.id;
-              const isPlayingCurrent = isCurrentBeat && isPlaying;
-              const isLoadingCurrent = isCurrentBeat && isLoading;
-              const inCart = isInCart(beat.id);
+            {/* Table Body */}
+            <div className="divide-y divide-border">
+              {remainingBeats.map((beat, index) => {
+                const rank = index + 4;
+                const isCurrentBeat = currentBeat?.id === beat.id;
+                const isPlayingCurrent = isCurrentBeat && isPlaying;
+                const isLoadingCurrent = isCurrentBeat && isLoading;
+                const inCart = isInCart(beat.id);
 
-              return (
-                <Link
-                  key={beat.id}
-                  to={`/beat/${beat.id}`}
-                  className="group grid grid-cols-12 items-center gap-2 sm:gap-4 px-4 py-3 transition-colors hover:bg-secondary/50"
-                >
-                  {/* Rank */}
-                  <div className="col-span-1 text-sm font-bold text-orange-500">
-                    {rank}
-                  </div>
+                return (
+                  <Link
+                    key={beat.id}
+                    to={`/beat/${beat.id}`}
+                    className="group grid grid-cols-12 items-center gap-2 sm:gap-4 px-4 py-3 transition-colors hover:bg-secondary/50"
+                  >
+                    {/* Rank */}
+                    <div className="col-span-1 text-sm font-bold text-orange-500">
+                      {rank}
+                    </div>
 
-                  {/* Beat Info */}
-                  <div className="col-span-7 sm:col-span-5 flex items-center gap-3 min-w-0">
-                    <div
-                      className="relative h-12 w-12 shrink-0 overflow-hidden rounded bg-secondary cursor-pointer"
-                      onClick={(e) => handlePlayClick(beat, e)}
-                    >
-                      <img
-                        src={beat.cover}
-                        alt={beat.title}
-                        className="h-full w-full object-cover"
-                      />
+                    {/* Beat Info */}
+                    <div className="col-span-7 sm:col-span-5 flex items-center gap-3 min-w-0">
                       <div
-                        className={cn(
-                          "absolute inset-0 flex items-center justify-center bg-black/50 transition-opacity",
-                          isPlayingCurrent || isLoadingCurrent
-                            ? "opacity-100"
-                            : "opacity-0 group-hover:opacity-100"
-                        )}
+                        className="relative h-12 w-12 shrink-0 overflow-hidden rounded bg-secondary cursor-pointer"
+                        onClick={(e) => handlePlayClick(beat, e)}
                       >
-                        {isLoadingCurrent ? (
-                          <Loader2 className="h-5 w-5 animate-spin text-white" />
-                        ) : isPlayingCurrent ? (
-                          <Pause className="h-5 w-5 fill-current text-white" />
-                        ) : (
-                          <Play className="ml-0.5 h-5 w-5 fill-current text-white" />
-                        )}
+                        <img
+                          src={beat.cover}
+                          alt={beat.title}
+                          className="h-full w-full object-cover"
+                        />
+                        <div
+                          className={cn(
+                            "absolute inset-0 flex items-center justify-center bg-black/50 transition-opacity",
+                            isPlayingCurrent || isLoadingCurrent
+                              ? "opacity-100"
+                              : "opacity-0 group-hover:opacity-100"
+                          )}
+                        >
+                          {isLoadingCurrent ? (
+                            <Loader2 className="h-5 w-5 animate-spin text-white" />
+                          ) : isPlayingCurrent ? (
+                            <Pause className="h-5 w-5 fill-current text-white" />
+                          ) : (
+                            <Play className="ml-0.5 h-5 w-5 fill-current text-white" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-bold text-foreground group-hover:text-orange-500">
+                          {beat.title}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {beat.producer}
+                        </p>
                       </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-bold text-foreground group-hover:text-orange-500">
-                        {beat.title}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {beat.producer}
-                      </p>
+
+                    {/* Plays - Hidden on mobile */}
+                    <div className="hidden sm:block col-span-2 text-center text-sm text-muted-foreground">
+                      {formatPlays(beat.plays)}
                     </div>
-                  </div>
 
-                  {/* Plays - Hidden on mobile */}
-                  <div className="hidden sm:block col-span-2 text-center text-sm text-muted-foreground">
-                    {formatPlays(beat.plays)}
-                  </div>
+                    {/* Price */}
+                    <div className="col-span-2 text-center text-sm font-bold text-foreground">
+                      ${beat.price.toFixed(2)}
+                    </div>
 
-                  {/* Price */}
-                  <div className="col-span-2 text-center text-sm font-bold text-foreground">
-                    ${beat.price.toFixed(2)}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="col-span-2 flex items-center justify-end gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      className="hidden sm:flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-red-500"
-                    >
-                      <Heart className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={(e) => handleAddToCart(beat, e)}
-                      className={cn(
-                        "rounded-md px-3 py-1.5 text-xs font-bold transition-colors",
-                        inCart
-                          ? "bg-green-600 text-white"
-                          : "bg-orange-500 text-white hover:bg-orange-600"
-                      )}
-                    >
-                      {inCart ? "Added" : "Buy"}
-                    </button>
-                  </div>
-                </Link>
-              );
-            })}
+                    {/* Actions */}
+                    <div className="col-span-2 flex items-center justify-end gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleLike(beat);
+                        }}
+                        className={cn(
+                          "hidden sm:flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                          isLiked(beat.id)
+                            ? "text-red-500"
+                            : "text-muted-foreground hover:text-red-500"
+                        )}
+                      >
+                        <Heart className={cn("h-4 w-4", isLiked(beat.id) && "fill-current")} />
+                      </button>
+                      <button
+                        onClick={(e) => handleCartToggle(beat, e)}
+                        className={cn(
+                          "rounded-md px-3 py-1.5 text-xs font-bold transition-colors",
+                          inCart
+                            ? "bg-green-600 text-white hover:bg-red-500"
+                            : "bg-orange-500 text-white hover:bg-orange-600"
+                        )}
+                      >
+                        {inCart ? "Added" : "Buy"}
+                      </button>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
