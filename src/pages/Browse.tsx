@@ -1,9 +1,9 @@
 import { useSearchParams } from "react-router-dom";
 import { useState, useMemo } from "react";
-import { Filter, X } from "lucide-react";
+import { Filter, X, Music, User, DollarSign } from "lucide-react";
 import { featuredBeats, trendingBeats } from "@/data/beats";
 import { BeatCard } from "@/components/shared/BeatCard";
-import { GenreFilter } from "@/components/shared/GenreFilter";
+import { BeatFilter, type PriceRange } from "@/components/shared/GenreFilter";
 import { cn } from "@/lib/utils";
 
 const allBeats = [...featuredBeats, ...trendingBeats];
@@ -11,9 +11,11 @@ const allBeats = [...featuredBeats, ...trendingBeats];
 const Browse = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedPriceRange, setSelectedPriceRange] = useState<PriceRange | null>(null);
   
-  // Get genre from URL
+  // Get filters from URL
   const selectedGenre = searchParams.get("genre");
+  const selectedProducer = searchParams.get("producer");
   
   // Get unique tags from all beats
   const allTags = useMemo(() => {
@@ -24,17 +26,32 @@ const Browse = () => {
     return Array.from(tags).sort();
   }, []);
 
+  // Get unique producers from all beats
+  const allProducers = useMemo(() => {
+    const producers = new Set<string>();
+    allBeats.forEach(beat => producers.add(beat.producer));
+    return Array.from(producers).sort();
+  }, []);
+
   // Calculate tag counts
   const tagCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     allTags.forEach(tag => {
       counts[tag] = allBeats.filter(b => b.tags.includes(tag)).length;
     });
-    
     return counts;
   }, [allTags]);
 
-  // Filter beats based on genre
+  // Calculate producer counts
+  const producerCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    allProducers.forEach(producer => {
+      counts[producer] = allBeats.filter(b => b.producer === producer).length;
+    });
+    return counts;
+  }, [allProducers]);
+
+  // Filter beats based on all filters
   const filteredBeats = useMemo(() => {
     let beats = allBeats;
     
@@ -43,27 +60,70 @@ const Browse = () => {
         beat.tags.some(tag => tag.toLowerCase() === selectedGenre.toLowerCase())
       );
     }
+
+    if (selectedProducer) {
+      beats = beats.filter(beat => beat.producer === selectedProducer);
+    }
+
+    if (selectedPriceRange) {
+      beats = beats.filter(beat => 
+        beat.price >= selectedPriceRange.min && beat.price <= selectedPriceRange.max
+      );
+    }
     
     return beats;
-  }, [selectedGenre]);
+  }, [selectedGenre, selectedProducer, selectedPriceRange]);
 
   const handleGenreSelect = (genre: string | null) => {
+    const params = new URLSearchParams(searchParams);
     if (genre) {
-      setSearchParams({ genre });
+      params.set("genre", genre);
     } else {
-      setSearchParams({});
+      params.delete("genre");
     }
+    setSearchParams(params);
+  };
+
+  const handleProducerSelect = (producer: string | null) => {
+    const params = new URLSearchParams(searchParams);
+    if (producer) {
+      params.set("producer", producer);
+    } else {
+      params.delete("producer");
+    }
+    setSearchParams(params);
+  };
+
+  const handlePriceRangeSelect = (range: PriceRange | null) => {
+    setSelectedPriceRange(range);
+  };
+
+  const clearAllFilters = () => {
+    setSearchParams({});
+    setSelectedPriceRange(null);
+  };
+
+  // Count active filters
+  const activeFiltersCount = [selectedGenre, selectedProducer, selectedPriceRange].filter(Boolean).length;
+
+  // Get display text for active filters
+  const getFilterLabel = () => {
+    const labels = [];
+    if (selectedGenre) labels.push(selectedGenre);
+    if (selectedProducer) labels.push(selectedProducer);
+    if (selectedPriceRange) labels.push(selectedPriceRange.label);
+    return labels.length > 0 ? labels.join(", ") : "Filters";
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-4 pb-32">
       {/* Header */}
       <div className="border-b border-border px-4 py-6 md:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl md:text-4xl">
-                {selectedGenre ? `${selectedGenre} Beats` : "Browse All Beats"}
+                {activeFiltersCount > 0 ? "Filtered Beats" : "Browse All Beats"}
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 {filteredBeats.length} {filteredBeats.length === 1 ? "beat" : "beats"} found
@@ -75,13 +135,13 @@ const Browse = () => {
               onClick={() => setIsFilterOpen(true)}
               className={cn(
                 "flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors lg:hidden",
-                selectedGenre 
+                activeFiltersCount > 0
                   ? "border-orange-500 bg-orange-500/20 text-orange-500" 
                   : "border-border bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
               )}
             >
               <Filter className="h-4 w-4" />
-              {selectedGenre || "Filter"}
+              {activeFiltersCount > 0 ? `${activeFiltersCount} Active` : "Filters"}
             </button>
           </div>
         </div>
@@ -91,72 +151,192 @@ const Browse = () => {
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-8">
         <div className="flex gap-8">
           {/* Desktop Sidebar */}
-          <aside className="hidden w-56 shrink-0 lg:block">
-            <div className="sticky top-20 rounded-xl border border-border bg-card p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 text-sm font-bold text-foreground">
-                  <Filter className="h-4 w-4" />
-                  Filter by Genre
-                </h2>
-                {selectedGenre && (
-                  <button 
-                    onClick={() => handleGenreSelect(null)}
-                    className="text-xs text-orange-500 hover:underline"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-              
-              <div className="flex flex-col gap-1">
-                {/* All Genres */}
-                <button
-                  onClick={() => handleGenreSelect(null)}
-                  className={cn(
-                    "rounded-lg px-3 py-2 text-left text-sm transition-colors",
-                    !selectedGenre 
-                      ? "bg-orange-500 text-white" 
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+          <aside className="hidden w-60 shrink-0 lg:block">
+            <div className="sticky top-20 space-y-4">
+              {/* Genre Filter */}
+              <div className="rounded-xl border border-border bg-card p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="flex items-center gap-2 text-sm font-bold text-foreground">
+                    <Music className="h-4 w-4 text-orange-500" />
+                    Genre
+                  </h2>
+                  {selectedGenre && (
+                    <button 
+                      onClick={() => handleGenreSelect(null)}
+                      className="text-xs text-orange-500 hover:underline"
+                    >
+                      Clear
+                    </button>
                   )}
-                >
-                  All Genres
-                  <span className="ml-2 text-xs opacity-60">({allBeats.length})</span>
-                </button>
-                
-                {allTags.map((tag) => (
+                </div>
+                <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
                   <button
-                    key={tag}
-                    onClick={() => handleGenreSelect(tag)}
+                    onClick={() => handleGenreSelect(null)}
                     className={cn(
                       "rounded-lg px-3 py-2 text-left text-sm transition-colors",
-                      selectedGenre === tag 
+                      !selectedGenre 
                         ? "bg-orange-500 text-white" 
                         : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                     )}
                   >
-                    {tag}
-                    <span className="ml-2 text-xs opacity-60">({tagCounts[tag]})</span>
+                    All
                   </button>
-                ))}
+                  {allTags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => handleGenreSelect(tag)}
+                      className={cn(
+                        "rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                        selectedGenre === tag 
+                          ? "bg-orange-500 text-white" 
+                          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      )}
+                    >
+                      {tag}
+                      <span className="ml-2 text-xs opacity-60">({tagCounts[tag]})</span>
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {/* Producer Filter */}
+              <div className="rounded-xl border border-border bg-card p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="flex items-center gap-2 text-sm font-bold text-foreground">
+                    <User className="h-4 w-4 text-orange-500" />
+                    Producer
+                  </h2>
+                  {selectedProducer && (
+                    <button 
+                      onClick={() => handleProducerSelect(null)}
+                      className="text-xs text-orange-500 hover:underline"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
+                  <button
+                    onClick={() => handleProducerSelect(null)}
+                    className={cn(
+                      "rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                      !selectedProducer 
+                        ? "bg-orange-500 text-white" 
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    All
+                  </button>
+                  {allProducers.map((producer) => (
+                    <button
+                      key={producer}
+                      onClick={() => handleProducerSelect(producer)}
+                      className={cn(
+                        "rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                        selectedProducer === producer 
+                          ? "bg-orange-500 text-white" 
+                          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      )}
+                    >
+                      {producer}
+                      <span className="ml-2 text-xs opacity-60">({producerCounts[producer]})</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Price Filter */}
+              <div className="rounded-xl border border-border bg-card p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="flex items-center gap-2 text-sm font-bold text-foreground">
+                    <DollarSign className="h-4 w-4 text-orange-500" />
+                    Price
+                  </h2>
+                  {selectedPriceRange && (
+                    <button 
+                      onClick={() => handlePriceRangeSelect(null)}
+                      className="text-xs text-orange-500 hover:underline"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={() => handlePriceRangeSelect(null)}
+                    className={cn(
+                      "rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                      !selectedPriceRange 
+                        ? "bg-orange-500 text-white" 
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    Any Price
+                  </button>
+                  {[
+                    { label: "Under $30", min: 0, max: 29.99 },
+                    { label: "$30 - $40", min: 30, max: 40 },
+                    { label: "$40 - $50", min: 40, max: 50 },
+                    { label: "Over $50", min: 50, max: 1000 },
+                  ].map((range) => (
+                    <button
+                      key={range.label}
+                      onClick={() => handlePriceRangeSelect(range)}
+                      className={cn(
+                        "rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                        selectedPriceRange?.label === range.label 
+                          ? "bg-orange-500 text-white" 
+                          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      )}
+                    >
+                      {range.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Clear All */}
+              {activeFiltersCount > 0 && (
+                <button
+                  onClick={clearAllFilters}
+                  className="w-full rounded-lg border border-border bg-secondary py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary/80 hover:text-foreground"
+                >
+                  Clear All Filters
+                </button>
+              )}
             </div>
           </aside>
 
           {/* Beat Grid */}
           <main className="flex-1 min-w-0">
-            {/* Active Filter Badge - Mobile only */}
-            {selectedGenre && (
-              <div className="mb-4 flex items-center gap-2 lg:hidden">
-                <span className="text-sm text-muted-foreground">Filtering by:</span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/20 px-3 py-1 text-sm font-medium text-orange-500">
-                  {selectedGenre}
-                  <button 
-                    onClick={() => handleGenreSelect(null)}
-                    className="ml-1 hover:text-orange-300"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
+            {/* Active Filter Badges - Mobile only */}
+            {activeFiltersCount > 0 && (
+              <div className="mb-4 flex flex-wrap items-center gap-2 lg:hidden">
+                <span className="text-sm text-muted-foreground">Active:</span>
+                {selectedGenre && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/20 px-3 py-1 text-sm font-medium text-orange-500">
+                    {selectedGenre}
+                    <button onClick={() => handleGenreSelect(null)}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                {selectedProducer && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/20 px-3 py-1 text-sm font-medium text-orange-500">
+                    {selectedProducer}
+                    <button onClick={() => handleProducerSelect(null)}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                {selectedPriceRange && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/20 px-3 py-1 text-sm font-medium text-orange-500">
+                    {selectedPriceRange.label}
+                    <button onClick={() => handlePriceRangeSelect(null)}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
               </div>
             )}
 
@@ -170,13 +350,13 @@ const Browse = () => {
               <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-16">
                 <p className="mb-2 text-lg font-bold text-foreground">No beats found</p>
                 <p className="mb-4 text-sm text-muted-foreground">
-                  No beats match the "{selectedGenre}" genre.
+                  No beats match your current filters.
                 </p>
                 <button
-                  onClick={() => handleGenreSelect(null)}
+                  onClick={clearAllFilters}
                   className="rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600"
                 >
-                  Clear Filter
+                  Clear Filters
                 </button>
               </div>
             )}
@@ -184,14 +364,20 @@ const Browse = () => {
         </div>
       </div>
 
-      {/* Mobile Genre Filter Component */}
-      <GenreFilter
+      {/* Mobile Filter Component */}
+      <BeatFilter
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
         selectedGenre={selectedGenre}
         onGenreSelect={handleGenreSelect}
         allTags={allTags}
         tagCounts={tagCounts}
+        selectedProducer={selectedProducer}
+        onProducerSelect={handleProducerSelect}
+        allProducers={allProducers}
+        producerCounts={producerCounts}
+        selectedPriceRange={selectedPriceRange}
+        onPriceRangeSelect={handlePriceRangeSelect}
         totalBeats={allBeats.length}
       />
     </div>

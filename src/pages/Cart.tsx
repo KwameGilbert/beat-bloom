@@ -14,15 +14,16 @@ import {
 import { useCartStore } from "@/store/cartStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { cn } from "@/lib/utils";
+import type { Beat } from "@/data/beats";
 
 const Cart = () => {
   const navigate = useNavigate();
-  const { items, removeFromCart, clearCart, getTotal } = useCartStore();
+  const { items, removeFromCart, clearCart } = useCartStore();
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
 
-  const total = getTotal();
+  const total = items.reduce((sum, item) => sum + item.price, 0);
 
-  const handlePlayClick = (beat: typeof items[0]["beat"]) => {
+  const handlePlayClick = (beat: Beat) => {
     if (currentBeat?.id === beat.id) {
       togglePlay();
     } else {
@@ -30,11 +31,11 @@ const Cart = () => {
     }
   };
 
+  // Empty cart state
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
-        {/* Header */}
-        <div className="border-b border-border px-4 py-4 md:px-8">
+      <div className="min-h-screen bg-background pt-4 pb-32">
+        <div className="mx-auto max-w-6xl px-4 py-4 md:px-8">
           <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -65,7 +66,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-4 pb-32">
       {/* Header */}
       <div className="border-b border-border px-4 py-4 md:px-8">
         <div className="mx-auto max-w-6xl">
@@ -102,25 +103,25 @@ const Cart = () => {
           {/* Cart Items */}
           <div className="lg:col-span-2">
             <div className="space-y-4">
-              {items.map((item) => {
-                const isCurrentBeat = currentBeat?.id === item.beat.id;
+              {items.map((beat) => {
+                const isCurrentBeat = currentBeat?.id === beat.id;
                 const isPlayingCurrent = isCurrentBeat && isPlaying;
                 const isLoadingCurrent = isCurrentBeat && isLoading;
 
                 return (
                   <div
-                    key={item.beat.id}
+                    key={beat.id}
                     className="group rounded-xl border border-border bg-card p-4 transition-colors hover:bg-secondary/50"
                   >
                     <div className="flex gap-4">
                       {/* Cover Image with Play Button */}
                       <div 
                         className="relative h-24 w-24 shrink-0 cursor-pointer overflow-hidden rounded-lg bg-secondary"
-                        onClick={() => handlePlayClick(item.beat)}
+                        onClick={() => handlePlayClick(beat)}
                       >
                         <img
-                          src={item.beat.cover}
-                          alt={item.beat.title}
+                          src={beat.cover}
+                          alt={beat.title}
                           className="h-full w-full object-cover"
                         />
                         <div className={cn(
@@ -143,42 +144,42 @@ const Cart = () => {
                       <div className="flex flex-1 flex-col justify-between min-w-0">
                         <div>
                           <Link 
-                            to={`/beat/${item.beat.id}`}
+                            to={`/beat/${beat.id}`}
                             className="block truncate font-bold text-foreground hover:text-orange-500"
                           >
-                            {item.beat.title}
+                            {beat.title}
                           </Link>
-                          <p className="text-sm text-muted-foreground">by {item.beat.producer}</p>
+                          <p className="text-sm text-muted-foreground">by {beat.producer}</p>
                           
                           {/* Tags & Specs */}
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             <span className="inline-block rounded bg-orange-500/20 px-2 py-0.5 text-xs font-medium text-orange-500">
-                              {item.beat.tags[0]}
+                              {beat.tags[0]}
                             </span>
                             <span className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Music2 className="h-3 w-3" />
-                              {item.beat.bpm} BPM
+                              {beat.bpm} BPM
                             </span>
                             <span className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Clock className="h-3 w-3" />
-                              {item.beat.duration}
+                              {beat.duration}
                             </span>
                           </div>
                         </div>
 
                         {/* Included Files */}
                         <div className="mt-2 text-xs text-muted-foreground">
-                          Includes: {item.beat.includedFiles.join(", ")}
+                          Includes: {beat.includedFiles.join(", ")}
                         </div>
                       </div>
 
                       {/* Price & Remove */}
                       <div className="flex flex-col items-end justify-between">
                         <p className="text-xl font-bold text-orange-500">
-                          ${item.beat.price.toFixed(2)}
+                          ${beat.price.toFixed(2)}
                         </p>
                         <button
-                          onClick={() => removeFromCart(item.beat.id)}
+                          onClick={() => removeFromCart(beat.id)}
                           className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-red-500"
                         >
                           <Trash2 className="h-3 w-3" />
@@ -199,23 +200,14 @@ const Cart = () => {
                 Order Summary
               </h2>
 
-              <div className="space-y-3 border-b border-border pb-4">
-                {items.map((item) => (
-                  <div key={item.beat.id} className="flex justify-between text-sm">
-                    <span className="truncate text-muted-foreground pr-2">{item.beat.title}</span>
-                    <span className="text-foreground">${item.beat.price.toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
                   <span className="text-foreground">${total.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Processing Fee</span>
-                  <span className="text-muted-foreground">$0.00</span>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Sales Tax</span>
+                  <span className="text-foreground">$0.00</span>
                 </div>
               </div>
 
@@ -226,10 +218,13 @@ const Cart = () => {
                 </div>
               </div>
 
-              <button className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-orange-500 py-4 font-bold text-white transition-all hover:bg-orange-600 active:scale-95">
+              <Link 
+                to="/checkout"
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-orange-500 py-4 font-bold text-white transition-all hover:bg-orange-600 active:scale-95"
+              >
                 <CreditCard className="h-5 w-5" />
                 Proceed to Checkout
-              </button>
+              </Link>
 
               <p className="mt-4 text-center text-xs text-muted-foreground">
                 By completing your purchase you agree to our Terms of Service

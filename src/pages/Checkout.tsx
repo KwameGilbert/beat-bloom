@@ -14,7 +14,8 @@ import { cn } from "@/lib/utils";
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, removeFromCart, clearCart, total } = useCartStore();
+  const { items, removeFromCart, clearCart } = useCartStore();
+  const total = items.reduce((sum, item) => sum + item.price, 0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [formData, setFormData] = useState({

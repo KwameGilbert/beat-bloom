@@ -8,7 +8,7 @@ interface HeaderProps {
 }
 
 export const Header = ({ onMenuClick }: HeaderProps) => {
-  const itemCount = useCartStore((state) => state.getItemCount());
+  const itemCount = useCartStore((state) => state.items.length);
   const { theme, toggleTheme } = useThemeStore();
 
   return (

@@ -242,7 +242,16 @@ const BeatDetail = () => {
               {/* Action Buttons */}
               <div className="flex flex-col gap-2 sm:flex-row">
                 <AddToCartButton beat={beat} />
-                <button className="flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-full border border-border bg-secondary px-4 py-3 text-sm font-bold text-foreground transition-all hover:bg-secondary/80">
+                <button 
+                  onClick={() => {
+                    const { addToCart, isInCart } = useCartStore.getState();
+                    if (!isInCart(beat.id)) {
+                      addToCart(beat);
+                    }
+                    navigate("/checkout");
+                  }}
+                  className="flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-full border border-border bg-secondary px-4 py-3 text-sm font-bold text-foreground transition-all hover:bg-secondary/80"
+                >
                   <Download className="h-4 w-4" />
                   Buy Now
                 </button>
