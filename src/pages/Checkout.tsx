@@ -10,6 +10,7 @@ import {
   CreditCard
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
+import { usePurchasesStore } from "@/store/purchasesStore";
 import { cn } from "@/lib/utils";
 
 // Paystack public key - Replace with your actual key
@@ -98,6 +99,10 @@ const Checkout = () => {
       callback: (response) => {
         // Payment successful
         console.log("Payment successful!", response.reference);
+        
+        // Add items to purchases
+        usePurchasesStore.getState().addPurchases(items, response.reference, total);
+        
         setIsProcessing(false);
         setIsComplete(true);
         clearCart();
@@ -164,10 +169,10 @@ const Checkout = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
-                to="/profile"
+                to="/purchases"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-6 py-3 font-bold text-white transition-colors hover:bg-orange-600"
               >
-                View My Library
+                View My Purchases
               </Link>
               <Link
                 to="/browse"

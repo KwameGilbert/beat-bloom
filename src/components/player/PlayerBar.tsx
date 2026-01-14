@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
+import { useLikesStore } from "@/store/likesStore";
 import { 
   Play, 
   Pause, 
@@ -23,6 +24,7 @@ import {
   Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getProducerById } from "@/data/beats";
 
 const formatTime = (time: number) => {
   if (isNaN(time)) return "0:00";
@@ -58,6 +60,13 @@ export const PlayerBar = () => {
   
   const navigate = useNavigate();
   const { addToCart, isInCart } = useCartStore();
+  const { toggleLike, isLiked } = useLikesStore();
+
+  // Get producer info from current beat
+  const producer = useMemo(() => {
+    if (!currentBeat?.producerId) return null;
+    return getProducerById(currentBeat.producerId);
+  }, [currentBeat?.producerId]);
 
   useEffect(() => {
     if (!audioRef.current) {
@@ -109,6 +118,7 @@ export const PlayerBar = () => {
   useEffect(() => {
     if (audioRef.current && currentBeat) {
       setIsLoading(true);
+      setIsMobileOpen(false); // Close full-screen player when new track starts
       audioRef.current.src = currentBeat.audio;
       audioRef.current.load();
       if (isPlaying) {
@@ -306,8 +316,14 @@ export const PlayerBar = () => {
                        </span>
                     </div>
                   </div>
-                  <button className="text-orange-500 shrink-0">
-                    <Heart className="h-8 w-8" />
+                  <button 
+                    onClick={() => currentBeat && toggleLike(currentBeat)}
+                    className={cn(
+                      "shrink-0 transition-colors",
+                      currentBeat && isLiked(currentBeat.id) ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+                    )}
+                  >
+                    <Heart className={cn("h-8 w-8", currentBeat && isLiked(currentBeat.id) && "fill-current")} />
                   </button>
                </div>
 
@@ -390,6 +406,9 @@ export const PlayerBar = () => {
                      value={volume}
                      onChange={handleVolumeChange}
                      className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-800 accent-white hover:accent-orange-500"
+                     style={{
+                       background: `linear-gradient(to right, white ${volume * 100}%, #27272a ${volume * 100}%)`
+                     }}
                   />
                </div>
 
@@ -420,6 +439,36 @@ export const PlayerBar = () => {
                      <ListMusic className="h-5 w-5" />
                   </button>
                </div>
+
+               {/* Producer Info Section */}
+               {producer && (
+                 <div className="mt-8 pt-6 border-t border-border">
+                   <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase mb-4">Producer</p>
+                   <div className="flex items-start gap-4">
+                     <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-border">
+                       <img 
+                         src={producer.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"} 
+                         alt={producer.name}
+                         className="h-full w-full object-cover"
+                       />
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <div className="flex items-center gap-2 mb-1">
+                         <h4 className="font-bold text-foreground">{producer.name}</h4>
+                         {producer.verified && (
+                           <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-orange-500 text-white">
+                             <Check className="h-3 w-3" />
+                           </span>
+                         )}
+                       </div>
+                       {producer.location && (
+                         <p className="text-xs text-muted-foreground mb-2">{producer.location}</p>
+                       )}
+                       <p className="text-sm text-muted-foreground line-clamp-2">{producer.bio}</p>
+                     </div>
+                   </div>
+                 </div>
+               )}
             </div>
          </div>
       </div>
@@ -444,8 +493,14 @@ export const PlayerBar = () => {
             <h4 className="text-sm font-bold text-foreground hover:underline cursor-pointer truncate">{currentBeat.title}</h4>
             <span className="text-xs text-muted-foreground hover:underline cursor-pointer truncate">{currentBeat.producer}</span>
           </div>
-          <button className="ml-2 text-muted-foreground hover:text-red-500 transition-colors shrink-0">
-            <Heart className="h-4 w-4" />
+          <button 
+            onClick={() => currentBeat && toggleLike(currentBeat)}
+            className={cn(
+              "ml-2 transition-colors shrink-0",
+              currentBeat && isLiked(currentBeat.id) ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+            )}
+          >
+            <Heart className={cn("h-4 w-4", currentBeat && isLiked(currentBeat.id) && "fill-current")} />
           </button>
         </div>
 
