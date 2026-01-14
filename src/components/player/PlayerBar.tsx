@@ -13,18 +13,18 @@ import {
   Shuffle, 
   Volume2, 
   Heart,
-  ListMusic,
   Maximize2,
   ChevronDown,
   Loader2,
   Share2,
-  MoreVertical,
   X,
   ShoppingCart,
-  Check
+  Check,
+  ListPlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getProducerById } from "@/data/beats";
+import { AddToPlaylistModal } from "@/components/shared/AddToPlaylistModal";
 
 const formatTime = (time: number) => {
   if (isNaN(time)) return "0:00";
@@ -57,6 +57,7 @@ export const PlayerBar = () => {
   const [duration, setDuration] = useState(0);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   
   const navigate = useNavigate();
   const { addToCart, isInCart } = useCartStore();
@@ -435,8 +436,12 @@ export const PlayerBar = () => {
                     <ShoppingCart className="h-4 w-4" />
                     {isInCart(currentBeat.id) ? "In Cart - Checkout" : `Buy GH₵${currentBeat.price}`}
                   </button>
-                  <button className="flex items-center gap-2 text-muted-foreground text-sm hover:text-foreground">
-                     <ListMusic className="h-5 w-5" />
+                  <button 
+                    onClick={() => setIsPlaylistModalOpen(true)}
+                    className="flex items-center gap-2 text-muted-foreground text-sm hover:text-foreground"
+                    title="Add to Playlist"
+                  >
+                     <ListPlus className="h-5 w-5" />
                   </button>
                </div>
 
@@ -584,8 +589,12 @@ export const PlayerBar = () => {
 
            <div className="mx-2 h-6 w-px bg-border hidden lg:block shrink-0" />
            
-           <button className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
-             <ListMusic className="h-5 w-5" />
+           <button 
+             onClick={() => setIsPlaylistModalOpen(true)}
+             className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+             title="Add to Playlist"
+           >
+             <ListPlus className="h-5 w-5" />
            </button>
 
            <div className="flex items-center gap-2 w-24 lg:w-32 group shrink-0">
@@ -613,6 +622,14 @@ export const PlayerBar = () => {
            </button>
         </div>
       </div>
+
+      {currentBeat && (
+        <AddToPlaylistModal 
+          isOpen={isPlaylistModalOpen}
+          onClose={() => setIsPlaylistModalOpen(false)}
+          beat={currentBeat}
+        />
+      )}
     </>
   );
 };

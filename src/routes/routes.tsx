@@ -10,9 +10,16 @@ import Profile from "../pages/Profile";
 import Liked from "../pages/Liked";
 import Recent from "../pages/Recent";
 import Purchases from "../pages/Purchases";
+import PlaylistDetail from "../pages/PlaylistDetail";
 import Upload from "../pages/Upload";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
+import EditProfile from "../pages/EditProfile";
+import Settings from "../pages/Settings";
+import PasswordSettings from "../pages/PasswordSettings";
+import TwoFactorAuth from "../pages/TwoFactorAuth";
+import PayoutMethods from "../pages/PayoutMethods";
+import BillingHistory from "../pages/BillingHistory";
 
 import { Layout } from "../components/layout/Layout";
 
@@ -30,9 +37,16 @@ export const AppRoutes = () => {
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/edit" element={<EditProfile />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings/password" element={<PasswordSettings />} />
+        <Route path="/settings/2fa" element={<TwoFactorAuth />} />
+        <Route path="/settings/payouts" element={<PayoutMethods />} />
+        <Route path="/settings/billing" element={<BillingHistory />} />
         <Route path="/liked" element={<Liked />} />
         <Route path="/recent" element={<Recent />} />
         <Route path="/purchases" element={<Purchases />} />
+        <Route path="/playlist/:playlistId" element={<PlaylistDetail />} />
         <Route path="/upload" element={<Upload />} />
       </Route>
 

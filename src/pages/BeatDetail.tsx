@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, 
@@ -11,7 +12,8 @@ import {
   Music2,
   Loader2,
   MapPin,
-  CheckCircle
+  CheckCircle,
+  ListPlus
 } from "lucide-react";
 
 import { featuredBeats, trendingBeats, getProducerById, type Beat } from "@/data/beats";
@@ -19,6 +21,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
 import { useLikesStore } from "@/store/likesStore";
 import { BeatCard } from "@/components/shared/BeatCard";
+import { AddToPlaylistModal } from "@/components/shared/AddToPlaylistModal";
 import { cn } from "@/lib/utils";
 
 const allBeats = [...featuredBeats, ...trendingBeats];
@@ -28,6 +31,7 @@ const BeatDetail = () => {
   const navigate = useNavigate();
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
   const { toggleLike, isLiked } = useLikesStore();
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
   const beat = allBeats.find((b) => b.id === id);
 
@@ -209,6 +213,14 @@ const BeatDetail = () => {
               <button className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground">
                 <Share2 className="h-5 w-5" />
               </button>
+
+              <button 
+                onClick={() => setIsPlaylistModalOpen(true)}
+                className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground"
+                title="Add to Playlist"
+              >
+                <ListPlus className="h-5 w-5" />
+              </button>
             </div>
 
             {/* Description */}
@@ -360,6 +372,14 @@ const BeatDetail = () => {
           </div>
         )}
       </div>
+
+      {beat && (
+        <AddToPlaylistModal 
+          isOpen={isPlaylistModalOpen}
+          onClose={() => setIsPlaylistModalOpen(false)}
+          beat={beat}
+        />
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   MapPin, 
   Calendar, 
@@ -18,10 +18,11 @@ import {
   Download,
   TrendingUp
 } from "lucide-react";
-import { featuredBeats, trendingBeats, currentUser, type Beat } from "@/data/beats";
+import { featuredBeats, trendingBeats, type Beat } from "@/data/beats";
 import { useLikesStore } from "@/store/likesStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
+import { useUserStore } from "@/store/userStore";
 import { cn } from "@/lib/utils";
 
 // Combine all beats as user's published beats (mock data)
@@ -31,9 +32,11 @@ type ProfileTab = "beats" | "liked" | "analytics";
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<ProfileTab>("beats");
+  const navigate = useNavigate();
   const { likedBeats, toggleLike, isLiked } = useLikesStore();
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
   const { addToCart, removeFromCart, isInCart } = useCartStore();
+  const { user } = useUserStore();
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) {
@@ -183,7 +186,7 @@ const Profile = () => {
       {/* Cover Image */}
       <div className="relative h-48 sm:h-56 md:h-64">
         <img
-          src={currentUser.cover}
+          src={user.cover}
           alt="Cover"
           className="h-full w-full object-cover"
         />
@@ -197,8 +200,8 @@ const Profile = () => {
           <div className="mb-4">
             <div className="h-24 w-24 sm:h-28 sm:w-28 overflow-hidden rounded-xl border-4 border-background bg-secondary shadow-xl">
               <img
-                src={currentUser.avatar}
-                alt={currentUser.name}
+                src={user.avatar}
+                alt={user.name}
                 className="h-full w-full object-cover"
               />
             </div>
@@ -208,10 +211,10 @@ const Profile = () => {
           <div className="mb-4">
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
-                {currentUser.name}
+                {user.name}
               </h1>
               <span className="rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-white">
-                {currentUser.role}
+                {user.role}
               </span>
             </div>
 
@@ -219,30 +222,36 @@ const Profile = () => {
             <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
                 <MapPin className="h-4 w-4" />
-                {currentUser.location}
+                {user.location}
               </span>
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                Joined {currentUser.joinedDate}
+                Joined {user.joinedDate}
               </span>
             </div>
 
             {/* Website */}
             <div className="mt-2 flex items-center gap-1 text-sm text-muted-foreground">
               <LinkIcon className="h-4 w-4" />
-              <a href={`https://${currentUser.website}`} className="text-orange-500 hover:underline">
-                {currentUser.website}
+              <a href={`https://${user.website}`} className="text-orange-500 hover:underline">
+                {user.website}
               </a>
             </div>
           </div>
 
           {/* Action Buttons */}
           <div className="mb-6 flex items-center gap-2">
-            <button className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
+            <button 
+              onClick={() => navigate("/profile/edit")}
+              className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+            >
               <Edit className="h-4 w-4" />
               Edit Profile
             </button>
-            <button className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+            <button 
+              onClick={() => navigate("/settings")}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
               <Settings className="h-4 w-4" />
             </button>
           </div>
@@ -254,28 +263,28 @@ const Profile = () => {
                 <Music className="h-4 w-4" />
                 Beats
               </div>
-              <p className="text-2xl font-bold text-foreground">{currentUser.stats.beats}</p>
+              <p className="text-2xl font-bold text-foreground">{user.stats.beats}</p>
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
                 <TrendingUp className="h-4 w-4" />
                 Total Plays
               </div>
-              <p className="text-2xl font-bold text-foreground">{formatNumber(currentUser.stats.totalPlays)}</p>
+              <p className="text-2xl font-bold text-foreground">{formatNumber(user.stats.totalPlays)}</p>
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
                 <Download className="h-4 w-4" />
                 Sales
               </div>
-              <p className="text-2xl font-bold text-foreground">{currentUser.stats.sales}</p>
+              <p className="text-2xl font-bold text-foreground">{user.stats.sales}</p>
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
                 <DollarSign className="h-4 w-4" />
                 Earnings
               </div>
-              <p className="text-2xl font-bold text-foreground">${currentUser.stats.earnings.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-foreground">${user.stats.earnings.toLocaleString()}</p>
             </div>
           </div>
         </div>

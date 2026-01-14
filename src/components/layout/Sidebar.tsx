@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
   Home, 
@@ -11,6 +12,7 @@ import {
   X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePlaylistsStore, playlistColors } from "@/store/playlistsStore";
 
 const mainNav = [
   { name: "Discover", icon: Home, path: "/" },
@@ -24,12 +26,6 @@ const libraryNav = [
   { name: "Purchases", icon: Library, path: "/purchases" },
 ];
 
-const playlists = [
-  { name: "Workout Beats", color: "bg-purple-500", path: "/playlist/workout" },
-  { name: "Chill Vibes", color: "bg-blue-400", path: "/playlist/chill" },
-  { name: "Studio Session", color: "bg-orange-500", path: "/playlist/studio" },
-];
-
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
@@ -37,6 +33,19 @@ interface SidebarProps {
 
 export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation();
+  const { playlists, createPlaylist } = usePlaylistsStore();
+  const [isCreating, setIsCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newColor, setNewColor] = useState(playlistColors[0].value);
+
+  const handleCreate = () => {
+    if (newName.trim()) {
+      createPlaylist(newName.trim(), newColor);
+      setNewName("");
+      setNewColor(playlistColors[0].value);
+      setIsCreating(false);
+    }
+  };
 
   return (
     <>
@@ -131,23 +140,88 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">
                 Playlists
               </h3>
-              <button className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-secondary/80">
-                <Plus className="h-4 w-4 text-muted-foreground" />
+              <button 
+                onClick={() => setIsCreating(!isCreating)}
+                className={cn(
+                  "flex h-6 w-6 items-center justify-center rounded-full transition-colors",
+                  isCreating 
+                    ? "bg-orange-500 text-white" 
+                    : "bg-secondary hover:bg-secondary/80"
+                )}
+              >
+                <Plus className={cn("h-4 w-4", isCreating && "rotate-45")} />
               </button>
             </div>
+
+            {/* Create New Playlist Inline */}
+            {isCreating && (
+              <div className="mb-4 space-y-3 rounded-lg bg-secondary/50 p-3">
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="Playlist name"
+                  autoFocus
+                  onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none"
+                />
+                <div className="flex flex-wrap gap-1.5">
+                  {playlistColors.map((color) => (
+                    <button
+                      key={color.value}
+                      onClick={() => setNewColor(color.value)}
+                      className={cn(
+                        "h-5 w-5 rounded-full transition-all",
+                        color.value,
+                        newColor === color.value && "ring-2 ring-offset-1 ring-offset-secondary ring-foreground"
+                      )}
+                    />
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsCreating(false)}
+                    className="flex-1 rounded py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCreate}
+                    disabled={!newName.trim()}
+                    className="flex-1 rounded bg-orange-500 py-1.5 text-xs font-bold text-white hover:bg-orange-600 disabled:opacity-50"
+                  >
+                    Create
+                  </button>
+                </div>
+              </div>
+            )}
             
-            <div className="flex flex-col gap-2">
-              {playlists.map((playlist) => (
-                <Link
-                  key={playlist.name}
-                  to={playlist.path}
-                  onClick={onClose}
-                  className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary hover:text-foreground"
-                >
-                  <div className={cn("h-4 w-4 rounded shadow-sm", playlist.color)} />
-                  {playlist.name}
-                </Link>
-              ))}
+            <div className="flex flex-col gap-1">
+              {playlists.map((playlist) => {
+                const isActive = location.pathname === `/playlist/${playlist.id}`;
+                
+                return (
+                  <Link
+                    key={playlist.id}
+                    to={`/playlist/${playlist.id}`}
+                    onClick={onClose}
+                    className={cn(
+                      "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-secondary hover:text-foreground",
+                      isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
+                    )}
+                  >
+                    <div className={cn("h-4 w-4 rounded shadow-sm shrink-0", playlist.color)} />
+                    <span className="truncate">{playlist.name}</span>
+                    <span className="ml-auto text-xs text-muted-foreground/60">{playlist.beats.length}</span>
+                  </Link>
+                );
+              })}
+
+              {playlists.length === 0 && !isCreating && (
+                <p className="px-3 py-4 text-center text-xs text-muted-foreground">
+                  No playlists yet
+                </p>
+              )}
             </div>
           </div>
         </div>
