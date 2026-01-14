@@ -14,7 +14,7 @@ export const BottomNav = () => {
   const location = useLocation();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-border bg-card/95 px-2 backdrop-blur-lg md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-border/50 bg-background/60 px-2 backdrop-blur-xl md:hidden">
       {mobileNavItems.map((item) => {
         const Icon = item.icon;
         const isActive = location.pathname === item.path;
@@ -28,7 +28,7 @@ export const BottomNav = () => {
               isActive ? "text-orange-500" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Icon className={cn("h-5 w-5", isActive && "fill-current")} />
+            <Icon className={cn("h-5 w-5", isActive && "text-orange-500")} />
             <span>{item.name}</span>
           </Link>
         );

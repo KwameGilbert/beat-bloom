@@ -11,10 +11,10 @@ interface PriceRange {
 }
 
 const priceRanges: PriceRange[] = [
-  { label: "Under $30", min: 0, max: 29.99 },
-  { label: "$30 - $40", min: 30, max: 40 },
-  { label: "$40 - $50", min: 40, max: 50 },
-  { label: "Over $50", min: 50, max: 1000 },
+  { label: "Under GH₵30", min: 0, max: 29.99 },
+  { label: "GH₵30 - GH₵40", min: 30, max: 40 },
+  { label: "GH₵40 - GH₵50", min: 40, max: 50 },
+  { label: "Over GH₵50", min: 50, max: 1000 },
 ];
 
 interface BeatFilterProps {
@@ -211,32 +211,74 @@ export const BeatFilter = ({
 
           {/* Price Filter */}
           {activeFilterType === "price" && (
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => handlePriceSelect(null)}
-                className={cn(
-                  "rounded-xl px-4 py-3 text-left text-sm font-medium transition-all",
-                  !selectedPriceRange
-                    ? "bg-orange-500 text-white"
-                    : "border border-border bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
-                )}
-              >
-                Any Price
-              </button>
-              {priceRanges.map((range) => (
+            <div className="space-y-4 pb-16">
+              <div className="grid grid-cols-2 gap-2">
                 <button
-                  key={range.label}
-                  onClick={() => handlePriceSelect(range)}
+                  onClick={() => handlePriceSelect(null)}
                   className={cn(
                     "rounded-xl px-4 py-3 text-left text-sm font-medium transition-all",
-                    selectedPriceRange?.label === range.label
+                    !selectedPriceRange
                       ? "bg-orange-500 text-white"
                       : "border border-border bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
                   )}
                 >
-                  {range.label}
+                  Any Price
                 </button>
-              ))}
+                {priceRanges.map((range) => (
+                  <button
+                    key={range.label}
+                    onClick={() => handlePriceSelect(range)}
+                    className={cn(
+                      "rounded-xl px-4 py-3 text-left text-sm font-medium transition-all",
+                      selectedPriceRange?.label === range.label
+                        ? "bg-orange-500 text-white"
+                        : "border border-border bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                    )}
+                  >
+                    {range.label}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Custom Price Range */}
+              <div className="rounded-xl border border-border bg-secondary/50 p-4">
+                <p className="mb-3 text-sm font-medium text-foreground">Custom Range</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <label className="mb-1 block text-xs text-muted-foreground">Min (GH₵)</label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none"
+                      id="customMinPrice"
+                    />
+                  </div>
+                  <span className="mt-5 text-muted-foreground">–</span>
+                  <div className="flex-1">
+                    <label className="mb-1 block text-xs text-muted-foreground">Max (GH₵)</label>
+                    <input
+                      type="number"
+                      placeholder="100"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none"
+                      id="customMaxPrice"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const minInput = document.getElementById("customMinPrice") as HTMLInputElement;
+                    const maxInput = document.getElementById("customMaxPrice") as HTMLInputElement;
+                    const min = parseFloat(minInput?.value) || 0;
+                    const max = parseFloat(maxInput?.value) || 1000;
+                    if (min >= 0 && max > min) {
+                      handlePriceSelect({ label: `GH₵${min} - GH₵${max}`, min, max });
+                    }
+                  }}
+                  className="mt-3 w-full rounded-lg bg-orange-500 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600"
+                >
+                  Apply Custom Range
+                </button>
+              </div>
             </div>
           )}
         </div>

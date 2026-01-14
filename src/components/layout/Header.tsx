@@ -12,7 +12,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   const { theme, toggleTheme } = useThemeStore();
 
   return (
-    <header className="sticky top-0 z-[60] flex h-16 items-center border-b border-border/50 px-4 backdrop-blur-3xl bg-background/80 md:px-6">
+    <header className="sticky top-0 z-[60] flex h-16 items-center border-b border-border/50 px-4 backdrop-blur-2xl bg-background/80 md:px-6">
 
       {/* Mobile Menu Trigger */}
       <button 

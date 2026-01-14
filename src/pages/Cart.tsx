@@ -176,7 +176,7 @@ const Cart = () => {
                       {/* Price & Remove */}
                       <div className="flex flex-col items-end justify-between">
                         <p className="text-xl font-bold text-orange-500">
-                          ${beat.price.toFixed(2)}
+                          GH₵{beat.price.toFixed(2)}
                         </p>
                         <button
                           onClick={() => removeFromCart(beat.id)}
@@ -203,7 +203,7 @@ const Cart = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
-                  <span className="text-foreground">${total.toFixed(2)}</span>
+                  <span className="text-foreground">GH₵{total.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Sales Tax</span>
@@ -214,7 +214,7 @@ const Cart = () => {
               <div className="mt-4 border-t border-border pt-4">
                 <div className="flex justify-between">
                   <span className="text-lg font-bold text-foreground">Total</span>
-                  <span className="text-2xl font-bold text-orange-500">${total.toFixed(2)}</span>
+                  <span className="text-2xl font-bold text-orange-500">GH₵{total.toFixed(2)}</span>
                 </div>
               </div>
 

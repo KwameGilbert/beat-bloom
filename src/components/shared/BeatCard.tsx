@@ -96,7 +96,7 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
 
       {/* Footer Actions */}
       <div className="mt-1 flex items-center justify-between">
-        <span className="text-sm font-bold text-primary">${beat.price}</span>
+        <span className="text-sm font-bold text-primary">GH₵{beat.price}</span>
         
         <div className="flex items-center gap-2">
           <button 

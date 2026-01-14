@@ -161,7 +161,7 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
               ) : (
                 <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
               )}
-              <span>{isCurrentInCart ? "In Cart" : `$${currentFeaturedBeat.price}`}</span>
+              <span>{isCurrentInCart ? "In Cart" : `GH₵${currentFeaturedBeat.price}`}</span>
             </button>
             <button 
               onClick={handleLikeClick}

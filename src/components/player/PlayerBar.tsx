@@ -269,7 +269,7 @@ export const PlayerBar = () => {
                      <Share2 className="h-5 w-5" />
                   </button>
                   <button className="w-full mx-4 py-3 rounded-full bg-secondary text-foreground font-bold hover:bg-secondary/80 transition-colors">
-                    Buy for ${currentBeat.price}
+                    Buy for GH₵{currentBeat.price}
                   </button>
                   <button className="flex items-center gap-2 text-muted-foreground text-sm">
                      <ListMusic className="h-5 w-5" />

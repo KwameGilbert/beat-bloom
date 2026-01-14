@@ -1,79 +1,117 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { 
   ArrowLeft,
-  CreditCard, 
   Lock, 
   CheckCircle,
   ShoppingBag,
   Trash2,
-  Music
+  Music,
+  CreditCard
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { cn } from "@/lib/utils";
+
+// Paystack public key - Replace with your actual key
+const PAYSTACK_PUBLIC_KEY = "pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+
+// Declare Paystack inline handler type
+declare global {
+  interface Window {
+    PaystackPop: {
+      setup: (options: PaystackOptions) => { openIframe: () => void };
+    };
+  }
+}
+
+interface PaystackOptions {
+  key: string;
+  email: string;
+  amount: number;
+  currency?: string;
+  ref?: string;
+  callback: (response: { reference: string }) => void;
+  onClose: () => void;
+  metadata?: Record<string, unknown>;
+}
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, removeFromCart, clearCart } = useCartStore();
   const total = items.reduce((sum, item) => sum + item.price, 0);
+  
+  const [email, setEmail] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    cardName: "",
-    cardNumber: "",
-    expiry: "",
-    cvv: "",
-  });
+  const [paystackLoaded, setPaystackLoaded] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    
-    // Format card number with spaces
-    if (name === "cardNumber") {
-      const formatted = value.replace(/\s/g, "").replace(/(.{4})/g, "$1 ").trim();
-      setFormData({ ...formData, [name]: formatted.slice(0, 19) });
-      return;
-    }
-    
-    // Format expiry as MM/YY
-    if (name === "expiry") {
-      const cleaned = value.replace(/\D/g, "");
-      if (cleaned.length >= 2) {
-        setFormData({ ...formData, [name]: `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}` });
-      } else {
-        setFormData({ ...formData, [name]: cleaned });
-      }
-      return;
-    }
-    
-    // Limit CVV to 4 digits
-    if (name === "cvv") {
-      setFormData({ ...formData, [name]: value.slice(0, 4) });
-      return;
-    }
-    
-    setFormData({ ...formData, [name]: value });
+  // Load Paystack script
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://js.paystack.co/v1/inline.js";
+    script.async = true;
+    script.onload = () => setPaystackLoaded(true);
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  const generateReference = () => {
+    return `BEATBLOOM_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePaystackPayment = () => {
+    if (!email.includes("@")) {
+      alert("Please enter a valid email address");
+      return;
+    }
+
+    if (!paystackLoaded || !window.PaystackPop) {
+      alert("Payment system is loading, please try again");
+      return;
+    }
+
     setIsProcessing(true);
-    
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    setIsProcessing(false);
-    setIsComplete(true);
-    clearCart();
+
+    const handler = window.PaystackPop.setup({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: email,
+      amount: Math.round(total * 100), // Paystack expects amount in kobo/cents
+      currency: "GHS", // Ghanaian Cedi
+      ref: generateReference(),
+      metadata: {
+        items: items.map(item => ({
+          id: item.id,
+          title: item.title,
+          price: item.price,
+        })),
+        custom_fields: [
+          {
+            display_name: "Cart Items",
+            variable_name: "cart_items",
+            value: items.map(i => i.title).join(", "),
+          },
+        ],
+      },
+      callback: (response) => {
+        // Payment successful
+        console.log("Payment successful!", response.reference);
+        setIsProcessing(false);
+        setIsComplete(true);
+        clearCart();
+      },
+      onClose: () => {
+        setIsProcessing(false);
+        // User closed the popup
+      },
+    });
+
+    handler.openIframe();
   };
 
-  const isFormValid = 
-    formData.email.includes("@") &&
-    formData.cardName.length > 2 &&
-    formData.cardNumber.replace(/\s/g, "").length === 16 &&
-    formData.expiry.length === 5 &&
-    formData.cvv.length >= 3;
+  const isEmailValid = email.includes("@") && email.includes(".");
 
   // Empty cart state
   if (items.length === 0 && !isComplete) {
@@ -122,6 +160,7 @@ const Checkout = () => {
             <h2 className="mb-2 text-2xl font-bold text-foreground">Payment Successful!</h2>
             <p className="mb-6 text-center text-muted-foreground">
               Thank you for your purchase. Your beats have been added to your library.
+              A receipt has been sent to {email}.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
@@ -161,14 +200,14 @@ const Checkout = () => {
             Checkout
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Complete your purchase securely
+            Complete your purchase securely with Paystack
           </p>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-5">
           {/* Payment Form */}
           <div className="lg:col-span-3">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-6">
               {/* Contact Information */}
               <div className="rounded-xl border border-border bg-card p-6">
                 <h2 className="mb-4 font-bold text-foreground">Contact Information</h2>
@@ -179,9 +218,8 @@ const Checkout = () => {
                   <input
                     type="email"
                     id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     className="w-full rounded-lg border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
                     required
@@ -192,97 +230,43 @@ const Checkout = () => {
                 </div>
               </div>
 
-              {/* Payment Details */}
+              {/* Payment Info */}
               <div className="rounded-xl border border-border bg-card p-6">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="font-bold text-foreground">Payment Details</h2>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Lock className="h-3 w-3" />
-                    Secure & Encrypted
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-bold text-foreground">Payment</h2>
+                  <div className="flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-green-500" />
+                    <span className="text-xs text-muted-foreground">Secured by Paystack</span>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  {/* Card Name */}
-                  <div>
-                    <label htmlFor="cardName" className="mb-2 block text-sm font-medium text-foreground">
-                      Name on Card
-                    </label>
-                    <input
-                      type="text"
-                      id="cardName"
-                      name="cardName"
-                      value={formData.cardName}
-                      onChange={handleInputChange}
-                      placeholder="John Doe"
-                      className="w-full rounded-lg border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                      required
-                    />
-                  </div>
-
-                  {/* Card Number */}
-                  <div>
-                    <label htmlFor="cardNumber" className="mb-2 block text-sm font-medium text-foreground">
-                      Card Number
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        id="cardNumber"
-                        name="cardNumber"
-                        value={formData.cardNumber}
-                        onChange={handleInputChange}
-                        placeholder="1234 5678 9012 3456"
-                        className="w-full rounded-lg border border-border bg-background px-4 py-3 pr-12 text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                        required
-                      />
-                      <CreditCard className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                    </div>
-                  </div>
-
-                  {/* Expiry & CVV */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="expiry" className="mb-2 block text-sm font-medium text-foreground">
-                        Expiry Date
-                      </label>
-                      <input
-                        type="text"
-                        id="expiry"
-                        name="expiry"
-                        value={formData.expiry}
-                        onChange={handleInputChange}
-                        placeholder="MM/YY"
-                        className="w-full rounded-lg border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                        required
-                      />
+                <div className="rounded-lg bg-secondary/50 p-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#00C3F7]">
+                      <CreditCard className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <label htmlFor="cvv" className="mb-2 block text-sm font-medium text-foreground">
-                        CVV
-                      </label>
-                      <input
-                        type="text"
-                        id="cvv"
-                        name="cvv"
-                        value={formData.cvv}
-                        onChange={handleInputChange}
-                        placeholder="123"
-                        className="w-full rounded-lg border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                        required
-                      />
+                      <p className="font-medium text-foreground">Pay with Paystack</p>
+                      <p className="text-xs text-muted-foreground">
+                        Card, Bank Transfer, USSD, Mobile Money
+                      </p>
                     </div>
                   </div>
                 </div>
+
+                <p className="text-xs text-muted-foreground">
+                  You'll be redirected to Paystack's secure payment page to complete your purchase.
+                  We accept Visa, Mastercard, Verve, and bank transfers.
+                </p>
               </div>
 
               {/* Submit Button */}
               <button
-                type="submit"
-                disabled={!isFormValid || isProcessing}
+                onClick={handlePaystackPayment}
+                disabled={!isEmailValid || isProcessing || !paystackLoaded}
                 className={cn(
                   "w-full rounded-full py-4 text-lg font-bold transition-all",
-                  isFormValid && !isProcessing
+                  isEmailValid && !isProcessing && paystackLoaded
                     ? "bg-orange-500 text-white hover:bg-orange-600"
                     : "bg-secondary text-muted-foreground cursor-not-allowed"
                 )}
@@ -295,17 +279,19 @@ const Checkout = () => {
                     </svg>
                     Processing...
                   </span>
+                ) : !paystackLoaded ? (
+                  "Loading..."
                 ) : (
-                  `Pay $${total.toFixed(2)}`
+                  `Pay GH₵${total.toFixed(2)}`
                 )}
               </button>
 
               {/* Security Note */}
-              <p className="text-center text-xs text-muted-foreground">
-                <Lock className="mr-1 inline h-3 w-3" />
-                Your payment information is encrypted and secure
-              </p>
-            </form>
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <Lock className="h-3 w-3" />
+                <span>Your payment is protected by Paystack's bank-grade security</span>
+              </div>
+            </div>
           </div>
 
           {/* Order Summary */}
@@ -335,7 +321,7 @@ const Checkout = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-orange-500">
-                        ${item.price.toFixed(2)}
+                        GH₵{item.price.toFixed(2)}
                       </span>
                       <button
                         onClick={() => removeFromCart(item.id)}
@@ -352,7 +338,7 @@ const Checkout = () => {
               <div className="space-y-2 border-t border-border pt-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
-                  <span className="text-foreground">${total.toFixed(2)}</span>
+                  <span className="text-foreground">GH₵{total.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Processing Fee</span>
@@ -360,7 +346,7 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between border-t border-border pt-2">
                   <span className="text-lg font-bold text-foreground">Total</span>
-                  <span className="text-xl font-bold text-orange-500">${total.toFixed(2)}</span>
+                  <span className="text-xl font-bold text-orange-500">GH₵{total.toFixed(2)}</span>
                 </div>
               </div>
 

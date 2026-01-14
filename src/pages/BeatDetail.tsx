@@ -229,7 +229,7 @@ const BeatDetail = () => {
                     Price
                   </h3>
                   <p className="mt-1 text-2xl sm:text-3xl font-bold text-orange-500">
-                    ${beat.price.toFixed(2)}
+                    GH₵{beat.price.toFixed(2)}
                   </p>
                 </div>
                 <div className="text-right">

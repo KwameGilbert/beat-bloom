@@ -106,15 +106,6 @@ const Browse = () => {
   // Count active filters
   const activeFiltersCount = [selectedGenre, selectedProducer, selectedPriceRange].filter(Boolean).length;
 
-  // Get display text for active filters
-  const getFilterLabel = () => {
-    const labels = [];
-    if (selectedGenre) labels.push(selectedGenre);
-    if (selectedProducer) labels.push(selectedProducer);
-    if (selectedPriceRange) labels.push(selectedPriceRange.label);
-    return labels.length > 0 ? labels.join(", ") : "Filters";
-  };
-
   return (
     <div className="min-h-screen bg-background pt-4 pb-32">
       {/* Header */}
@@ -274,10 +265,10 @@ const Browse = () => {
                     Any Price
                   </button>
                   {[
-                    { label: "Under $30", min: 0, max: 29.99 },
-                    { label: "$30 - $40", min: 30, max: 40 },
-                    { label: "$40 - $50", min: 40, max: 50 },
-                    { label: "Over $50", min: 50, max: 1000 },
+                    { label: "Under GH₵30", min: 0, max: 29.99 },
+                    { label: "GH₵30 - GH₵40", min: 30, max: 40 },
+                    { label: "GH₵40 - GH₵50", min: 40, max: 50 },
+                    { label: "Over GH₵50", min: 50, max: 1000 },
                   ].map((range) => (
                     <button
                       key={range.label}
@@ -292,6 +283,40 @@ const Browse = () => {
                       {range.label}
                     </button>
                   ))}
+                  
+                  {/* Custom Price Range */}
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <p className="mb-2 text-xs font-medium text-muted-foreground">Custom</p>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        placeholder="Min"
+                        className="w-full rounded border border-border bg-background px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none"
+                        id="desktopMinPrice"
+                      />
+                      <span className="text-muted-foreground text-xs">–</span>
+                      <input
+                        type="number"
+                        placeholder="Max"
+                        className="w-full rounded border border-border bg-background px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-orange-500 focus:outline-none"
+                        id="desktopMaxPrice"
+                      />
+                    </div>
+                    <button
+                      onClick={() => {
+                        const minInput = document.getElementById("desktopMinPrice") as HTMLInputElement;
+                        const maxInput = document.getElementById("desktopMaxPrice") as HTMLInputElement;
+                        const min = parseFloat(minInput?.value) || 0;
+                        const max = parseFloat(maxInput?.value) || 1000;
+                        if (min >= 0 && max > min) {
+                          handlePriceRangeSelect({ label: `GH₵${min} - GH₵${max}`, min, max });
+                        }
+                      }}
+                      className="mt-2 w-full rounded bg-orange-500 py-1.5 text-xs font-bold text-white hover:bg-orange-600"
+                    >
+                      Apply
+                    </button>
+                  </div>
                 </div>
               </div>
 

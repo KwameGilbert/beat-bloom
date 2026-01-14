@@ -7,7 +7,8 @@ import {
   Trophy, 
   TrendingUp, 
   Flame,
-  Loader2
+  Loader2,
+  ShoppingCart
 } from "lucide-react";
 import { featuredBeats, trendingBeats, type Beat } from "@/data/beats";
 import { usePlayerStore } from "@/store/playerStore";
@@ -206,7 +207,7 @@ const Charts = () => {
                       {formatPlays(beat.plays)} plays
                     </span>
                     <span className="text-lg font-bold text-orange-500">
-                      ${beat.price.toFixed(2)}
+                                            GH₵{beat.price.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -291,12 +292,12 @@ const Charts = () => {
                     </div>
 
                     {/* Price */}
-                    <div className="col-span-2 text-center text-sm font-bold text-foreground">
-                      ${beat.price.toFixed(2)}
+                    <div className="col-span-2 text-center text-sm font-bold text-orange-500">
+                      GH₵{beat.price.toFixed(2)}
                     </div>
 
                     {/* Actions */}
-                    <div className="col-span-2 flex items-center justify-end gap-2">
+                    <div className="col-span-2 flex items-center justify-end gap-1">
                       <button
                         onClick={(e) => {
                           e.preventDefault();
@@ -315,13 +316,13 @@ const Charts = () => {
                       <button
                         onClick={(e) => handleCartToggle(beat, e)}
                         className={cn(
-                          "rounded-md px-3 py-1.5 text-xs font-bold transition-colors",
+                          "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
                           inCart
                             ? "bg-green-600 text-white hover:bg-red-500"
                             : "bg-orange-500 text-white hover:bg-orange-600"
                         )}
                       >
-                        {inCart ? "Added" : "Buy"}
+                        <ShoppingCart className="h-4 w-4" />
                       </button>
                     </div>
                   </Link>
