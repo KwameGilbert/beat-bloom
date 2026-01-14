@@ -67,31 +67,22 @@ export const usePlayerStore = create<PlayerState>()(
       clearRecentlyPlayed: () => set({ recentlyPlayed: [] }),
 
       nextTrack: () => {
-        const { currentBeat, playlist, shuffle, repeat, recentlyPlayed } = get();
+        const { currentBeat, playlist, shuffle, recentlyPlayed } = get();
         if (!currentBeat || playlist.length === 0) return;
 
         let nextBeat: Beat | null = null;
 
-        if (repeat === "one") {
-          // Repeat same track
-          nextBeat = currentBeat;
-        } else if (shuffle) {
+        if (shuffle) {
           // Random track
           nextBeat = getRandomBeat(playlist, currentBeat.id);
         } else {
-          // Sequential
+          // Sequential - always go to next track
           const currentIndex = playlist.findIndex(b => b.id === currentBeat.id);
           const nextIndex = currentIndex + 1;
           
           if (nextIndex >= playlist.length) {
-            // End of playlist
-            if (repeat === "all") {
-              nextBeat = playlist[0];
-            } else {
-              // Stop playing
-              set({ isPlaying: false });
-              return;
-            }
+            // End of playlist - wrap to beginning
+            nextBeat = playlist[0];
           } else {
             nextBeat = playlist[nextIndex];
           }

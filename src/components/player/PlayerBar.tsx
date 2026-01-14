@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { usePlayerStore } from "@/store/playerStore";
+import { useCartStore } from "@/store/cartStore";
 import { 
   Play, 
   Pause, 
@@ -16,7 +18,9 @@ import {
   Loader2,
   Share2,
   MoreVertical,
-  X
+  X,
+  ShoppingCart,
+  Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +36,7 @@ export const PlayerBar = () => {
     currentBeat, 
     isPlaying, 
     pause, 
-    resume, 
+    resume,  
     volume, 
     setVolume, 
     isLoading, 
@@ -50,6 +54,10 @@ export const PlayerBar = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [shareSuccess, setShareSuccess] = useState(false);
+  
+  const navigate = useNavigate();
+  const { addToCart, isInCart } = useCartStore();
 
   useEffect(() => {
     if (!audioRef.current) {
@@ -65,7 +73,20 @@ export const PlayerBar = () => {
     };
 
     const setAudioTime = () => setCurrentTime(audio.currentTime);
-    const onEnded = () => nextTrack(); // Auto-next on track end
+    
+    // Handle track end - respect repeat mode
+    const onEnded = () => {
+      const { repeat } = usePlayerStore.getState();
+      if (repeat === "one") {
+        // Repeat same track
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      } else {
+        // Go to next track
+        nextTrack();
+      }
+    };
+    
     const onWaiting = () => setIsLoading(true);
     const onCanPlay = () => setIsLoading(false);
 
@@ -134,6 +155,40 @@ export const PlayerBar = () => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = "";
+    }
+  };
+
+  const handleBuyClick = () => {
+    if (!currentBeat) return;
+    if (!isInCart(currentBeat.id)) {
+      addToCart(currentBeat);
+    }
+    setIsMobileOpen(false);
+    navigate("/checkout");
+  };
+
+  const handleShare = async () => {
+    if (!currentBeat) return;
+    
+    const shareUrl = `${window.location.origin}/beat/${currentBeat.id}`;
+    const shareData = {
+      title: currentBeat.title,
+      text: `Check out "${currentBeat.title}" by ${currentBeat.producer} on BeatBloom!`,
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(shareUrl);
+        setShareSuccess(true);
+        setTimeout(() => setShareSuccess(false), 2000);
+      }
+    } catch (err) {
+      // User cancelled or error
+      console.log("Share failed", err);
     }
   };
   
@@ -340,13 +395,28 @@ export const PlayerBar = () => {
 
                {/* Bottom Actions */}
                <div className="flex justify-between items-center">
-                  <button className="flex items-center gap-2 text-muted-foreground text-sm">
-                     <Share2 className="h-5 w-5" />
+                  <button 
+                    onClick={handleShare}
+                    className={cn(
+                      "flex items-center gap-2 text-sm transition-colors",
+                      shareSuccess ? "text-green-500" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                     {shareSuccess ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
                   </button>
-                  <button className="w-full mx-4 py-3 rounded-full bg-secondary text-foreground font-bold hover:bg-secondary/80 transition-colors">
-                    Buy for GH₵{currentBeat.price}
+                  <button 
+                    onClick={handleBuyClick}
+                    className={cn(
+                      "w-full mx-4 py-3 rounded-full font-bold transition-colors flex items-center justify-center gap-2",
+                      isInCart(currentBeat.id)
+                        ? "bg-green-600 text-white"
+                        : "bg-orange-500 text-white hover:bg-orange-600"
+                    )}
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    {isInCart(currentBeat.id) ? "In Cart - Checkout" : `Buy GH₵${currentBeat.price}`}
                   </button>
-                  <button className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <button className="flex items-center gap-2 text-muted-foreground text-sm hover:text-foreground">
                      <ListMusic className="h-5 w-5" />
                   </button>
                </div>
