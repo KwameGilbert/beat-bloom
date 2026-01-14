@@ -6,6 +6,7 @@ import {
   SkipBack, 
   SkipForward, 
   Repeat, 
+  Repeat1,
   Shuffle, 
   Volume2, 
   Heart,
@@ -14,7 +15,8 @@ import {
   ChevronDown,
   Loader2,
   Share2,
-  MoreVertical
+  MoreVertical,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +28,24 @@ const formatTime = (time: number) => {
 };
 
 export const PlayerBar = () => {
-  const { currentBeat, isPlaying, pause, resume, volume, setVolume, isLoading, setIsLoading } = usePlayerStore();
+  const { 
+    currentBeat, 
+    isPlaying, 
+    pause, 
+    resume, 
+    volume, 
+    setVolume, 
+    isLoading, 
+    setIsLoading,
+    nextTrack,
+    previousTrack,
+    shuffle,
+    toggleShuffle,
+    repeat,
+    toggleRepeat,
+    closePlayer
+  } = usePlayerStore();
+  
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -46,7 +65,7 @@ export const PlayerBar = () => {
     };
 
     const setAudioTime = () => setCurrentTime(audio.currentTime);
-    const onEnded = () => pause(); // Or handle auto-next
+    const onEnded = () => nextTrack(); // Auto-next on track end
     const onWaiting = () => setIsLoading(true);
     const onCanPlay = () => setIsLoading(false);
 
@@ -63,25 +82,23 @@ export const PlayerBar = () => {
       audio.removeEventListener("waiting", onWaiting);
       audio.removeEventListener("canplay", onCanPlay);
     };
-  }, []);
+  }, [setIsLoading, nextTrack]);
 
-  // Handle Beat Change
+  // Handle Track Change
   useEffect(() => {
-    if (currentBeat && audioRef.current) {
-      if (audioRef.current.src !== currentBeat.audio) {
-        setIsLoading(true);
-        audioRef.current.src = currentBeat.audio;
-        audioRef.current.volume = volume;
-        if (isPlaying) {
-          audioRef.current.play().catch(() => pause());
-        }
+    if (audioRef.current && currentBeat) {
+      setIsLoading(true);
+      audioRef.current.src = currentBeat.audio;
+      audioRef.current.load();
+      if (isPlaying) {
+        audioRef.current.play().catch(() => pause());
       }
     }
   }, [currentBeat?.id]);
 
   // Handle Play/Pause
   useEffect(() => {
-    if (audioRef.current) {
+    if (audioRef.current && currentBeat?.audio) {
       if (isPlaying) {
         audioRef.current.play().catch(() => pause());
       } else {
@@ -110,8 +127,20 @@ export const PlayerBar = () => {
     const newVol = parseFloat(e.target.value);
     setVolume(newVol);
   };
+
+  const handleClose = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    closePlayer();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
+  };
   
   if (!currentBeat) return null;
+
+  // Get repeat icon based on mode
+  const RepeatIcon = repeat === "one" ? Repeat1 : Repeat;
 
   return (
     <>
@@ -142,7 +171,16 @@ export const PlayerBar = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          {/* Next Button */}
+          <button 
+            onClick={(e) => { e.stopPropagation(); nextTrack(); }}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
+          >
+            <SkipForward className="h-5 w-5 fill-current" />
+          </button>
+          
+          {/* Play/Pause Button */}
           <button 
             onClick={(e) => { e.stopPropagation(); isPlaying ? pause() : resume(); }}
             className="flex h-10 w-10 items-center justify-center rounded-full text-foreground hover:bg-secondary"
@@ -154,6 +192,14 @@ export const PlayerBar = () => {
             ) : (
                <Play className="h-6 w-6 fill-current ml-0.5" />
             )}
+          </button>
+
+          {/* Close Button */}
+          <button 
+            onClick={handleClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-red-500"
+          >
+            <X className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -171,8 +217,8 @@ export const PlayerBar = () => {
              <ChevronDown className="h-8 w-8" />
            </button>
            <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase">Now Playing</span>
-           <button className="text-foreground">
-             <MoreVertical className="h-6 w-6" />
+           <button onClick={handleClose} className="text-muted-foreground hover:text-red-500">
+             <X className="h-6 w-6" />
            </button>
         </div>
 
@@ -231,8 +277,21 @@ export const PlayerBar = () => {
 
                {/* Main Controls */}
                <div className="flex items-center justify-between mb-8">
-                  <button className="text-muted-foreground hover:text-foreground"><Shuffle className="h-6 w-6" /></button>
-                  <button className="text-foreground hover:text-foreground"><SkipBack className="h-8 w-8 fill-current" /></button>
+                  <button 
+                    onClick={toggleShuffle}
+                    className={cn(
+                      "transition-colors",
+                      shuffle ? "text-orange-500" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Shuffle className="h-6 w-6" />
+                  </button>
+                  <button 
+                    onClick={previousTrack}
+                    className="text-foreground hover:text-foreground"
+                  >
+                    <SkipBack className="h-8 w-8 fill-current" />
+                  </button>
                   <button 
                     onClick={isPlaying ? pause : resume}
                     className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg active:scale-95 transition-transform"
@@ -245,8 +304,24 @@ export const PlayerBar = () => {
                        <Play className="h-8 w-8 fill-current ml-1" />
                      )}
                   </button>
-                  <button className="text-foreground hover:text-foreground"><SkipForward className="h-8 w-8 fill-current" /></button>
-                  <button className="text-muted-foreground hover:text-foreground"><Repeat className="h-6 w-6" /></button>
+                  <button 
+                    onClick={nextTrack}
+                    className="text-foreground hover:text-foreground"
+                  >
+                    <SkipForward className="h-8 w-8 fill-current" />
+                  </button>
+                  <button 
+                    onClick={toggleRepeat}
+                    className={cn(
+                      "transition-colors relative",
+                      repeat !== "off" ? "text-orange-500" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <RepeatIcon className="h-6 w-6" />
+                    {repeat === "one" && (
+                      <span className="absolute -top-1 -right-1 text-[8px] font-bold text-orange-500">1</span>
+                    )}
+                  </button>
                </div>
 
                {/* Volume Control (Mobile) */}
@@ -276,7 +351,7 @@ export const PlayerBar = () => {
                   </button>
                </div>
             </div>
-        </div>
+         </div>
       </div>
 
 
@@ -307,10 +382,19 @@ export const PlayerBar = () => {
         {/* Center: Controls */}
         <div className="flex flex-1 max-w-xl flex-col items-center gap-2 px-8">
           <div className="flex items-center gap-6">
-            <button className="text-muted-foreground hover:text-foreground transition-colors">
+            <button 
+              onClick={toggleShuffle}
+              className={cn(
+                "transition-colors",
+                shuffle ? "text-orange-500" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
               <Shuffle className="h-4 w-4" />
             </button>
-            <button className="text-foreground hover:text-foreground transition-colors">
+            <button 
+              onClick={previousTrack}
+              className="text-foreground hover:text-foreground transition-colors"
+            >
               <SkipBack className="h-5 w-5 fill-current" />
             </button>
             
@@ -327,11 +411,20 @@ export const PlayerBar = () => {
               )}
             </button>
 
-            <button className="text-foreground hover:text-foreground transition-colors">
+            <button 
+              onClick={nextTrack}
+              className="text-foreground hover:text-foreground transition-colors"
+            >
               <SkipForward className="h-5 w-5 fill-current" />
             </button>
-            <button className="text-muted-foreground hover:text-foreground transition-colors">
-              <Repeat className="h-4 w-4" />
+            <button 
+              onClick={toggleRepeat}
+              className={cn(
+                "transition-colors relative",
+                repeat !== "off" ? "text-orange-500" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <RepeatIcon className="h-4 w-4" />
             </button>
           </div>
           
@@ -385,6 +478,14 @@ export const PlayerBar = () => {
                }}
              />
            </div>
+
+           {/* Close Button */}
+           <button 
+             onClick={handleClose}
+             className="text-muted-foreground hover:text-red-500 transition-colors shrink-0"
+           >
+             <X className="h-5 w-5" />
+           </button>
         </div>
       </div>
     </>
