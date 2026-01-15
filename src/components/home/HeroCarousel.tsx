@@ -115,7 +115,7 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
                   {currentFeaturedBeat.title}
                 </h1>
                 <Link 
-                  to={`/profile/${currentFeaturedBeat.producerId}`}
+                  to={`/producer/${currentFeaturedBeat.producerId}`}
                   className="text-lg text-white/60 md:text-xl hover:text-orange-500 hover:underline transition-colors"
                 >
                   {currentFeaturedBeat.producer}

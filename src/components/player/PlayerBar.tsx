@@ -235,7 +235,7 @@ export const PlayerBar = () => {
             <Link to={`/beat/${currentBeat.id}`} onClick={() => setIsMobileOpen(true)} className="truncate text-sm font-bold text-foreground leading-tight hover:text-orange-500">
               {currentBeat.title}
             </Link>
-            <Link to={`/profile/${currentBeat.producerId}`} onClick={(e) => e.stopPropagation()} className="truncate text-xs text-muted-foreground hover:text-orange-500">
+            <Link to={`/producer/${currentBeat.producerId}`} onClick={(e) => e.stopPropagation()} className="truncate text-xs text-muted-foreground hover:text-orange-500">
               {currentBeat.producer}
             </Link>
           </div>
@@ -315,7 +315,7 @@ export const PlayerBar = () => {
                       <h2 className="text-2xl font-bold text-foreground mb-2 truncate hover:text-orange-500">{currentBeat.title}</h2>
                     </Link>
                     <div className="flex flex-wrap items-center gap-2">
-                       <Link to={`/profile/${currentBeat.producerId}`} onClick={() => setIsMobileOpen(false)}>
+                       <Link to={`/producer/${currentBeat.producerId}`} onClick={() => setIsMobileOpen(false)}>
                          <p className="text-lg text-muted-foreground truncate mr-1 hover:text-orange-500">{currentBeat.producer}</p>
                        </Link>
                        <span className="rounded bg-secondary px-2 py-0.5 text-xs font-medium text-foreground pointer-events-none border border-border">
@@ -459,7 +459,7 @@ export const PlayerBar = () => {
                   <div className="mt-8 pt-6 border-t border-border">
                     <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase mb-4">Producer</p>
                     <Link 
-                      to={`/profile/${producer.id}`} 
+                      to={`/producer/${producer.username}`} 
                       onClick={() => setIsMobileOpen(false)}
                       className="flex items-start gap-4 group/prod"
                     >
@@ -511,7 +511,7 @@ export const PlayerBar = () => {
             <Link to={`/beat/${currentBeat.id}`} className="text-sm font-bold text-foreground hover:text-orange-500 hover:underline truncate">
               {currentBeat.title}
             </Link>
-            <Link to={`/profile/${currentBeat.producerId}`} className="text-xs text-muted-foreground hover:text-orange-500 hover:underline truncate">
+            <Link to={`/producer/${currentBeat.producerId}`} className="text-xs text-muted-foreground hover:text-orange-500 hover:underline truncate">
               {currentBeat.producer}
             </Link>
           </div>

@@ -1,5 +1,6 @@
 export interface Producer {
   id: string;
+  username: string; // URL-safe username
   name: string;
   avatar?: string;
   bio: string;
@@ -376,6 +377,7 @@ export const trendingBeats: Beat[] = [
 export const producers: Producer[] = [
   {
     id: "prod-1",
+    username: "cloudnine",
     name: "CloudNine",
     avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80",
     bio: "Multi-platinum producer specializing in dark trap and melodic beats. Known for atmospheric soundscapes and hard-hitting 808s.",
@@ -384,6 +386,7 @@ export const producers: Producer[] = [
   },
   {
     id: "prod-2",
+    username: "synthwave",
     name: "SynthWave Pro",
     avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&q=80",
     bio: "Retro-futuristic producer bringing the 80s back with modern production techniques. Specializes in synthwave and electronic music.",
@@ -392,6 +395,7 @@ export const producers: Producer[] = [
   },
   {
     id: "prod-3",
+    username: "urbanflow",
     name: "UrbanFlow",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
     bio: "Golden era hip hop meets modern production. Creating timeless beats with soul and authenticity.",
@@ -400,6 +404,7 @@ export const producers: Producer[] = [
   },
   {
     id: "prod-4",
+    username: "vibemaster",
     name: "VibeMaster",
     avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&q=80",
     bio: "Experimental producer blending electronic, soul, and R&B. Pushing boundaries with innovative sound design.",
@@ -408,6 +413,7 @@ export const producers: Producer[] = [
   },
   {
     id: "prod-5",
+    username: "shadow",
     name: "ShadowProd",
     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80",
     bio: "Dark, aggressive production for drill and trap. Working with top artists in the UK drill scene.",

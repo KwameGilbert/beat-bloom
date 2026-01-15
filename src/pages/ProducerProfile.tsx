@@ -43,10 +43,11 @@ const ProducerProfile = () => {
 
   useEffect(() => {
     if (id) {
-      const foundProducer = producers.find(p => p.id === id);
+      // Find producer by ID or username
+      const foundProducer = producers.find(p => p.id === id || p.username.toLowerCase() === id.toLowerCase());
       if (foundProducer) {
         setProducer(foundProducer);
-        setProducerBeats(getBeatsByProducerId(id));
+        setProducerBeats(getBeatsByProducerId(foundProducer.id));
       }
     }
   }, [id]);

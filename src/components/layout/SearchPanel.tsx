@@ -129,7 +129,7 @@ export const SearchPanel = ({
                       {filteredProducers.map((producer) => (
                         <button
                           key={producer.id}
-                          onClick={() => onResultClick(`/profile/${producer.id}`)}
+                          onClick={() => onResultClick(`/producer/${producer.username}`)}
                           className="flex items-center gap-3 rounded-xl p-2 text-left transition-all hover:bg-secondary/80 group"
                         >
                           <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-muted shadow-sm group-hover:shadow-md transition-all">

@@ -156,7 +156,7 @@ const BeatDetail = () => {
                 {beat.title}
               </h1>
               <p className="text-base sm:text-lg text-muted-foreground">
-                by <Link to={`/profile/${beat.producerId}`} className="font-medium text-foreground hover:text-orange-500 hover:underline cursor-pointer">{beat.producer}</Link>
+                by <Link to={`/producer/${beat.producerId}`} className="font-medium text-foreground hover:text-orange-500 hover:underline cursor-pointer">{beat.producer}</Link>
               </p>
             </div>
 
@@ -280,7 +280,7 @@ const BeatDetail = () => {
                 More from {beat.producer}
               </h2>
               <Link
-                to={`/profile/${beat.producerId}`}
+                to={`/producer/${beat.producerId}`}
                 className="text-xs sm:text-sm font-medium text-orange-500 hover:underline whitespace-nowrap"
               >
                 View All
@@ -361,7 +361,7 @@ const BeatDetail = () => {
                 {/* View Profile Button */}
                 <div className="shrink-0 w-full md:w-auto">
                   <Link
-                    to={`/profile/${beat.producerId}`}
+                    to={`/producer/${beat.producerId}`}
                     className="inline-flex w-full md:w-auto items-center justify-center gap-2 rounded-full border border-border bg-secondary px-6 py-3 text-sm sm:text-base font-bold text-foreground transition-all hover:bg-secondary/80"
                   >
                     View Profile
