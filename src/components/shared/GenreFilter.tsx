@@ -11,10 +11,10 @@ interface PriceRange {
 }
 
 const priceRanges: PriceRange[] = [
-  { label: "Under GH₵30", min: 0, max: 29.99 },
-  { label: "GH₵30 - GH₵40", min: 30, max: 40 },
-  { label: "GH₵40 - GH₵50", min: 40, max: 50 },
-  { label: "Over GH₵50", min: 50, max: 1000 },
+  { label: "Under $30", min: 0, max: 29.99 },
+  { label: "$30 - $45", min: 30, max: 45 },
+  { label: "$45 - $60", min: 45, max: 60 },
+  { label: "Over $60", min: 60, max: 1000 },
 ];
 
 interface BeatFilterProps {
@@ -245,7 +245,7 @@ export const BeatFilter = ({
                 <p className="mb-3 text-sm font-medium text-foreground">Custom Range</p>
                 <div className="flex items-center gap-2">
                   <div className="flex-1">
-                    <label className="mb-1 block text-xs text-muted-foreground">Min (GH₵)</label>
+                    <label className="mb-1 block text-xs text-muted-foreground">Min ($)</label>
                     <input
                       type="number"
                       placeholder="0"
@@ -255,7 +255,7 @@ export const BeatFilter = ({
                   </div>
                   <span className="mt-5 text-muted-foreground">–</span>
                   <div className="flex-1">
-                    <label className="mb-1 block text-xs text-muted-foreground">Max (GH₵)</label>
+                    <label className="mb-1 block text-xs text-muted-foreground">Max ($)</label>
                     <input
                       type="number"
                       placeholder="100"
@@ -271,7 +271,7 @@ export const BeatFilter = ({
                     const min = parseFloat(minInput?.value) || 0;
                     const max = parseFloat(maxInput?.value) || 1000;
                     if (min >= 0 && max > min) {
-                      handlePriceSelect({ label: `GH₵${min} - GH₵${max}`, min, max });
+                      handlePriceSelect({ label: `$${min} - $${max}`, min, max });
                     }
                   }}
                   className="mt-3 w-full rounded-lg bg-orange-500 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600"

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Play, Pause, ShoppingCart, Heart, ChevronLeft, ChevronRight, Loader2, Check } from "lucide-react";
 import type { Beat } from "@/data/beats";
 import { usePlayerStore } from "@/store/playerStore";
@@ -113,7 +114,12 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
                 <h1 className="font-display text-3xl font-bold text-white md:text-5xl lg:text-6xl">
                   {currentFeaturedBeat.title}
                 </h1>
-                <p className="text-lg text-white/60 md:text-xl">{currentFeaturedBeat.producer}</p>
+                <Link 
+                  to={`/profile/${currentFeaturedBeat.producerId}`}
+                  className="text-lg text-white/60 md:text-xl hover:text-orange-500 hover:underline transition-colors"
+                >
+                  {currentFeaturedBeat.producer}
+                </Link>
              </motion.div>
           </AnimatePresence>
           
@@ -129,14 +135,14 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
              </span>
              <span className="flex items-center gap-1">
                <span className="h-1 w-1 rounded-full bg-current" />
-               3:00
+               {currentFeaturedBeat.duration}
              </span>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-3 md:mt-6 md:gap-4">
             <button 
                 onClick={handlePlayClick}
-                className="group flex h-10 items-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground transition-all hover:scale-105 active:scale-95 md:h-12 md:px-8 md:text-base"
+                className="group flex h-10 items-center gap-2 rounded-full bg-orange-500 px-6 text-sm font-bold text-white transition-all hover:scale-105 active:scale-95 md:h-12 md:px-8 md:text-base"
             >
               {isFeaturedLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin md:h-5 md:w-5" />
@@ -161,7 +167,7 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
               ) : (
                 <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
               )}
-              <span>{isCurrentInCart ? "In Cart" : `GH₵${currentFeaturedBeat.price}`}</span>
+              <span>{isCurrentInCart ? "In Cart" : `$${currentFeaturedBeat.price}`}</span>
             </button>
             <button 
               onClick={handleLikeClick}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
 import { useLikesStore } from "@/store/likesStore";
@@ -232,8 +232,12 @@ export const PlayerBar = () => {
              />
           </div>
           <div className="flex flex-col overflow-hidden">
-            <span className="truncate text-sm font-bold text-foreground leading-tight">{currentBeat.title}</span>
-            <span className="truncate text-xs text-muted-foreground">{currentBeat.producer}</span>
+            <Link to={`/beat/${currentBeat.id}`} onClick={() => setIsMobileOpen(true)} className="truncate text-sm font-bold text-foreground leading-tight hover:text-orange-500">
+              {currentBeat.title}
+            </Link>
+            <Link to={`/profile/${currentBeat.producerId}`} onClick={(e) => e.stopPropagation()} className="truncate text-xs text-muted-foreground hover:text-orange-500">
+              {currentBeat.producer}
+            </Link>
           </div>
         </div>
 
@@ -298,6 +302,7 @@ export const PlayerBar = () => {
                     alt={currentBeat.title}
                     className="h-full w-full object-cover"
                   />
+                  <div className="absolute inset-0 bg-black/20" />
                </div>
             </div>
 
@@ -306,9 +311,13 @@ export const PlayerBar = () => {
                {/* Title Row */}
                <div className="flex items-center justify-between mb-8">
                   <div className="overflow-hidden pr-4">
-                    <h2 className="text-2xl font-bold text-foreground mb-2 truncate">{currentBeat.title}</h2>
+                    <Link to={`/beat/${currentBeat.id}`} onClick={() => setIsMobileOpen(false)}>
+                      <h2 className="text-2xl font-bold text-foreground mb-2 truncate hover:text-orange-500">{currentBeat.title}</h2>
+                    </Link>
                     <div className="flex flex-wrap items-center gap-2">
-                       <p className="text-lg text-muted-foreground truncate mr-1">{currentBeat.producer}</p>
+                       <Link to={`/profile/${currentBeat.producerId}`} onClick={() => setIsMobileOpen(false)}>
+                         <p className="text-lg text-muted-foreground truncate mr-1 hover:text-orange-500">{currentBeat.producer}</p>
+                       </Link>
                        <span className="rounded bg-secondary px-2 py-0.5 text-xs font-medium text-foreground pointer-events-none border border-border">
                           {currentBeat.bpm} BPM
                        </span>
@@ -434,7 +443,7 @@ export const PlayerBar = () => {
                     )}
                   >
                     <ShoppingCart className="h-4 w-4" />
-                    {isInCart(currentBeat.id) ? "In Cart - Checkout" : `Buy GH₵${currentBeat.price}`}
+                    {isInCart(currentBeat.id) ? "In Cart - Checkout" : `Buy $${currentBeat.price}`}
                   </button>
                   <button 
                     onClick={() => setIsPlaylistModalOpen(true)}
@@ -446,34 +455,38 @@ export const PlayerBar = () => {
                </div>
 
                {/* Producer Info Section */}
-               {producer && (
-                 <div className="mt-8 pt-6 border-t border-border">
-                   <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase mb-4">Producer</p>
-                   <div className="flex items-start gap-4">
-                     <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-border">
-                       <img 
-                         src={producer.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"} 
-                         alt={producer.name}
-                         className="h-full w-full object-cover"
-                       />
-                     </div>
-                     <div className="flex-1 min-w-0">
-                       <div className="flex items-center gap-2 mb-1">
-                         <h4 className="font-bold text-foreground">{producer.name}</h4>
-                         {producer.verified && (
-                           <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-orange-500 text-white">
-                             <Check className="h-3 w-3" />
-                           </span>
-                         )}
-                       </div>
-                       {producer.location && (
-                         <p className="text-xs text-muted-foreground mb-2">{producer.location}</p>
-                       )}
-                       <p className="text-sm text-muted-foreground line-clamp-2">{producer.bio}</p>
-                     </div>
-                   </div>
-                 </div>
-               )}
+                {producer && (
+                  <div className="mt-8 pt-6 border-t border-border">
+                    <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase mb-4">Producer</p>
+                    <Link 
+                      to={`/profile/${producer.id}`} 
+                      onClick={() => setIsMobileOpen(false)}
+                      className="flex items-start gap-4 group/prod"
+                    >
+                      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-border group-hover/prod:border-orange-500 transition-colors">
+                        <img 
+                          src={producer.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"} 
+                          alt={producer.name}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-bold text-foreground group-hover/prod:text-orange-500 transition-colors">{producer.name}</h4>
+                          {producer.verified && (
+                            <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-orange-500 text-white">
+                              <Check className="h-3 w-3" />
+                            </span>
+                          )}
+                        </div>
+                        {producer.location && (
+                          <p className="text-xs text-muted-foreground mb-2">{producer.location}</p>
+                        )}
+                        <p className="text-sm text-muted-foreground line-clamp-2">{producer.bio}</p>
+                      </div>
+                    </Link>
+                  </div>
+                )}
             </div>
          </div>
       </div>
@@ -495,8 +508,12 @@ export const PlayerBar = () => {
              </div>
           </div>
           <div className="flex flex-col min-w-0">
-            <h4 className="text-sm font-bold text-foreground hover:underline cursor-pointer truncate">{currentBeat.title}</h4>
-            <span className="text-xs text-muted-foreground hover:underline cursor-pointer truncate">{currentBeat.producer}</span>
+            <Link to={`/beat/${currentBeat.id}`} className="text-sm font-bold text-foreground hover:text-orange-500 hover:underline truncate">
+              {currentBeat.title}
+            </Link>
+            <Link to={`/profile/${currentBeat.producerId}`} className="text-xs text-muted-foreground hover:text-orange-500 hover:underline truncate">
+              {currentBeat.producer}
+            </Link>
           </div>
           <button 
             onClick={() => currentBeat && toggleLike(currentBeat)}

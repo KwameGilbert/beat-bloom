@@ -85,7 +85,12 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
         <Link to={`/beat/${beat.id}`} className="font-display font-bold text-foreground hover:underline truncate">
           {beat.title}
         </Link>
-        <span className="text-xs text-muted-foreground">{beat.producer}</span>
+        <Link 
+          to={`/profile/${beat.producerId}`} 
+          className="text-xs text-muted-foreground hover:text-orange-500 hover:underline transition-colors"
+        >
+          {beat.producer}
+        </Link>
       </div>
 
       {/* Tags / Stats */}

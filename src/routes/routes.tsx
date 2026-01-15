@@ -22,6 +22,7 @@ import PasswordSettings from "../pages/PasswordSettings";
 import TwoFactorAuth from "../pages/TwoFactorAuth";
 import PayoutMethods from "../pages/PayoutMethods";
 import BillingHistory from "../pages/BillingHistory";
+import ProducerProfile from "../pages/ProducerProfile";
 
 import { Layout } from "../components/layout/Layout";
 import { AuthLayout } from "../components/auth/AuthLayout";
@@ -58,6 +59,7 @@ export const AppRoutes = () => {
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/producer/:id" element={<ProducerProfile />} />
             <Route path="/profile/edit" element={<EditProfile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/settings/password" element={<PasswordSettings />} />
