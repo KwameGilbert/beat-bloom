@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { usePlaylistsStore, playlistColors } from "@/store/playlistsStore";
 
 const mainNav = [
-  { name: "Discover", icon: Home, path: "/" },
+  { name: "Discover", icon: Home, path: "/home" },
   { name: "Browse", icon: Search, path: "/browse" },
   { name: "Charts", icon: BarChart2, path: "/charts" },
 ];
