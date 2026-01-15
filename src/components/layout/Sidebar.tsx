@@ -9,7 +9,8 @@ import {
   Library, 
   Plus, 
   Music2,
-  X
+  X,
+  UploadCloud
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePlaylistsStore, playlistColors } from "@/store/playlistsStore";
@@ -104,6 +105,20 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 </Link>
               );
             })}
+          </div>
+
+          {/* Producer Actions */}
+          <div>
+            <Link
+              to="/upload"
+              onClick={onClose}
+              className="group flex w-full items-center gap-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-orange-600/10 px-4 py-3 text-sm font-bold text-orange-500 transition-all hover:from-orange-500 hover:to-orange-600 hover:text-white shadow-sm shadow-orange-500/5 active:scale-[0.98]"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 text-white shadow-md">
+                <UploadCloud className="h-4 w-4" />
+              </div>
+              Upload Beat
+            </Link>
           </div>
 
           {/* Library Section */}

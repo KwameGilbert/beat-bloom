@@ -100,7 +100,7 @@ const Signup = () => {
                 >
                   <button
                     onClick={() => handleSignup()}
-                    className="flex w-full items-center justify-center gap-3 rounded-2xl bg-zinc-950 px-6 py-4 text-sm font-bold text-white transition-all hover:bg-zinc-900 active:scale-95 shadow-lg"
+                    className="flex w-full items-center justify-center gap-3 rounded-2xl bg-zinc-950 px-6 py-4 text-sm font-bold text-white transition-all hover:bg-zinc-900 active:scale-95 shadow-lg dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white"
                   >
                     <Apple className="h-5 w-5" />
                     Sign up with Apple
