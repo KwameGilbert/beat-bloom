@@ -33,7 +33,7 @@ export const SearchPanel = ({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 10, scale: 0.98 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="fixed sm:absolute top-16 sm:top-full left-1/2 -translate-x-1/2 z-[100] mt-2 w-[calc(100vw-2rem)] sm:w-[500px] md:w-[700px] lg:w-[900px] xl:w-[1000px] max-h-[80vh] overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl"
+      className="fixed sm:absolute top-[72px] sm:top-full left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[100] sm:w-[500px] md:w-[700px] lg:w-[900px] xl:w-[1000px] max-h-[80vh] overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl"
     >
       <div className="overflow-y-auto p-3 scrollbar-thin scrollbar-thumb-muted">
         {/* Recent Searches Section */}
