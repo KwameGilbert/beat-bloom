@@ -54,7 +54,7 @@ const PayoutMethods = () => {
             <span className="text-sm font-medium opacity-80 uppercase tracking-widest">Available Balance</span>
             <DollarSign className="h-6 w-6 opacity-40" />
           </div>
-          <p className="text-4xl font-bold">GH₵ 12,450.00</p>
+          <p className="text-4xl font-bold">$12,450.00</p>
           <div className="mt-6 flex gap-3">
             <button className="flex-1 rounded-xl bg-white/20 px-4 py-3 text-sm font-bold backdrop-blur-md transition-all hover:bg-white/30">
               Withdraw Funds
@@ -147,7 +147,7 @@ const PayoutMethods = () => {
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Minimum threshold</span>
-              <span className="font-bold text-foreground">GH₵ 100.00</span>
+              <span className="font-bold text-foreground">$100.00</span>
             </div>
           </div>
         </div>

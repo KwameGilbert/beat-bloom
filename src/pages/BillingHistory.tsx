@@ -134,7 +134,7 @@ const BillingHistory = () => {
                         "font-bold",
                         tx.type === "sale" ? "text-green-500" : "text-foreground"
                       )}>
-                        {tx.type === "sale" ? "+" : "-"} GH₵{tx.amount.toFixed(2)}
+                        {tx.type === "sale" ? "+" : "-"} ${tx.amount.toFixed(2)}
                       </p>
                       <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                         <CreditCard className="h-3 w-3" />

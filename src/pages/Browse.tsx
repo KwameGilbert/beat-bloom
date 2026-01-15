@@ -265,10 +265,10 @@ const Browse = () => {
                     Any Price
                   </button>
                   {[
-                    { label: "Under GH₵30", min: 0, max: 29.99 },
-                    { label: "GH₵30 - GH₵40", min: 30, max: 40 },
-                    { label: "GH₵40 - GH₵50", min: 40, max: 50 },
-                    { label: "Over GH₵50", min: 50, max: 1000 },
+                    { label: "Under $30", min: 0, max: 29.99 },
+                    { label: "$30 - $40", min: 30, max: 40 },
+                    { label: "$40 - $50", min: 40, max: 50 },
+                    { label: "Over $50", min: 50, max: 1000 },
                   ].map((range) => (
                     <button
                       key={range.label}
@@ -309,7 +309,7 @@ const Browse = () => {
                         const min = parseFloat(minInput?.value) || 0;
                         const max = parseFloat(maxInput?.value) || 1000;
                         if (min >= 0 && max > min) {
-                          handlePriceRangeSelect({ label: `GH₵${min} - GH₵${max}`, min, max });
+                          handlePriceRangeSelect({ label: `$${min} - $${max}`, min, max });
                         }
                       }}
                       className="mt-2 w-full rounded bg-orange-500 py-1.5 text-xs font-bold text-white hover:bg-orange-600"

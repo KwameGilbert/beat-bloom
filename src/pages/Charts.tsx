@@ -207,7 +207,7 @@ const Charts = () => {
                       {formatPlays(beat.plays)} plays
                     </span>
                     <span className="text-lg font-bold text-orange-500">
-                                            GH₵{beat.price.toFixed(2)}
+                                            ${beat.price.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -293,7 +293,7 @@ const Charts = () => {
 
                     {/* Price */}
                     <div className="col-span-2 text-center text-sm font-bold text-orange-500">
-                      GH₵{beat.price.toFixed(2)}
+                      ${beat.price.toFixed(2)}
                     </div>
 
                     {/* Actions */}

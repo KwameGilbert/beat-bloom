@@ -122,7 +122,7 @@ const Purchases = () => {
                         {formatDate(purchase.purchasedAt)}
                       </span>
                       <span className="text-green-500 font-medium">
-                        GH₵{purchase.amount.toFixed(2)}
+                        ${purchase.amount.toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -173,7 +173,7 @@ const Purchases = () => {
             </div>
             <div className="rounded-xl border border-border bg-card p-4 text-center">
               <p className="text-2xl font-bold text-green-500">
-                GH₵{purchases.reduce((acc, p) => acc + p.amount, 0).toFixed(2)}
+                ${purchases.reduce((acc, p) => acc + p.amount, 0).toFixed(2)}
               </p>
               <p className="text-sm text-muted-foreground">Total Spent</p>
             </div>

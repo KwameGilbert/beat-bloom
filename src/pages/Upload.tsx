@@ -14,7 +14,9 @@ import {
   Tag,
   Type,
   FileAudio,
-  Loader2
+  Loader2,
+  Lock,
+  Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +33,8 @@ const Upload = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isPublishing, setIsPublishing] = useState(false);
-  const audioInputRef = useRef<HTMLInputElement>(null);
+  const previewInputRef = useRef<HTMLInputElement>(null);
+  const masterInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -42,16 +45,22 @@ const Upload = () => {
     description: "",
     tags: [] as string[],
     price: "29.99",
-    audioFile: null as File | null,
+    previewFile: null as File | null,
+    masterFile: null as File | null,
     coverFile: null as File | null,
     coverPreview: "",
   });
 
   const [tagInput, setTagInput] = useState("");
 
-  const handleAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAudioChange = (type: "preview" | "master", e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setFormData(prev => ({ ...prev, audioFile: file }));
+    if (file) {
+      setFormData(prev => ({ 
+        ...prev, 
+        [type === "preview" ? "previewFile" : "masterFile"]: file 
+      }));
+    }
   };
 
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,9 +104,11 @@ const Upload = () => {
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 4));
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
+  const isStep1Complete = formData.previewFile && formData.masterFile && formData.coverFile;
+
   return (
     <div className="min-h-screen bg-background pb-32 pt-6">
-      <div className="mx-auto max-w-4xl px-4 md:px-8">
+      <div className="mx-auto max-w-5xl px-4 md:px-8">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
@@ -147,7 +158,7 @@ const Upload = () => {
         </div>
 
         {/* Main Card */}
-        <div className="relative overflow-hidden rounded-[32px] border border-border bg-card shadow-2xl">
+        <div className="relative overflow-hidden rounded-[40px] border border-border bg-card shadow-2xl">
           <div className="p-8 md:p-12">
             <AnimatePresence mode="wait">
               {currentStep === 1 && (
@@ -156,35 +167,84 @@ const Upload = () => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="space-y-8"
+                  className="space-y-10"
                 >
-                  <div className="grid gap-8 md:grid-cols-2">
-                    {/* Audio Upload */}
+                  <div className="grid gap-10 lg:grid-cols-3">
+                    {/* Preview Audio Upload */}
                     <div className="space-y-4">
-                      <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Audio File</label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Public Preview</label>
+                        <span className="flex items-center gap-1 rounded bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-bold text-blue-500">
+                          <Eye className="h-3 w-3" /> Public
+                        </span>
+                      </div>
                       <div 
-                        onClick={() => audioInputRef.current?.click()}
+                        onClick={() => previewInputRef.current?.click()}
                         className={cn(
-                          "group relative flex aspect-video cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-border bg-secondary/30 transition-all hover:border-orange-500 hover:bg-secondary/50",
-                          formData.audioFile && "border-solid border-green-500 bg-green-500/5 hover:border-green-600"
+                          "group relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-border bg-secondary/30 transition-all hover:border-orange-500 hover:bg-secondary/50",
+                          formData.previewFile && "border-solid border-green-500 bg-green-500/5 hover:border-green-600"
                         )}
                       >
-                        <input type="file" ref={audioInputRef} className="hidden" accept="audio/*" onChange={handleAudioChange} />
-                        {formData.audioFile ? (
-                          <div className="flex flex-col items-center gap-2 text-center px-4">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500 text-white">
-                              <FileAudio className="h-6 w-6" />
+                        <input type="file" ref={previewInputRef} className="hidden" accept="audio/*" onChange={(e) => handleAudioChange("preview", e)} />
+                        {formData.previewFile ? (
+                          <div className="flex flex-col items-center gap-3 text-center px-4">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-green-500 text-white shadow-lg shadow-green-500/20">
+                              <FileAudio className="h-8 w-8" />
                             </div>
-                            <span className="text-sm font-bold text-foreground truncate max-w-[200px]">{formData.audioFile.name}</span>
-                            <span className="text-xs text-muted-foreground">Click to change file</span>
+                            <div className="space-y-1">
+                              <span className="block text-sm font-black text-foreground truncate max-w-[140px]">{formData.previewFile.name}</span>
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase">Click to change</span>
+                            </div>
                           </div>
                         ) : (
                           <>
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-500 transition-transform group-hover:scale-110">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-orange-500/10 text-orange-500 transition-transform group-hover:scale-110">
                               <Music className="h-8 w-8" />
                             </div>
-                            <span className="mt-4 font-bold text-foreground">Drag & drop high-quality audio</span>
-                            <span className="text-xs text-muted-foreground mt-1">WAV or MP3 (max 50MB)</span>
+                            <div className="mt-6 text-center">
+                              <span className="block font-bold text-foreground">Preview Audio</span>
+                              <span className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">MP3 tagged recommended</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Master Audio Upload */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Unlockable Master</label>
+                        <span className="flex items-center gap-1 rounded bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-bold text-orange-500">
+                          <Lock className="h-3 w-3" /> Private
+                        </span>
+                      </div>
+                      <div 
+                        onClick={() => masterInputRef.current?.click()}
+                        className={cn(
+                          "group relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-border bg-secondary/30 transition-all hover:border-orange-500 hover:bg-secondary/50",
+                          formData.masterFile && "border-solid border-green-500 bg-green-500/5 hover:border-green-600"
+                        )}
+                      >
+                        <input type="file" ref={masterInputRef} className="hidden" accept="audio/*" onChange={(e) => handleAudioChange("master", e)} />
+                        {formData.masterFile ? (
+                          <div className="flex flex-col items-center gap-3 text-center px-4">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-green-500 text-white shadow-lg shadow-green-500/20">
+                              <FileAudio className="h-8 w-8" />
+                            </div>
+                            <div className="space-y-1">
+                              <span className="block text-sm font-black text-foreground truncate max-w-[140px]">{formData.masterFile.name}</span>
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase">Click to change</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-zinc-950/10 dark:bg-zinc-100/10 text-foreground transition-transform group-hover:scale-110">
+                              <Lock className="h-8 w-8" />
+                            </div>
+                            <div className="mt-6 text-center">
+                              <span className="block font-bold text-foreground">High-Quality Master</span>
+                              <span className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">WAV / ZIP for buyer only</span>
+                            </div>
                           </>
                         )}
                       </div>
@@ -192,11 +252,11 @@ const Upload = () => {
 
                     {/* Cover Upload */}
                     <div className="space-y-4">
-                      <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Cover Art</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Artwork</label>
                       <div 
                         onClick={() => coverInputRef.current?.click()}
                         className={cn(
-                          "group relative flex aspect-video cursor-pointer items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed border-border bg-secondary/30 transition-all hover:border-orange-500 hover:bg-secondary/50",
+                          "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-[32px] border-2 border-dashed border-border bg-secondary/30 transition-all hover:border-orange-500 hover:bg-secondary/50",
                           formData.coverPreview && "border-solid border-border bg-background"
                         )}
                       >
@@ -205,16 +265,18 @@ const Upload = () => {
                           <>
                             <img src={formData.coverPreview} alt="Preview" className="h-full w-full object-cover transition-transform group-hover:scale-105" />
                             <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                              <span className="font-bold text-white">Change Image</span>
+                              <span className="font-bold text-white uppercase text-xs">Change Art</span>
                             </div>
                           </>
                         ) : (
                           <div className="flex flex-col items-center">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-500 transition-transform group-hover:scale-110">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-orange-500/10 text-orange-500 transition-transform group-hover:scale-110">
                               <ImageIcon className="h-8 w-8" />
                             </div>
-                            <span className="mt-4 font-bold text-foreground">Upload cover art</span>
-                            <span className="text-xs text-muted-foreground mt-1">PNG or JPG (1:1 aspect ratio)</span>
+                            <div className="mt-6 text-center">
+                              <span className="block font-bold text-foreground">Cover Art</span>
+                              <span className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">1:1 Ratio (Min 1000px)</span>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -335,7 +397,7 @@ const Upload = () => {
                     <div className="space-y-2">
                       <label className="text-center block text-sm font-bold text-foreground">Standard License Price</label>
                       <div className="relative group">
-                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground transition-colors group-focus-within:text-orange-500">GH₵</span>
+                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground transition-colors group-focus-within:text-orange-500">$</span>
                         <input 
                           type="number" 
                           value={formData.price}
@@ -350,7 +412,7 @@ const Upload = () => {
                         <Info className="h-3 w-3 text-orange-500" />
                       </span>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Prices are displayed in GHS for local markets. Global pricing will be automatically converted based on current exchange rates.
+                        Prices are displayed in USD. Global transactions will be processed at the current market rate.
                       </p>
                     </div>
                   </div>
@@ -399,7 +461,7 @@ const Upload = () => {
                       onClick={() => {
                         setFormData({
                           title: "", genre: "", bpm: "", key: "", description: "",
-                          tags: [], price: "29.99", audioFile: null, coverFile: null, coverPreview: ""
+                          tags: [], price: "29.99", previewFile: null, masterFile: null, coverFile: null, coverPreview: ""
                         });
                         setCurrentStep(1);
                       }}
@@ -436,7 +498,7 @@ const Upload = () => {
                 {currentStep === 3 ? (
                   <button
                     onClick={handlePublish}
-                    disabled={isPublishing || !formData.audioFile}
+                    disabled={isPublishing || !formData.previewFile || !formData.masterFile || !formData.coverFile}
                     className="flex items-center gap-2 rounded-2xl bg-orange-500 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:bg-orange-600 active:scale-95 disabled:opacity-50"
                   >
                     {isPublishing ? (
@@ -454,7 +516,7 @@ const Upload = () => {
                 ) : (
                   <button
                     onClick={nextStep}
-                    disabled={currentStep === 1 && !formData.audioFile}
+                    disabled={currentStep === 1 && !isStep1Complete}
                     className="flex items-center gap-2 rounded-2xl bg-zinc-950 px-8 py-3 dark:bg-zinc-100 dark:text-zinc-950 text-sm font-bold text-white transition-all hover:bg-zinc-900 dark:hover:bg-white active:scale-95 disabled:opacity-50"
                   >
                     Continue
@@ -477,9 +539,10 @@ const Upload = () => {
               <Info className="h-5 w-5" />
             </div>
             <div className="space-y-1">
-              <h4 className="text-sm font-bold text-foreground">Upload Guidelines</h4>
+              <h4 className="text-sm font-bold text-foreground">Upload Requirements</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Ensure your audio is high quality and you have full rights to the content. We recommend uploading WAV files for the best audio experience. Cover art should be at least 1000x1000px.
+                You must provide both a <span className="text-blue-500 font-bold">Preview</span> (publicly streamable) and a <span className="text-orange-500 font-bold">Master</span> (delivered to buyer upon payment). 
+                We recommend tagged MP3s for previews and high-quality WAVs or ZIP stems for masters.
               </p>
             </div>
           </motion.div>

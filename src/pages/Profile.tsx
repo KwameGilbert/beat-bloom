@@ -148,7 +148,7 @@ const Profile = () => {
             {/* Price & Actions */}
             <div className="mt-3 flex items-center justify-between">
               <span className="text-lg font-bold text-orange-500">
-                GH₵{beat.price.toFixed(2)}
+                ${beat.price.toFixed(2)}
               </span>
               <div className="flex items-center gap-1">
                 <button

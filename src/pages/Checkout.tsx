@@ -79,8 +79,8 @@ const Checkout = () => {
     const handler = window.PaystackPop.setup({
       key: PAYSTACK_PUBLIC_KEY,
       email: email,
-      amount: Math.round(total * 100), // Paystack expects amount in kobo/cents
-      currency: "GHS", // Ghanaian Cedi
+      amount: Math.round(total * 100), // Paystack expects amount in cents
+      currency: "USD", // US Dollars
       ref: generateReference(),
       metadata: {
         items: items.map(item => ({
@@ -287,7 +287,7 @@ const Checkout = () => {
                 ) : !paystackLoaded ? (
                   "Loading..."
                 ) : (
-                  `Pay GH₵${total.toFixed(2)}`
+                  `Pay $${total.toFixed(2)}`
                 )}
               </button>
 
@@ -326,7 +326,7 @@ const Checkout = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-orange-500">
-                        GH₵{item.price.toFixed(2)}
+                        ${item.price.toFixed(2)}
                       </span>
                       <button
                         onClick={() => removeFromCart(item.id)}
@@ -343,7 +343,7 @@ const Checkout = () => {
               <div className="space-y-2 border-t border-border pt-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
-                  <span className="text-foreground">GH₵{total.toFixed(2)}</span>
+                  <span className="text-foreground">${total.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Processing Fee</span>
@@ -351,7 +351,7 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between border-t border-border pt-2">
                   <span className="text-lg font-bold text-foreground">Total</span>
-                  <span className="text-xl font-bold text-orange-500">GH₵{total.toFixed(2)}</span>
+                  <span className="text-xl font-bold text-orange-500">${total.toFixed(2)}</span>
                 </div>
               </div>
 
