@@ -8,6 +8,18 @@ export interface Producer {
   verified: boolean;
 }
 
+// License tier types
+export type LicenseTierType = 'mp3' | 'wav' | 'stems' | 'exclusive';
+
+export interface LicenseTier {
+  type: LicenseTierType;
+  name: string;
+  price: number;
+  includedFiles: string[];
+  description: string;
+  isExclusive?: boolean; // If true, beat becomes unavailable after purchase
+}
+
 export interface Beat {
   id: string;
   title: string;
@@ -15,14 +27,15 @@ export interface Beat {
   producerId: string; // Reference to Producer ID
   bpm: number;
   key: string;
-  price: number;
+  price: number; // Base price (lowest tier) - kept for backward compatibility
   cover: string;
   tags: string[];
   audio: string;
   duration: string; // e.g., "3:45"
   description: string;
-  includedFiles: string[]; // e.g., ["MP3 + WAV Files", "Trackout Stems"]
+  includedFiles: string[]; // e.g., ["MP3 + WAV Files", "Trackout Stems"] - kept for backward compatibility
   plays: number; // Number of plays/streams
+  licenseTiers?: LicenseTier[]; // Optional: Multiple pricing tiers
 }
 
 export interface Genre {
@@ -48,6 +61,37 @@ export const featuredBeats: Beat[] = [
     description: "A captivating trap beat with dark, melodic elements and hard-hitting 808s. Perfect for artists looking to create powerful tracks that resonate with listeners. Features carefully crafted sound design and professional mixing.",
     includedFiles: ["MP3 + WAV Files", "Trackout Stems"],
     plays: 481000,
+    licenseTiers: [
+      {
+        type: 'mp3',
+        name: 'MP3 Lease',
+        price: 29.99,
+        includedFiles: ['Tagged MP3 File'],
+        description: 'Basic license for non-profit use. Includes tagged MP3 file.'
+      },
+      {
+        type: 'wav',
+        name: 'WAV Lease',
+        price: 49.99,
+        includedFiles: ['Untagged MP3 File', 'High-Quality WAV File'],
+        description: 'Standard lease with untagged MP3 and high-quality WAV files.'
+      },
+      {
+        type: 'stems',
+        name: 'Trackout',
+        price: 99.99,
+        includedFiles: ['Untagged MP3 File', 'High-Quality WAV File', 'Trackout Stems (ZIP)'],
+        description: 'Full trackout package with individual stems for mixing.'
+      },
+      {
+        type: 'exclusive',
+        name: 'Exclusive Rights',
+        price: 499.99,
+        includedFiles: ['Untagged MP3 File', 'High-Quality WAV File', 'Trackout Stems (ZIP)', 'Project Files'],
+        description: 'Full ownership transfer. Beat will be removed from store after purchase.',
+        isExclusive: true
+      }
+    ]
   },
   {
     id: "2",
@@ -64,6 +108,29 @@ export const featuredBeats: Beat[] = [
     description: "An energetic synthwave track with retro, upbeat vibes reminiscent of the 80s. Rich analog synths and driving basslines create a nostalgic yet modern sound perfect for any creative project.",
     includedFiles: ["MP3 + WAV Files", "Trackout Stems"],
     plays: 156000,
+    licenseTiers: [
+      {
+        type: 'mp3',
+        name: 'MP3 Lease',
+        price: 34.99,
+        includedFiles: ['Tagged MP3 File'],
+        description: 'Basic license for non-profit use. Includes tagged MP3 file.'
+      },
+      {
+        type: 'wav',
+        name: 'WAV Lease',
+        price: 59.99,
+        includedFiles: ['Untagged MP3 File', 'High-Quality WAV File'],
+        description: 'Standard lease with untagged MP3 and high-quality WAV files.'
+      },
+      {
+        type: 'stems',
+        name: 'Trackout',
+        price: 129.99,
+        includedFiles: ['Untagged MP3 File', 'High-Quality WAV File', 'Trackout Stems (ZIP)'],
+        description: 'Full trackout package with individual stems for mixing.'
+      }
+    ]
   },
   {
     id: "3",
@@ -99,6 +166,37 @@ export const trendingBeats: Beat[] = [
     description: "Futuristic electronic production meets soulful melodies in this unique blend. Lush synth pads, smooth bass, and intricate percussion create an atmosphere that's both modern and emotional.",
     includedFiles: ["MP3 + WAV Files", "Trackout Stems", "MIDI Files"],
     plays: 228000,
+    licenseTiers: [
+      {
+        type: 'mp3',
+        name: 'MP3 Lease',
+        price: 39.99,
+        includedFiles: ['Tagged MP3 File'],
+        description: 'Basic license for non-profit use. Includes tagged MP3 file.'
+      },
+      {
+        type: 'wav',
+        name: 'WAV Lease',
+        price: 69.99,
+        includedFiles: ['Untagged MP3 File', 'High-Quality WAV File'],
+        description: 'Standard lease with untagged MP3 and high-quality WAV files.'
+      },
+      {
+        type: 'stems',
+        name: 'Premium Trackout',
+        price: 149.99,
+        includedFiles: ['Untagged MP3 File', 'High-Quality WAV File', 'Trackout Stems (ZIP)', 'MIDI Files'],
+        description: 'Full trackout package with stems and MIDI files.'
+      },
+      {
+        type: 'exclusive',
+        name: 'Exclusive Rights',
+        price: 799.99,
+        includedFiles: ['Untagged MP3 File', 'High-Quality WAV File', 'Trackout Stems (ZIP)', 'MIDI Files', 'Project Files'],
+        description: 'Full ownership transfer. Beat will be removed from store.',
+        isExclusive: true
+      }
+    ]
   },
   {
     id: "5",
@@ -115,6 +213,22 @@ export const trendingBeats: Beat[] = [
     description: "Smooth R&B instrumental with warm keys and silky drum patterns. The chill, laid-back vibe makes it perfect for late-night sessions or heartfelt lyrics. Features live instrumentation and polished production.",
     includedFiles: ["MP3 + WAV Files", "Trackout Stems"],
     plays: 81000,
+    licenseTiers: [
+      {
+        type: 'mp3',
+        name: 'MP3 Lease',
+        price: 34.99,
+        includedFiles: ['Tagged MP3 File'],
+        description: 'Basic license for non-profit use.'
+      },
+      {
+        type: 'wav',
+        name: 'WAV Lease',
+        price: 54.99,
+        includedFiles: ['Untagged MP3 File', 'High-Quality WAV File'],
+        description: 'Standard lease with high-quality WAV file.'
+      }
+    ]
   },
   {
     id: "6",

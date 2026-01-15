@@ -13,10 +13,14 @@ import {
   Loader2,
   MapPin,
   CheckCircle,
-  ListPlus
+  ListPlus,
+  Check,
+  Crown,
+  FileAudio,
+  Sparkles
 } from "lucide-react";
 
-import { featuredBeats, trendingBeats, getProducerById, type Beat } from "@/data/beats";
+import { featuredBeats, trendingBeats, getProducerById, type Beat, type LicenseTier } from "@/data/beats";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
 import { useLikesStore } from "@/store/likesStore";
@@ -32,6 +36,7 @@ const BeatDetail = () => {
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
   const { toggleLike, isLiked } = useLikesStore();
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  const [selectedTierIndex, setSelectedTierIndex] = useState(0);
 
   const beat = allBeats.find((b) => b.id === id);
 
@@ -233,41 +238,158 @@ const BeatDetail = () => {
               </p>
             </div>
 
-            {/* Price & Purchase */}
+            {/* License Tiers / Pricing */}
             <div className="rounded-xl border border-border bg-card p-4">
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Price
-                  </h3>
-                  <p className="mt-1 text-2xl sm:text-3xl font-bold text-orange-500">
-                    ${beat.price.toFixed(2)}
-                  </p>
-                </div>
-                <div className="text-right">
-                  {beat.includedFiles.map((file, idx) => (
-                    <p key={idx} className="text-xs text-muted-foreground">{file}</p>
-                  ))}
-                </div>
-              </div>
+              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                Choose Your License
+              </h3>
+              
+              {beat.licenseTiers && beat.licenseTiers.length > 0 ? (
+                <>
+                  {/* License Tier Cards */}
+                  <div className="grid gap-3 mb-4">
+                    {beat.licenseTiers.map((tier, index) => {
+                      const isSelected = selectedTierIndex === index;
+                      const isExclusive = tier.isExclusive;
+                      
+                      return (
+                        <button
+                          key={tier.type}
+                          onClick={() => setSelectedTierIndex(index)}
+                          className={cn(
+                            "relative w-full rounded-xl border-2 p-4 text-left transition-all",
+                            isSelected
+                              ? isExclusive
+                                ? "border-purple-500 bg-purple-500/10"
+                                : "border-orange-500 bg-orange-500/10"
+                              : "border-border bg-secondary/30 hover:border-muted-foreground/50"
+                          )}
+                        >
+                          {/* Selection indicator */}
+                          <div className={cn(
+                            "absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all",
+                            isSelected
+                              ? isExclusive
+                                ? "border-purple-500 bg-purple-500 text-white"
+                                : "border-orange-500 bg-orange-500 text-white"
+                              : "border-muted-foreground/30"
+                          )}>
+                            {isSelected && <Check className="h-4 w-4" />}
+                          </div>
+                          
+                          <div className="flex items-start gap-3 pr-10">
+                            {/* Tier Icon */}
+                            <div className={cn(
+                              "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+                              isExclusive ? "bg-purple-500/20 text-purple-500" : "bg-orange-500/20 text-orange-500"
+                            )}>
+                              {tier.type === 'exclusive' ? (
+                                <Crown className="h-5 w-5" />
+                              ) : tier.type === 'stems' ? (
+                                <Sparkles className="h-5 w-5" />
+                              ) : (
+                                <FileAudio className="h-5 w-5" />
+                              )}
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-bold text-foreground">{tier.name}</span>
+                                {isExclusive && (
+                                  <span className="rounded bg-purple-500/20 px-2 py-0.5 text-[10px] font-bold uppercase text-purple-500">
+                                    Exclusive
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mb-2">{tier.description}</p>
+                              <div className="flex flex-wrap gap-1">
+                                {tier.includedFiles.map((file, idx) => (
+                                  <span 
+                                    key={idx} 
+                                    className="rounded bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                                  >
+                                    {file}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            {/* Price */}
+                            <div className="text-right shrink-0">
+                              <span className={cn(
+                                "text-xl font-bold",
+                                isExclusive ? "text-purple-500" : "text-orange-500"
+                              )}>
+                                ${tier.price.toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Action Buttons with selected tier */}
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <AddToCartButtonWithTier beat={beat} selectedTier={beat.licenseTiers[selectedTierIndex]} />
+                    <button 
+                      onClick={() => {
+                        const { addToCart, isInCart } = useCartStore.getState();
+                        const selectedTier = beat.licenseTiers![selectedTierIndex];
+                        // Create a beat object with the selected tier's price
+                        const beatWithTier = { ...beat, price: selectedTier.price, selectedLicense: selectedTier };
+                        if (!isInCart(beat.id)) {
+                          addToCart(beatWithTier);
+                        }
+                        navigate("/checkout");
+                      }}
+                      className={cn(
+                        "flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-bold transition-all",
+                        beat.licenseTiers[selectedTierIndex].isExclusive
+                          ? "border-purple-500 bg-purple-500 text-white hover:bg-purple-600"
+                          : "border-border bg-secondary text-foreground hover:bg-secondary/80"
+                      )}
+                    >
+                      <Download className="h-4 w-4" />
+                      Buy Now - ${beat.licenseTiers[selectedTierIndex].price.toFixed(2)}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                /* Legacy single price display */
+                <>
+                  <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-2xl sm:text-3xl font-bold text-orange-500">
+                        ${beat.price.toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      {beat.includedFiles.map((file, idx) => (
+                        <p key={idx} className="text-xs text-muted-foreground">{file}</p>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <AddToCartButton beat={beat} />
-                <button 
-                  onClick={() => {
-                    const { addToCart, isInCart } = useCartStore.getState();
-                    if (!isInCart(beat.id)) {
-                      addToCart(beat);
-                    }
-                    navigate("/checkout");
-                  }}
-                  className="flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-full border border-border bg-secondary px-4 py-3 text-sm font-bold text-foreground transition-all hover:bg-secondary/80"
-                >
-                  <Download className="h-4 w-4" />
-                  Buy Now
-                </button>
-              </div>
+                  {/* Action Buttons */}
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <AddToCartButton beat={beat} />
+                    <button 
+                      onClick={() => {
+                        const { addToCart, isInCart } = useCartStore.getState();
+                        if (!isInCart(beat.id)) {
+                          addToCart(beat);
+                        }
+                        navigate("/checkout");
+                      }}
+                      className="flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-full border border-border bg-secondary px-4 py-3 text-sm font-bold text-foreground transition-all hover:bg-secondary/80"
+                    >
+                      <Download className="h-4 w-4" />
+                      Buy Now
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -409,6 +531,43 @@ const AddToCartButton = ({ beat }: { beat: Beat }) => {
     >
       <ShoppingCart className="h-4 w-4" />
       {inCart ? "Remove from Cart" : "Add to Cart"}
+    </button>
+  );
+};
+
+// Add to Cart Button with License Tier
+const AddToCartButtonWithTier = ({ beat, selectedTier }: { beat: Beat; selectedTier: LicenseTier }) => {
+  const { addToCart, removeFromCart, isInCart } = useCartStore();
+  const inCart = isInCart(beat.id);
+
+  const handleClick = () => {
+    if (inCart) {
+      removeFromCart(beat.id);
+    } else {
+      // Create a beat object with the selected tier's price and info
+      const beatWithTier = { 
+        ...beat, 
+        price: selectedTier.price, 
+        selectedLicense: selectedTier 
+      };
+      addToCart(beatWithTier);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        "flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-bold shadow-lg transition-all active:scale-95",
+        inCart
+          ? "bg-green-600 text-white hover:bg-red-500"
+          : selectedTier.isExclusive
+            ? "bg-purple-500 text-white hover:bg-purple-600"
+            : "bg-orange-500 text-white hover:bg-orange-600"
+      )}
+    >
+      <ShoppingCart className="h-4 w-4" />
+      {inCart ? "Remove from Cart" : `Add to Cart - $${selectedTier.price.toFixed(2)}`}
     </button>
   );
 };

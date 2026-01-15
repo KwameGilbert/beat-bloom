@@ -111,9 +111,10 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
                transition={{ delay: 0.2 }}
                className="space-y-2"
              >
-                <h1 className="font-display text-3xl font-bold text-white md:text-5xl lg:text-6xl">
+                <Link to={`/beat/${currentFeaturedBeat.id}`} className="font-display text-3xl font-bold text-white md:text-5xl lg:text-6xl">
                   {currentFeaturedBeat.title}
-                </h1>
+                </Link>
+                <br />
                 <Link 
                   to={`/producer/${currentFeaturedBeat.producerId}`}
                   className="text-lg text-white/60 md:text-xl hover:text-orange-500 hover:underline transition-colors"

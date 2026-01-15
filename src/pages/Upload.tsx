@@ -16,7 +16,11 @@ import {
   FileAudio,
   Loader2,
   Lock,
-  Eye
+  Eye,
+  Crown,
+  Sparkles,
+  ToggleLeft,
+  ToggleRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +53,13 @@ const Upload = () => {
     masterFile: null as File | null,
     coverFile: null as File | null,
     coverPreview: "",
+    // License tier pricing
+    licenseTiers: {
+      mp3: { enabled: true, price: "29.99" },
+      wav: { enabled: true, price: "49.99" },
+      stems: { enabled: false, price: "99.99" },
+      exclusive: { enabled: false, price: "499.99" }
+    }
   });
 
   const [tagInput, setTagInput] = useState("");
@@ -383,27 +394,191 @@ const Upload = () => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="space-y-8"
+                  className="space-y-6"
                 >
                   <div className="flex flex-col items-center justify-center text-center space-y-4 py-4">
                     <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-orange-500/10 text-orange-500">
                       <DollarSign className="h-8 w-8" />
                     </div>
                     <h2 className="text-2xl font-bold">Set Your Pricing</h2>
-                    <p className="text-muted-foreground max-w-sm">Determine the value of your masterpiece. Producers keep 100% of sales.</p>
+                    <p className="text-muted-foreground max-w-md">Configure license tiers for your beat. Enable the ones you want to offer and set your prices.</p>
                   </div>
 
-                  <div className="mx-auto max-w-sm space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-center block text-sm font-bold text-foreground">Standard License Price</label>
-                      <div className="relative group">
-                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground transition-colors group-focus-within:text-orange-500">$</span>
-                        <input 
-                          type="number" 
-                          value={formData.price}
-                          onChange={(e) => setFormData({...formData, price: e.target.value})}
-                          className="w-full rounded-[24px] border-2 border-border bg-secondary/30 py-6 pl-20 pr-6 text-3xl font-bold text-foreground focus:border-orange-500 focus:outline-none transition-all text-center"
-                        />
+                  <div className="mx-auto max-w-2xl space-y-4">
+                    {/* MP3 Lease */}
+                    <div className={cn(
+                      "rounded-2xl border-2 p-4 transition-all",
+                      formData.licenseTiers.mp3.enabled ? "border-orange-500/50 bg-orange-500/5" : "border-border bg-secondary/20"
+                    )}>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/20 text-orange-500">
+                            <FileAudio className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-foreground">MP3 Lease</h3>
+                            <p className="text-xs text-muted-foreground">Tagged MP3 file • Non-profit use</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="relative flex items-center gap-2">
+                            <span className="text-lg font-bold text-muted-foreground">$</span>
+                            <input
+                              type="number"
+                              value={formData.licenseTiers.mp3.price}
+                              onChange={(e) => setFormData({
+                                ...formData,
+                                licenseTiers: { ...formData.licenseTiers, mp3: { ...formData.licenseTiers.mp3, price: e.target.value } }
+                              })}
+                              disabled={!formData.licenseTiers.mp3.enabled}
+                              className="w-24 rounded-xl border border-border bg-secondary/50 px-3 py-2 text-lg font-bold text-center disabled:opacity-50"
+                            />
+                          </div>
+                          <button
+                            onClick={() => setFormData({
+                              ...formData,
+                              licenseTiers: { ...formData.licenseTiers, mp3: { ...formData.licenseTiers.mp3, enabled: !formData.licenseTiers.mp3.enabled } }
+                            })}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {formData.licenseTiers.mp3.enabled ? <ToggleRight className="h-8 w-8 text-orange-500" /> : <ToggleLeft className="h-8 w-8" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* WAV Lease */}
+                    <div className={cn(
+                      "rounded-2xl border-2 p-4 transition-all",
+                      formData.licenseTiers.wav.enabled ? "border-orange-500/50 bg-orange-500/5" : "border-border bg-secondary/20"
+                    )}>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/20 text-orange-500">
+                            <FileAudio className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-foreground">WAV Lease</h3>
+                            <p className="text-xs text-muted-foreground">Untagged MP3 + High-quality WAV</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="relative flex items-center gap-2">
+                            <span className="text-lg font-bold text-muted-foreground">$</span>
+                            <input
+                              type="number"
+                              value={formData.licenseTiers.wav.price}
+                              onChange={(e) => setFormData({
+                                ...formData,
+                                licenseTiers: { ...formData.licenseTiers, wav: { ...formData.licenseTiers.wav, price: e.target.value } }
+                              })}
+                              disabled={!formData.licenseTiers.wav.enabled}
+                              className="w-24 rounded-xl border border-border bg-secondary/50 px-3 py-2 text-lg font-bold text-center disabled:opacity-50"
+                            />
+                          </div>
+                          <button
+                            onClick={() => setFormData({
+                              ...formData,
+                              licenseTiers: { ...formData.licenseTiers, wav: { ...formData.licenseTiers.wav, enabled: !formData.licenseTiers.wav.enabled } }
+                            })}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {formData.licenseTiers.wav.enabled ? <ToggleRight className="h-8 w-8 text-orange-500" /> : <ToggleLeft className="h-8 w-8" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stems/Trackout */}
+                    <div className={cn(
+                      "rounded-2xl border-2 p-4 transition-all",
+                      formData.licenseTiers.stems.enabled ? "border-orange-500/50 bg-orange-500/5" : "border-border bg-secondary/20"
+                    )}>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "flex h-10 w-10 items-center justify-center rounded-lg",
+                            formData.licenseTiers.stems.enabled ? "bg-orange-500/20 text-orange-500" : "bg-muted text-muted-foreground"
+                          )}>
+                            <Sparkles className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-foreground">Trackout (Stems)</h3>
+                            <p className="text-xs text-muted-foreground">MP3 + WAV + Individual stem files</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="relative flex items-center gap-2">
+                            <span className="text-lg font-bold text-muted-foreground">$</span>
+                            <input
+                              type="number"
+                              value={formData.licenseTiers.stems.price}
+                              onChange={(e) => setFormData({
+                                ...formData,
+                                licenseTiers: { ...formData.licenseTiers, stems: { ...formData.licenseTiers.stems, price: e.target.value } }
+                              })}
+                              disabled={!formData.licenseTiers.stems.enabled}
+                              className="w-24 rounded-xl border border-border bg-secondary/50 px-3 py-2 text-lg font-bold text-center disabled:opacity-50"
+                            />
+                          </div>
+                          <button
+                            onClick={() => setFormData({
+                              ...formData,
+                              licenseTiers: { ...formData.licenseTiers, stems: { ...formData.licenseTiers.stems, enabled: !formData.licenseTiers.stems.enabled } }
+                            })}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {formData.licenseTiers.stems.enabled ? <ToggleRight className="h-8 w-8 text-orange-500" /> : <ToggleLeft className="h-8 w-8" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Exclusive Rights */}
+                    <div className={cn(
+                      "rounded-2xl border-2 p-4 transition-all",
+                      formData.licenseTiers.exclusive.enabled ? "border-purple-500/50 bg-purple-500/5" : "border-border bg-secondary/20"
+                    )}>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "flex h-10 w-10 items-center justify-center rounded-lg",
+                            formData.licenseTiers.exclusive.enabled ? "bg-purple-500/20 text-purple-500" : "bg-muted text-muted-foreground"
+                          )}>
+                            <Crown className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-foreground">Exclusive Rights</h3>
+                              <span className="rounded bg-purple-500/20 px-2 py-0.5 text-[10px] font-bold uppercase text-purple-500">Premium</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">Full ownership • Beat removed after sale</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="relative flex items-center gap-2">
+                            <span className="text-lg font-bold text-muted-foreground">$</span>
+                            <input
+                              type="number"
+                              value={formData.licenseTiers.exclusive.price}
+                              onChange={(e) => setFormData({
+                                ...formData,
+                                licenseTiers: { ...formData.licenseTiers, exclusive: { ...formData.licenseTiers.exclusive, price: e.target.value } }
+                              })}
+                              disabled={!formData.licenseTiers.exclusive.enabled}
+                              className="w-24 rounded-xl border border-border bg-secondary/50 px-3 py-2 text-lg font-bold text-center disabled:opacity-50"
+                            />
+                          </div>
+                          <button
+                            onClick={() => setFormData({
+                              ...formData,
+                              licenseTiers: { ...formData.licenseTiers, exclusive: { ...formData.licenseTiers.exclusive, enabled: !formData.licenseTiers.exclusive.enabled } }
+                            })}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {formData.licenseTiers.exclusive.enabled ? <ToggleRight className="h-8 w-8 text-purple-500" /> : <ToggleLeft className="h-8 w-8" />}
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -412,7 +587,7 @@ const Upload = () => {
                         <Info className="h-3 w-3 text-orange-500" />
                       </span>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Prices are displayed in USD. Global transactions will be processed at the current market rate.
+                        Enable at least one license tier. Prices are in USD. You keep 100% of all sales. Toggle tiers on/off based on the files you want to offer.
                       </p>
                     </div>
                   </div>
@@ -461,7 +636,13 @@ const Upload = () => {
                       onClick={() => {
                         setFormData({
                           title: "", genre: "", bpm: "", key: "", description: "",
-                          tags: [], price: "29.99", previewFile: null, masterFile: null, coverFile: null, coverPreview: ""
+                          tags: [], price: "29.99", previewFile: null, masterFile: null, coverFile: null, coverPreview: "",
+                          licenseTiers: {
+                            mp3: { enabled: true, price: "29.99" },
+                            wav: { enabled: true, price: "49.99" },
+                            stems: { enabled: false, price: "99.99" },
+                            exclusive: { enabled: false, price: "499.99" }
+                          }
                         });
                         setCurrentStep(1);
                       }}
