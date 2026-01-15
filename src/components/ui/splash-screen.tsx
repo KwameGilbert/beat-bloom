@@ -1,19 +1,21 @@
 import { motion } from "framer-motion";
 import { Music } from "lucide-react";
+import { AuthBackground } from "../auth/AuthBackground";
 
 export const SplashScreen = () => {
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      onAnimationComplete={() => {
-        // Trigger completion after the entrance animation + some dwell time
-        // This is handled by the parent's timeout usually, but we define the exit animation here
-      }}
     >
+      {/* Background - In the shadows */}
+      <div className="absolute inset-0 opacity-20 scale-110 blur-[1px]">
+        <AuthBackground />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/60 to-background" />
+      </div>
       <div className="relative flex items-center justify-center">
         {/* Pulsing background glow */}
         <motion.div
@@ -23,7 +25,7 @@ export const SplashScreen = () => {
             opacity: [0.3, 0.6, 0.3],
           }}
           transition={{
-            duration: 2,
+            duration: 5,
             repeat: Infinity,
             ease: "easeInOut",
           }}
@@ -66,7 +68,7 @@ export const SplashScreen = () => {
           className="h-full bg-primary"
           initial={{ x: "-100%" }}
           animate={{ x: "0%" }}
-          transition={{ duration: 2, ease: "easeInOut" }}
+          transition={{ duration: 5, ease: "easeInOut" }}
         />
       </motion.div>
     </motion.div>
