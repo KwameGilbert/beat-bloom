@@ -213,7 +213,7 @@ export const PlayerBar = () => {
       {/* ==================== MOBILE COMPACT PLAYER ==================== */}
       <div 
         onClick={() => setIsMobileOpen(true)}
-        className="fixed bottom-16 left-2 right-2 z-50 flex h-16 items-center justify-between rounded-lg bg-card/95 px-3 shadow-xl backdrop-blur-lg border border-border md:hidden transition-transform active:scale-[0.98]"
+        className="fixed bottom-16 left-2 right-2 z-[100] flex h-16 items-center justify-between rounded-lg bg-card/95 px-3 shadow-xl backdrop-blur-lg border border-border md:hidden transition-transform active:scale-[0.98]"
       >
          {/* Simple Progress Bar on Top */}
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-muted overflow-hidden rounded-t-lg">
@@ -279,7 +279,7 @@ export const PlayerBar = () => {
       {/* Slide-up Container */}
       <div className={cn(
         "fixed inset-0 z-[100] flex flex-col bg-background transition-transform duration-300 ease-out md:hidden overflow-y-auto",
-        isMobileOpen ? "translate-y-0" : "translate-y-full"
+        isMobileOpen ? "translate-y-0 pointer-events-auto" : "translate-y-full pointer-events-none"
       )}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-8">

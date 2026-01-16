@@ -587,7 +587,7 @@ const Upload = () => {
                         <Info className="h-3 w-3 text-orange-500" />
                       </span>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Enable at least one license tier. Prices are in USD. You keep 100% of all sales. Toggle tiers on/off based on the files you want to offer.
+                        Enable at least one license tier. Prices are in USD. Toggle tiers on/off based on the files you want to offer.
                       </p>
                     </div>
                   </div>

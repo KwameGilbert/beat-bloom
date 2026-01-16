@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const mobileNavItems = [
-  { name: "Home", icon: Home, path: "/" },
+  { name: "Home", icon: Home, path: "/home" },
   { name: "Browse", icon: Search, path: "/browse" },
   { name: "Charts", icon: BarChart2, path: "/charts" },
   { name: "Liked", icon: Heart, path: "/liked" },
