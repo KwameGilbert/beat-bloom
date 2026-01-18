@@ -7,15 +7,56 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { AppRoutes } from "./routes/routes";
 import { SplashScreen } from "./components/ui/splash-screen";
+import { useAuthStore } from "./store/authStore";
 
 const queryClient = new QueryClient();
+
+/**
+ * Auth Initializer Component
+ * Fetches user profile on app load if authenticated
+ */
+const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, fetchProfile, user } = useAuthStore();
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    const init = async () => {
+      if (isAuthenticated && !user) {
+        await fetchProfile();
+      }
+      setInitialized(true);
+    };
+    init();
+  }, [isAuthenticated, user, fetchProfile]);
+
+  // Wait for auth initialization before rendering
+  if (!initialized && isAuthenticated) {
+    return null;
+  }
+
+  return <>{children}</>;
+};
 
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    // Apply dark mode based on system preference
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    // Apply dark mode based on system preference or saved theme
+    const authData = localStorage.getItem('beatbloom-auth');
+    let userTheme: string | null = null;
+    
+    if (authData) {
+      try {
+        const parsed = JSON.parse(authData);
+        userTheme = parsed.state?.user?.theme;
+      } catch {
+        // Ignore parse errors
+      }
+    }
+
+    if (userTheme === 'dark' || userTheme === 'light') {
+      document.documentElement.classList.toggle('dark', userTheme === 'dark');
+    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       document.documentElement.classList.add("dark");
     }
 
@@ -42,7 +83,9 @@ const App = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <AppRoutes />
+                <AuthInitializer>
+                  <AppRoutes />
+                </AuthInitializer>
               </BrowserRouter>
             </motion.div>
           )}
@@ -53,4 +96,3 @@ const App = () => {
 };
 
 export default App;
- 

@@ -10,8 +10,10 @@ import {
   Lock, 
   ChevronRight,
   Apple,
-  Chrome
+  Chrome,
+  AlertCircle
 } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
 
 const panelTransition = {
   type: "spring" as const,
@@ -22,18 +24,30 @@ const panelTransition = {
 
 const Login = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const { login, isLoading, error, clearError } = useAuthStore();
   const [authMethod, setAuthMethod] = useState<"social" | "email">("social");
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
 
-  const handleLogin = (e?: React.FormEvent) => {
+  const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    clearError();
+    
+    try {
+      await login({
+        email: formData.email,
+        password: formData.password,
+      });
       navigate("/home");
-    }, 1500);
+    } catch {
+      // Error is handled in the store
+    }
+  };
+
+  const handleSocialLogin = () => {
+    // TODO: Implement OAuth social login
+    // For now, switch to email login
+    setAuthMethod("email");
   };
 
   return (
@@ -54,7 +68,10 @@ const Login = () => {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  onClick={() => setAuthMethod("social")}
+                  onClick={() => {
+                    setAuthMethod("social");
+                    clearError();
+                  }}
                   className="absolute left-6 top-8 flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-foreground transition-colors hover:bg-secondary/80"
                 >
                   <ArrowLeft className="h-5 w-5" />
@@ -86,6 +103,21 @@ const Login = () => {
               </motion.p>
           </div>
 
+          {/* Error Message */}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-4 flex w-full items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-500"
+              >
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{error}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div className="w-full relative flex-1">
             <AnimatePresence mode="wait">
               {authMethod === "social" ? (
@@ -98,7 +130,7 @@ const Login = () => {
                   className="space-y-3 w-full"
                 >
                   <button
-                    onClick={() => handleLogin()}
+                    onClick={handleSocialLogin}
                     disabled={isLoading}
                     className="flex w-full items-center justify-center gap-3 rounded-2xl bg-zinc-950 px-6 py-4 text-sm font-bold text-white transition-all hover:bg-zinc-900 active:scale-95 disabled:opacity-50 shadow-lg dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white"
                   >
@@ -107,7 +139,7 @@ const Login = () => {
                   </button>
                   
                   <button
-                    onClick={() => handleLogin()}
+                    onClick={handleSocialLogin}
                     disabled={isLoading}
                     className="flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 text-sm font-bold text-white transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50 shadow-lg"
                   >
@@ -184,13 +216,31 @@ const Login = () => {
                       </div>
                   </div>
 
+                  <div className="flex justify-end">
+                    <Link 
+                      to="/forgot-password" 
+                      className="text-xs font-medium text-muted-foreground hover:text-orange-500 transition-colors"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
+
                   <button
                       type="submit"
                       disabled={isLoading}
                       className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 py-4 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:bg-orange-600 active:scale-95 disabled:opacity-50"
                   >
-                      Sign In
-                      <ChevronRight className="h-4 w-4" />
+                      {isLoading ? (
+                        <>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                          Signing in...
+                        </>
+                      ) : (
+                        <>
+                          Sign In
+                          <ChevronRight className="h-4 w-4" />
+                        </>
+                      )}
                   </button>
                 </motion.form>
               )}
@@ -201,15 +251,6 @@ const Login = () => {
               By continuing you agree to BeatBloom's <span className="underline">Terms</span> and <span className="underline">Privacy Policy</span>.
           </p>
       </div>
-
-      {isLoading && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/60 backdrop-blur-md">
-          <div className="flex flex-col items-center gap-4 text-orange-500">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-orange-500/20 border-t-orange-500" />
-            <span className="text-sm font-bold tracking-widest uppercase">Connecting...</span>
-          </div>
-        </div>
-      )}
     </motion.div>
   );
 };
