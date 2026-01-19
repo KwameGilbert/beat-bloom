@@ -19,6 +19,7 @@ export interface ProfilePageData {
     name: string;
     email: string;
     avatar?: string;
+    coverImage?: string;
     role: string;
     bio?: string;
     location?: string;

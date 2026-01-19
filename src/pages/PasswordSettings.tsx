@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useAuthStore from "@/store/authStore";
 import { 
   ArrowLeft, 
   Eye, 
@@ -11,6 +12,7 @@ import { showNotification } from "@/components/ui/custom-notification";
 
 const PasswordSettings = () => {
   const navigate = useNavigate();
+  const { changePassword, isLoading } = useAuthStore();
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -21,24 +23,39 @@ const PasswordSettings = () => {
     confirm: ""
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    
+    if (passwords.new !== passwords.confirm) {
+      showNotification("Validation Error", "New passwords do not match.", "error");
+      return;
+    }
+
+    if (passwords.new.length < 8) {
+      showNotification("Validation Error", "New password must be at least 8 characters long.", "error");
+      return;
+    }
+
+    try {
+      await changePassword({
+        currentPassword: passwords.current,
+        newPassword: passwords.new
+      });
+      
       showNotification(
         "Password Updated",
         "Your account security has been updated successfully.",
         "success"
       );
       
-      setTimeout(() => {
-        navigate("/settings");
-      }, 1000);
-    }, 1000);
+      navigate("/settings");
+    } catch (err: any) {
+      showNotification(
+        "Update Failed",
+        err.message || "Failed to update password. Please check your current password.",
+        "error"
+      );
+    }
   };
 
   return (
@@ -141,10 +158,10 @@ const PasswordSettings = () => {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isLoading}
             className="w-full flex items-center justify-center gap-2 rounded-xl bg-orange-500 py-4 text-sm font-bold text-white transition-all hover:bg-orange-600 disabled:opacity-50 active:scale-95"
           >
-            {isSubmitting ? (
+            {isLoading ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
             ) : <Save className="h-4 w-4" />}
             Update Password

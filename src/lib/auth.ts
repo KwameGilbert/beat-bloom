@@ -23,6 +23,7 @@ export interface User {
   website?: string;
   bio?: string;
   emailVerifiedAt?: string;
+  mfaEnabled: boolean;
   emailNotifications: boolean;
   pushNotifications: boolean;
   publicProfile: boolean;
@@ -192,6 +193,28 @@ export const authService = {
     } catch {
       // Ignore errors on logout
     }
+  },
+
+  /**
+   * Delete account
+   */
+  async deleteAccount(): Promise<{ success: boolean }> {
+    return api.delete('/auth/me');
+  },
+
+  /**
+   * 2FA Support
+   */
+  async setup2FA(): Promise<{ data: { secret: string; qrCode: string } }> {
+    return api.get('/auth/2fa/setup');
+  },
+
+  async verify2FA(code: string): Promise<{ data: { backupCodes: string[] } }> {
+    return api.post('/auth/2fa/verify', { code });
+  },
+
+  async disable2FA(): Promise<{ success: boolean }> {
+    return api.post('/auth/2fa/disable');
   },
 };
 

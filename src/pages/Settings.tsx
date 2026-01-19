@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useAuthStore from "@/store/authStore";
 import { useThemeStore } from "@/store/themeStore";
-import { useSettingsStore } from "@/store/settingsStore";
 import { 
   ArrowLeft, 
   Bell, 
@@ -18,60 +18,101 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/shared/ConfirmationModal";
+import { showNotification } from "@/components/ui/custom-notification";
 
 interface SettingItem {
   icon: any;
   label: string;
   value?: string;
   path?: string;
-  toggle?: () => void;
+  toggle?: () => Promise<void>;
   state?: boolean;
 }
 
 const Settings = () => {
   const navigate = useNavigate();
+  const { user, logout, deleteAccount, updateSettings, isLoading } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
-  const { 
-    emailNotifications, 
-    pushNotifications, 
-    publicProfile,
-    setEmailNotifications,
-    setPushNotifications,
-    setPublicProfile
-  } = useSettingsStore();
   
   const [modalState, setModalState] = useState<{
     show: boolean;
     type: "logout" | "delete" | null;
   }>({ show: false, type: null });
 
+  if (!user) {
+    navigate("/login");
+    return null;
+  }
+
+  const handleToggle = async (key: string, value: boolean) => {
+    try {
+      await updateSettings({ [key]: value });
+      showNotification("Settings updated", "Your preferences have been saved.", "success", 2000);
+    } catch (err: any) {
+      showNotification("Error", err.message || "Failed to update settings", "error");
+    }
+  };
+
+  const handleThemeToggle = async () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    try {
+      // Update local theme first for instant feedback
+      toggleTheme();
+      // Then sync with backend
+      await updateSettings({ theme: newTheme });
+    } catch (err: any) {
+       // If backend fails, we might want to revert local theme or just notify
+       console.error("Failed to sync theme with backend", err);
+    }
+  };
+
   const handleItemClick = (label: string) => {
-    alert(`${label} settings are coming soon!`);
+    showNotification("Coming Soon", `${label} settings are being implemented!`, "info");
   };
 
   const sections: { title: string; items: SettingItem[] }[] = [
     {
       title: "Account",
       items: [
-        { icon: Mail, label: "Email Address", value: "alex.p@example.com" },
+        { icon: Mail, label: "Email Address", value: user.email },
         { icon: Lock, label: "Password", value: "••••••••", path: "/settings/password" },
-        { icon: ShieldCheck, label: "Two-Factor Auth", value: "Off", path: "/settings/2fa" },
+        { icon: ShieldCheck, label: "Two-Factor Auth", value: user.mfaEnabled ? "On" : "Off", path: "/settings/2fa" },
       ]
     },
     {
       title: "Payments & Billing",
       items: [
-        { icon: CreditCard, label: "Payout Methods", value: "PayPal", path: "/settings/payouts" },
+        { icon: CreditCard, label: "Payout Methods", value: user.role === 'producer' ? "Manage" : "No methods added", path: "/settings/payouts" },
         { icon: TrendingUp, label: "Billing History", path: "/settings/billing" },
       ]
     },
     {
       title: "Preferences",
       items: [
-        { icon: Bell, label: "Email Notifications", state: emailNotifications, toggle: () => setEmailNotifications(!emailNotifications) },
-        { icon: Bell, label: "Push Notifications", state: pushNotifications, toggle: () => setPushNotifications(!pushNotifications) },
-        { icon: Eye, label: "Public Profile", state: publicProfile, toggle: () => setPublicProfile(!publicProfile) },
-        { icon: Moon, label: "Dark Mode", state: theme === "dark", toggle: toggleTheme },
+        { 
+          icon: Bell, 
+          label: "Email Notifications", 
+          state: user.emailNotifications, 
+          toggle: () => handleToggle('emailNotifications', !user.emailNotifications) 
+        },
+        { 
+          icon: Bell, 
+          label: "Push Notifications", 
+          state: user.pushNotifications, 
+          toggle: () => handleToggle('pushNotifications', !user.pushNotifications) 
+        },
+        { 
+          icon: Eye, 
+          label: "Public Profile", 
+          state: user.publicProfile, 
+          toggle: () => handleToggle('publicProfile', !user.publicProfile) 
+        },
+        { 
+          icon: Moon, 
+          label: "Dark Mode", 
+          state: theme === "dark", 
+          toggle: handleThemeToggle 
+        },
       ]
     }
   ];
@@ -84,13 +125,20 @@ const Settings = () => {
     setModalState({ show: true, type: "delete" });
   };
 
-  const confirmAction = () => {
+  const confirmAction = async () => {
     if (modalState.type === "logout") {
+      await logout();
       navigate("/login");
     } else if (modalState.type === "delete") {
-      alert("Account deleted successfully.");
-      navigate("/login");
+      try {
+        await deleteAccount();
+        showNotification("Account Deleted", "Your account has been permanently removed.", "success");
+        navigate("/login");
+      } catch (err: any) {
+        showNotification("Error", err.message || "Failed to delete account", "error");
+      }
     }
+    setModalState({ show: false, type: null });
   };
 
   return (
@@ -127,7 +175,8 @@ const Settings = () => {
                         else handleItemClick(item.label);
                       }}
                       className={cn(
-                        "flex items-center justify-between px-4 py-4 transition-colors hover:bg-secondary/30 cursor-pointer",
+                        "flex items-center justify-between px-4 py-4 transition-colors hover:bg-secondary/30",
+                        !item.toggle && "cursor-pointer",
                         itemIdx !== section.items.length - 1 && "border-b border-border"
                       )}
                     >
@@ -147,8 +196,9 @@ const Settings = () => {
                             e.stopPropagation();
                             item.toggle?.();
                           }}
+                          disabled={isLoading}
                           className={cn(
-                            "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                            "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50",
                             item.state ? "bg-orange-500" : "bg-zinc-700"
                           )}
                         >

@@ -7,7 +7,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { authService, type User, type RegisterData, type LoginData, type UpdateProfileData, type UpdateSettingsData, ApiError } from '@/lib/auth';
+import { authService, type User, type RegisterData, type LoginData, type UpdateProfileData, type UpdateSettingsData, type ChangePasswordData, ApiError } from '@/lib/auth';
 
 interface AuthState {
   // State
@@ -26,6 +26,11 @@ interface AuthState {
   fetchProfile: () => Promise<void>;
   updateProfile: (data: UpdateProfileData | FormData) => Promise<void>;
   updateSettings: (data: UpdateSettingsData) => Promise<void>;
+  changePassword: (data: ChangePasswordData) => Promise<void>;
+  deleteAccount: () => Promise<void>;
+  setup2FA: () => Promise<{ secret: string; qrCode: string }>;
+  verify2FA: (code: string) => Promise<string[]>;
+  disable2FA: () => Promise<void>;
   clearError: () => void;
   setUser: (user: User) => void;
 }
@@ -176,6 +181,86 @@ export const useAuthStore = create<AuthState>()(
           set({ user: response.data, isLoading: false });
         } catch (error) {
           const message = error instanceof ApiError ? error.message : 'Settings update failed';
+          set({ isLoading: false, error: message });
+          throw error;
+        }
+      },
+
+      /**
+       * Change user password
+       */
+      changePassword: async (data: ChangePasswordData) => {
+        set({ isLoading: true, error: null });
+        try {
+          await authService.changePassword(data);
+          set({ isLoading: false });
+        } catch (error) {
+          const message = error instanceof ApiError ? error.message : 'Password change failed';
+          set({ isLoading: false, error: message });
+          throw error;
+        }
+      },
+
+      /**
+       * Delete user account
+       */
+      deleteAccount: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          await authService.deleteAccount();
+          set({
+            user: null,
+            accessToken: null,
+            refreshToken: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        } catch (error) {
+          const message = error instanceof ApiError ? error.message : 'Account deletion failed';
+          set({ isLoading: false, error: message });
+          throw error;
+        }
+      },
+
+      /**
+       * 2FA Actions
+       */
+      setup2FA: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await authService.setup2FA();
+          set({ isLoading: false });
+          return response.data;
+        } catch (error) {
+          const message = error instanceof ApiError ? error.message : '2FA setup failed';
+          set({ isLoading: false, error: message });
+          throw error;
+        }
+      },
+
+      verify2FA: async (code: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await authService.verify2FA(code);
+          // Refresh profile after 2FA activation
+          await get().fetchProfile();
+          set({ isLoading: false });
+          return response.data.backupCodes;
+        } catch (error) {
+          const message = error instanceof ApiError ? error.message : '2FA verification failed';
+          set({ isLoading: false, error: message });
+          throw error;
+        }
+      },
+
+      disable2FA: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          await authService.disable2FA();
+          await get().fetchProfile();
+          set({ isLoading: false });
+        } catch (error) {
+          const message = error instanceof ApiError ? error.message : '2FA disable failed';
           set({ isLoading: false, error: message });
           throw error;
         }

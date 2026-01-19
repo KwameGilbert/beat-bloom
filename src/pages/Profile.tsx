@@ -206,7 +206,7 @@ const Profile = () => {
       {/* Cover Image */}
       <div className="relative h-48 sm:h-56 md:h-64">
         <img
-          src={user.avatar || "https://images.unsplash.com/photo-1614149162883-504ce4d13909?w=1200&q=80"}
+          src={user.coverImage || "https://images.unsplash.com/photo-1614149162883-504ce4d13909?w=1200&q=80"}
           alt="Cover"
           className="h-full w-full object-cover"
         />
