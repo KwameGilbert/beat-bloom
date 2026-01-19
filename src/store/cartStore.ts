@@ -1,13 +1,13 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Beat } from "@/data/beats";
+import type { Beat } from "@/lib/marketplace";
 
 interface CartState {
   items: Beat[];
   addToCart: (beat: Beat) => void;
-  removeFromCart: (beatId: string) => void;
+  removeFromCart: (beatId: string | number) => void;
   clearCart: () => void;
-  isInCart: (beatId: string) => boolean;
+  isInCart: (beatId: string | number) => boolean;
   total: number;
 }
 
@@ -17,20 +17,21 @@ export const useCartStore = create<CartState>()(
       items: [],
       
       get total() {
-        return get().items.reduce((sum, item) => sum + item.price, 0);
+        return get().items.reduce((sum, item) => sum + (item.price || 0), 0);
       },
       
       addToCart: (beat) => {
         const { items } = get();
         // Check if already in cart
-        if (items.some(item => item.id === beat.id)) {
+        if (items.some(item => item.id.toString() === beat.id.toString())) {
           return; // Already in cart
         }
         set({ items: [...items, beat] });
       },
       
       removeFromCart: (beatId) => {
-        set({ items: get().items.filter(item => item.id !== beatId) });
+        const idStr = beatId.toString();
+        set({ items: get().items.filter(item => item.id.toString() !== idStr) });
       },
       
       clearCart: () => {
@@ -38,7 +39,8 @@ export const useCartStore = create<CartState>()(
       },
       
       isInCart: (beatId) => {
-        return get().items.some(item => item.id === beatId);
+        const idStr = beatId.toString();
+        return get().items.some(item => item.id.toString() === idStr);
       },
     }),
     {

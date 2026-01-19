@@ -10,6 +10,7 @@ import {
   Briefcase
 } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
+import { showNotification } from "@/components/ui/custom-notification";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -39,7 +40,19 @@ const EditProfile = () => {
     setTimeout(() => {
       updateUser(formData);
       setIsSubmitting(false);
-      navigate("/profile");
+
+      // Show success notification
+      showNotification(
+        "Profile Updated",
+        "Your changes have been saved successfully.",
+        "success",
+        3000
+      );
+
+      // Navigate back after toast
+      setTimeout(() => {
+        navigate("/profile");
+      }, 1000);
     }, 800);
   };
 

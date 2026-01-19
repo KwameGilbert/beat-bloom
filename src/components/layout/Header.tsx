@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCartStore } from "@/store/cartStore";
 import { useThemeStore } from "@/store/themeStore";
 import { featuredBeats, trendingBeats, producers } from "@/data/beats";
+import { useAuthStore } from "@/store/authStore";
 import { AnimatePresence } from "framer-motion";
 import { SearchPanel } from "./SearchPanel";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   const location = useLocation();
   const itemCount = useCartStore((state) => state.items.length);
   const { theme, toggleTheme } = useThemeStore();
+  const { isAuthenticated } = useAuthStore();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -188,18 +190,35 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
           
           {/* Expanded Actions - Show earlier for Tablets (sm breakpoint) */}
           <div className="hidden items-center gap-1.5 sm:flex sm:gap-2">
-            <button className="relative inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-border bg-secondary/50 text-foreground/80 transition-all hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="sr-only">Notifications</span>
-              <span className="absolute right-2.5 top-2.5 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse"></span>
-            </button>
-
             <Link to="/profile">
-              <button className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-border bg-secondary/50 text-foreground/80 transition-all hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                <User className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="sr-only">Profile</span>
+              <button className="relative inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-border bg-secondary/50 text-foreground/80 transition-all hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="sr-only">Notifications</span>
+                <span className="absolute right-2.5 top-2.5 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse"></span>
               </button>
             </Link>
+
+            {isAuthenticated ? (
+              <Link to="/profile">
+                <button className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-border bg-secondary/50 text-foreground/80 transition-all hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <User className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="sr-only">Profile</span>
+                </button>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-1">
+                <Link to="/login">
+                  <button className="px-3 py-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors">
+                    Log In
+                  </button>
+                </Link>
+                <Link to="/signup">
+                  <button className="rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:bg-orange-600 active:scale-95">
+                    Sign Up
+                  </button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,14 +1,30 @@
-import { Flame, Sparkles } from "lucide-react";
+import { useEffect } from "react";
+import { Flame, Sparkles, Loader2 } from "lucide-react";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { GenreGrid } from "@/components/home/GenreGrid";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { BeatCard } from "@/components/shared/BeatCard";
-import { featuredBeats, trendingBeats, genres } from "@/data/beats";
+import { genres } from "@/data/beats";
+import { useBeatsStore } from "@/store/beatsStore";
 
 const Index = () => {
-  // We can derive "New Releases" from trending for now, or shuffle them
-  // For this demo, I'll just slice the trending array differently to fake variety
-  const newReleases = [...trendingBeats].reverse();
+  const { trendingBeats, isLoading, fetchTrending } = useBeatsStore();
+
+  useEffect(() => {
+    fetchTrending(12);
+  }, [fetchTrending]);
+
+  // For featured, we'll just use the first few trending for now until we have a featured endpoint
+  const featuredBeats = trendingBeats.slice(0, 3) as any[];
+  const newReleases = [...trendingBeats].reverse().slice(0, 6) as any[];
+
+  if (isLoading && trendingBeats.length === 0) {
+    return (
+      <div className="flex h-[80vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-12 p-6 md:p-8 pb-20">

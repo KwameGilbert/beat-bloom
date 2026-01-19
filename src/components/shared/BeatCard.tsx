@@ -1,25 +1,38 @@
 import { Play, Pause, Heart, ShoppingCart, Loader2, Check } from "lucide-react";
-import { Link } from "react-router-dom";
-import type { Beat } from "@/data/beats";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
 import { useLikesStore } from "@/store/likesStore";
+import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 
 interface BeatCardProps {
-  beat: Beat;
+  beat: any;
 }
 
 export const BeatCard = ({ beat }: BeatCardProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
   const { addToCart, removeFromCart, isInCart } = useCartStore();
   const { toggleLike, isLiked } = useLikesStore();
+  const { isAuthenticated } = useAuthStore();
   
-  const isCurrentBeat = currentBeat?.id === beat.id;
+  // Normalize fields between API and Mock data
+  const id = beat.id.toString();
+  const title = beat.title;
+  const producerName = beat.producerName || beat.producer;
+  const producerId = beat.producerId.toString();
+  const cover = beat.coverImage || beat.cover;
+  const bpm = beat.bpm;
+  const musicalKey = beat.musicalKey || beat.key;
+  const price = beat.price || (beat.licenseTiers && beat.licenseTiers[0]?.price) || 0;
+  
+  const isCurrentBeat = currentBeat?.id.toString() === id;
   const isPlayingCurrent = isCurrentBeat && isPlaying;
   const isLoadingCurrent = isCurrentBeat && isLoading;
-  const inCart = isInCart(beat.id);
-  const liked = isLiked(beat.id);
+  const inCart = isInCart(id);
+  const liked = isLiked(id);
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -33,7 +46,7 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
   const handleCartClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (inCart) {
-      removeFromCart(beat.id);
+      removeFromCart(id);
     } else {
       addToCart(beat);
     }
@@ -41,6 +54,10 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
 
   const handleLikeClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      navigate("/login", { state: { from: location } });
+      return;
+    }
     toggleLike(beat);
   };
 
@@ -49,8 +66,8 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
       {/* Cover Image Container */}
       <div className="relative aspect-square w-full overflow-hidden rounded-md bg-secondary/50">
         <img
-          src={beat.cover}
-          alt={beat.title}
+          src={cover}
+          alt={title}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
@@ -70,7 +87,7 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
             )}
           </button>
         </div>
-
+        
         {/* In Cart Badge */}
         {inCart && (
           <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-green-600 px-2 py-1 text-xs font-bold text-white">
@@ -82,26 +99,26 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
 
       {/* Info Section */}
       <div className="flex flex-col gap-1">
-        <Link to={`/beat/${beat.id}`} className="font-display font-bold text-foreground hover:underline truncate">
-          {beat.title}
+        <Link to={`/beat/${id}`} className="font-display font-bold text-foreground hover:underline truncate">
+          {title}
         </Link>
         <Link 
-          to={`/producer/${beat.producerId}`} 
+          to={beat.producerUsername ? `/producer/${beat.producerUsername}` : `/producer/${producerId}`} 
           className="text-xs text-muted-foreground hover:text-orange-500 hover:underline transition-colors"
         >
-          {beat.producer}
+          {producerName}
         </Link>
       </div>
 
       {/* Tags / Stats */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span className="rounded bg-secondary px-1.5 py-0.5">{beat.bpm} BPM</span>
-        <span className="rounded bg-secondary px-1.5 py-0.5">{beat.key}</span>
+        <span className="rounded bg-secondary px-1.5 py-0.5">{bpm} BPM</span>
+        <span className="rounded bg-secondary px-1.5 py-0.5">{musicalKey}</span>
       </div>
 
       {/* Footer Actions */}
       <div className="mt-1 flex items-center justify-between">
-        <span className="text-sm font-bold text-primary">${beat.price}</span>
+        <span className="text-sm font-bold text-primary">${Number(price).toFixed(2)}</span>
         
         <div className="flex items-center gap-2">
           <button 

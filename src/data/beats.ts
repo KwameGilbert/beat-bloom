@@ -41,6 +41,7 @@ export interface Beat {
 export interface Genre {
   id: string;
   name: string;
+  slug: string;
   count: number;
   color: string;
 }
@@ -537,12 +538,12 @@ export const producers: Producer[] = [
 ];
 
 export const genres: Genre[] = [
-  { id: "1", name: "Trap", count: 1250, color: "bg-orange-700/80 hover:bg-orange-600/80" },
-  { id: "2", name: "Hip Hop", count: 2100, color: "bg-purple-700/80 hover:bg-purple-600/80" },
-  { id: "3", name: "R&B", count: 890, color: "bg-blue-700/80 hover:bg-blue-600/80" },
-  { id: "4", name: "Electronic", count: 1560, color: "bg-emerald-700/80 hover:bg-emerald-600/80" },
-  { id: "5", name: "Lo-Fi", count: 720, color: "bg-yellow-700/80 hover:bg-yellow-600/80" },
-  { id: "6", name: "Pop", count: 980, color: "bg-pink-700/80 hover:bg-pink-600/80" },
+  { id: "1", name: "Trap", slug: "trap", count: 1250, color: "bg-orange-700/80 hover:bg-orange-600/80" },
+  { id: "2", name: "Hip Hop", slug: "hip-hop", count: 2100, color: "bg-purple-700/80 hover:bg-purple-600/80" },
+  { id: "3", name: "R&B", slug: "rnb", count: 890, color: "bg-blue-700/80 hover:bg-blue-600/80" },
+  { id: "4", name: "Electronic", slug: "electronic", count: 1560, color: "bg-emerald-700/80 hover:bg-emerald-600/80" },
+  { id: "5", name: "Lo-Fi", slug: "lofi", count: 720, color: "bg-yellow-700/80 hover:bg-yellow-600/80" },
+  { id: "6", name: "Pop", slug: "pop", count: 980, color: "bg-pink-700/80 hover:bg-pink-600/80" },
 ];
 
 // Helper functions

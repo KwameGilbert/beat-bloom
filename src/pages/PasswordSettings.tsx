@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   Save
 } from "lucide-react";
+import { showNotification } from "@/components/ui/custom-notification";
 
 const PasswordSettings = () => {
   const navigate = useNavigate();
@@ -28,8 +29,15 @@ const PasswordSettings = () => {
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
-      alert("Password updated successfully!");
-      navigate("/settings");
+      showNotification(
+        "Password Updated",
+        "Your account security has been updated successfully.",
+        "success"
+      );
+      
+      setTimeout(() => {
+        navigate("/settings");
+      }, 1000);
     }, 1000);
   };
 

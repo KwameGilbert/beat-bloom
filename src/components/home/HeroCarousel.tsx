@@ -2,14 +2,13 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Play, Pause, ShoppingCart, Heart, ChevronLeft, ChevronRight, Loader2, Check } from "lucide-react";
-import type { Beat } from "@/data/beats";
 import { usePlayerStore } from "@/store/playerStore";
 import { useLikesStore } from "@/store/likesStore";
 import { useCartStore } from "@/store/cartStore";
 import { cn } from "@/lib/utils";
 
 interface HeroCarouselProps {
-  beats: Beat[];
+  beats: any[];
 }
 
 export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
@@ -19,32 +18,43 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
   const { addToCart, removeFromCart, isInCart } = useCartStore();
 
   useEffect(() => {
+    if (beats.length <= 1) return;
     const interval = setInterval(() => {
-      // Pause auto-rotation if user is interacting or if this beat is playing? 
-      // Actually usually carousels keep rotating unless hovered. 
-      // For now, keep it simple.
       handleNext();
     }, 8000);
     return () => clearInterval(interval);
-  }, [currentIndex]);
+  }, [currentIndex, beats.length]);
 
   const handleNext = () => {
+    if (beats.length === 0) return;
     setCurrentIndex((prev) => (prev + 1) % beats.length);
   };
 
   const handlePrev = () => {
+    if (beats.length === 0) return;
     setCurrentIndex((prev) => (prev - 1 + beats.length) % beats.length);
   };
 
   const currentFeaturedBeat = beats[currentIndex];
-  // Check if the currently displayed featured beat is the one playing
-  const isFeaturedPlaying = currentBeat?.id === currentFeaturedBeat?.id && isPlaying;
-  const isFeaturedLoading = currentBeat?.id === currentFeaturedBeat?.id && isLoading;
-
   if (!currentFeaturedBeat) return null;
 
+  // Normalize
+  const id = currentFeaturedBeat.id.toString();
+  const title = currentFeaturedBeat.title;
+  const producerName = currentFeaturedBeat.producerName || currentFeaturedBeat.producer;
+  const producerId = currentFeaturedBeat.producerId.toString();
+  const cover = currentFeaturedBeat.coverImage || currentFeaturedBeat.cover;
+  const bpm = currentFeaturedBeat.bpm;
+  const musicalKey = currentFeaturedBeat.musicalKey || currentFeaturedBeat.key;
+  const duration = currentFeaturedBeat.duration || "3:00";
+  const price = currentFeaturedBeat.price || (currentFeaturedBeat.licenseTiers && currentFeaturedBeat.licenseTiers[0]?.price) || 29.99;
+  const tags = currentFeaturedBeat.tags || [];
+
+  const isFeaturedPlaying = currentBeat?.id.toString() === id && isPlaying;
+  const isFeaturedLoading = currentBeat?.id.toString() === id && isLoading;
+
   const handlePlayClick = () => {
-      if (currentBeat?.id === currentFeaturedBeat.id) {
+      if (currentBeat?.id.toString() === id) {
           togglePlay();
       } else {
           playBeat(currentFeaturedBeat);
@@ -56,21 +66,21 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
   };
 
   const handleCartClick = () => {
-      if (isInCart(currentFeaturedBeat.id)) {
-        removeFromCart(currentFeaturedBeat.id);
+      if (isInCart(id)) {
+        removeFromCart(id);
       } else {
         addToCart(currentFeaturedBeat);
       }
   };
 
-  const isCurrentLiked = isLiked(currentFeaturedBeat.id);
-  const isCurrentInCart = isInCart(currentFeaturedBeat.id);
+  const isCurrentLiked = isLiked(id);
+  const isCurrentInCart = isInCart(id);
 
   return (
     <div className="relative h-[400px] w-full overflow-hidden rounded-2xl bg-black">
       <AnimatePresence mode="wait">
         <motion.div
-          key={currentFeaturedBeat.id}
+          key={id}
           className="absolute inset-0"
           initial={{ opacity: 0, scale: 1.1 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -80,9 +90,8 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
           {/* Background Image */}
           <div 
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${currentFeaturedBeat.cover})` }}
+            style={{ backgroundImage: `url(${cover})` }}
           />
-          {/* ... Gradients ... */}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-transparent" />
         </motion.div>
@@ -91,12 +100,11 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
       {/* Content */}
       <div className="absolute inset-0 flex flex-col justify-center p-6 md:p-12">
         <div className="flex flex-col items-start gap-4">
-          {/* ... Tags ... */}
           <div className="flex flex-wrap gap-2">
             <span className="rounded-full bg-orange-600 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">
               Featured Beat
             </span>
-            {currentFeaturedBeat.tags.map(tag => (
+            {tags.map((tag: string) => (
               <span key={tag} className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
                 {tag}
               </span>
@@ -105,38 +113,37 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
 
           <AnimatePresence mode="wait">
              <motion.div
-               key={currentFeaturedBeat.id}
+               key={id}
                initial={{ y: 20, opacity: 0 }}
                animate={{ y: 0, opacity: 1 }}
                transition={{ delay: 0.2 }}
                className="space-y-2"
              >
-                <Link to={`/beat/${currentFeaturedBeat.id}`} className="font-display text-3xl font-bold text-white md:text-5xl lg:text-6xl">
-                  {currentFeaturedBeat.title}
+                <Link to={`/beat/${id}`} className="font-display text-3xl font-bold text-white md:text-5xl lg:text-6xl">
+                  {title}
                 </Link>
                 <br />
                 <Link 
-                  to={`/producer/${currentFeaturedBeat.producerId}`}
+                  to={currentFeaturedBeat.producerUsername ? `/producer/${currentFeaturedBeat.producerUsername}` : `/producer/${producerId}`}
                   className="text-lg text-white/60 md:text-xl hover:text-orange-500 hover:underline transition-colors"
                 >
-                  {currentFeaturedBeat.producer}
+                  {producerName}
                 </Link>
              </motion.div>
           </AnimatePresence>
           
-          {/* ... Stats ... */}
           <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-white/60 md:gap-4 md:text-sm">
              <span className="flex items-center gap-1">
                <span className="h-1 w-1 rounded-full bg-current" />
-               {currentFeaturedBeat.bpm} BPM
+               {bpm} BPM
              </span>
              <span className="flex items-center gap-1">
                <span className="h-1 w-1 rounded-full bg-current" />
-               {currentFeaturedBeat.key}
+               {musicalKey}
              </span>
              <span className="flex items-center gap-1">
                <span className="h-1 w-1 rounded-full bg-current" />
-               {currentFeaturedBeat.duration}
+               {duration}
              </span>
           </div>
 
@@ -168,7 +175,7 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
               ) : (
                 <ShoppingCart className="h-4 w-4 md:h-5 md:w-5" />
               )}
-              <span>{isCurrentInCart ? "In Cart" : `$${currentFeaturedBeat.price}`}</span>
+              <span>{isCurrentInCart ? "In Cart" : `$${Number(price).toFixed(2)}`}</span>
             </button>
             <button 
               onClick={handleLikeClick}
@@ -185,21 +192,22 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
         </div>
       </div>
       
-      {/* ... Nav Buittons ... */}
-      <div className="absolute bottom-4 right-4 flex gap-2 md:bottom-8 md:right-8">
-        <button 
-          onClick={handlePrev} 
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button 
-          onClick={handleNext} 
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      </div>
+      {beats.length > 1 && (
+        <div className="absolute bottom-4 right-4 flex gap-2 md:bottom-8 md:right-8">
+          <button 
+            onClick={handlePrev} 
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button 
+            onClick={handleNext} 
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

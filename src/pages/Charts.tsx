@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { 
   Play, 
@@ -10,64 +10,61 @@ import {
   Loader2,
   ShoppingCart
 } from "lucide-react";
-import { featuredBeats, trendingBeats, type Beat } from "@/data/beats";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
 import { useLikesStore } from "@/store/likesStore";
+import { useBeatsStore } from "@/store/beatsStore";
 import { cn } from "@/lib/utils";
-
-// Combine all beats
-const allBeats = [...featuredBeats, ...trendingBeats];
 
 type ChartTab = "top50" | "trending" | "hot";
 
 const Charts = () => {
   const [activeTab, setActiveTab] = useState<ChartTab>("top50");
+  const { trendingBeats, isLoading: isBeatsLoading, fetchTrending } = useBeatsStore();
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
   const { addToCart, removeFromCart, isInCart } = useCartStore();
   const { toggleLike, isLiked } = useLikesStore();
 
-  // Sort beats based on active tab using data from beats file
+  useEffect(() => {
+    fetchTrending(50);
+  }, [fetchTrending]);
+
   const chartBeats = useMemo(() => {
-    switch (activeTab) {
-      case "top50":
-        // Sort by plays (highest first)
-        return [...allBeats].sort((a, b) => b.plays - a.plays);
-      case "trending":
-        // Sort by price (premium first) - simulates trending as "premium picks"
-        return [...allBeats].sort((a, b) => b.price - a.price);
-      case "hot":
-        // Sort by BPM (faster beats = "hotter") 
-        return [...allBeats].sort((a, b) => b.bpm - a.bpm);
-      default:
-        return allBeats;
+    // Current backend only has one trending endpoint, so we'll use it for all tabs for now
+    // but we could sort locally as a simulation
+    const beats = [...trendingBeats];
+    if (activeTab === "hot") {
+      return beats.sort((a, b) => b.bpm - a.bpm);
     }
-  }, [activeTab]);
+    return beats;
+  }, [trendingBeats, activeTab]);
 
   const top3Beats = chartBeats.slice(0, 3);
   const remainingBeats = chartBeats.slice(3);
 
-  const handlePlayClick = (beat: Beat, e?: React.MouseEvent) => {
+  const handlePlayClick = (beat: any, e?: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
-    if (currentBeat?.id === beat.id) {
+    if (currentBeat?.id.toString() === beat.id.toString()) {
       togglePlay();
     } else {
       playBeat(beat);
     }
   };
 
-  const handleCartToggle = (beat: Beat, e: React.MouseEvent) => {
+  const handleCartToggle = (beat: any, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isInCart(beat.id)) {
-      removeFromCart(beat.id);
+    const id = beat.id.toString();
+    if (isInCart(id)) {
+      removeFromCart(id);
     } else {
       addToCart(beat);
     }
   };
 
   const formatPlays = (plays: number) => {
+    if (!plays) return "0";
     if (plays >= 1000000) {
       return `${(plays / 1000000).toFixed(1)}M`;
     }
@@ -95,6 +92,14 @@ const Charts = () => {
     { id: "trending" as ChartTab, label: "Trending", icon: TrendingUp },
     { id: "hot" as ChartTab, label: "Hot This Week", icon: Flame },
   ];
+
+  if (isBeatsLoading && trendingBeats.length === 0) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -135,83 +140,83 @@ const Charts = () => {
       {/* Main Content */}
       <div className="mx-auto max-w-6xl px-4 md:px-8">
         {/* Top 3 Hero Cards */}
-        <div className="space-y-4 mb-8">
-          {top3Beats.map((beat, index) => {
+        <div className="grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2 lg:grid-cols-3">
+          {top3Beats.map((beat: any, index) => {
             const rank = index + 1;
-            const isCurrentBeat = currentBeat?.id === beat.id;
+            const id = beat.id.toString();
+            const isCurrentBeat = currentBeat?.id.toString() === id;
             const isPlayingCurrent = isCurrentBeat && isPlaying;
             const isLoadingCurrent = isCurrentBeat && isLoading;
+            const cover = beat.coverImage || beat.cover;
 
             return (
-              <Link
-                key={beat.id}
-                to={`/beat/${beat.id}`}
-                className="group block"
+              <div
+                key={id}
+                className="group relative overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-orange-500/50"
               >
-                <div className="relative overflow-hidden rounded-xl border border-border bg-card">
-                  {/* Rank Badge */}
-                  <div
-                    className={cn(
-                      "absolute left-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold shadow-lg",
-                      getRankColor(rank)
-                    )}
-                  >
-                    {rank}
-                  </div>
-
-                  {/* Cover Image */}
-                  <div className="relative aspect-[16/9] sm:aspect-[21/9] overflow-hidden">
+                <Link to={`/beat/${id}`}>
+                  <div className="relative aspect-video overflow-hidden">
                     <img
-                      src={beat.cover}
+                      src={cover}
                       alt={beat.title}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    {/* Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                    {/* Play Button Overlay */}
-                    <div
-                      className={cn(
-                        "absolute inset-0 flex items-center justify-center transition-opacity",
-                        isPlayingCurrent || isLoadingCurrent
-                          ? "opacity-100"
-                          : "opacity-0 group-hover:opacity-100"
-                      )}
-                    >
-                      <button
-                        onClick={(e) => handlePlayClick(beat, e)}
-                        className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-500 text-white shadow-xl transition-transform hover:scale-110"
-                      >
-                        {isLoadingCurrent ? (
-                          <Loader2 className="h-6 w-6 animate-spin" />
-                        ) : isPlayingCurrent ? (
-                          <Pause className="h-6 w-6 fill-current" />
-                        ) : (
-                          <Play className="ml-1 h-6 w-6 fill-current" />
-                        )}
-                      </button>
-                    </div>
-
-                    {/* Info Overlay */}
+                    
                     <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <h3 className="text-xl font-bold text-white sm:text-2xl">
+                      <h3 className="text-lg font-bold text-white truncate">
                         {beat.title}
                       </h3>
-                      <p className="text-sm text-white/70">{beat.producer}</p>
+                      <p className="text-xs text-white/70">{beat.producerName || beat.producer}</p>
                     </div>
                   </div>
+                </Link>
 
-                  {/* Footer */}
-                  <div className="flex items-center justify-between p-4">
-                    <span className="text-sm text-muted-foreground">
-                      {formatPlays(beat.plays)} plays
-                    </span>
-                    <span className="text-lg font-bold text-orange-500">
-                                            ${beat.price.toFixed(2)}
+                {/* Rank Badge */}
+                <div
+                  className={cn(
+                    "absolute left-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold shadow-lg",
+                    getRankColor(rank)
+                  )}
+                >
+                  {rank}
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-card/80 backdrop-blur-sm">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground">{formatPlays(beat.plays)} plays</span>
+                    <span className="text-sm font-bold text-orange-500">
+                      ${Number(beat.price || (beat.licenseTiers && beat.licenseTiers[0]?.price) || 0).toFixed(2)}
                     </span>
                   </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => handlePlayClick(beat, e)}
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg transition-transform hover:scale-110"
+                    >
+                      {isLoadingCurrent ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : isPlayingCurrent ? (
+                        <Pause className="h-4 w-4 fill-current" />
+                      ) : (
+                        <Play className="ml-0.5 h-4 w-4 fill-current" />
+                      )}
+                    </button>
+                    <button
+                      onClick={(e) => handleCartToggle(beat, e)}
+                      className={cn(
+                        "flex h-10 w-10 items-center justify-center rounded-full transition-all",
+                        isInCart(id)
+                          ? "bg-green-600 text-white"
+                          : "bg-secondary text-foreground hover:bg-orange-500 hover:text-white"
+                      )}
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>
@@ -230,18 +235,19 @@ const Charts = () => {
 
             {/* Table Body */}
             <div className="divide-y divide-border">
-              {remainingBeats.map((beat, index) => {
+              {remainingBeats.map((beat: any, index) => {
                 const rank = index + 4;
-                const isCurrentBeat = currentBeat?.id === beat.id;
+                const id = beat.id.toString();
+                const isCurrentBeat = currentBeat?.id.toString() === id;
                 const isPlayingCurrent = isCurrentBeat && isPlaying;
                 const isLoadingCurrent = isCurrentBeat && isLoading;
-                const inCart = isInCart(beat.id);
+                const inCart = isInCart(id);
+                const cover = beat.coverImage || beat.cover;
 
                 return (
-                  <Link
-                    key={beat.id}
-                    to={`/beat/${beat.id}`}
-                    className="group grid grid-cols-12 items-center gap-2 sm:gap-4 px-4 py-3 transition-colors hover:bg-secondary/50"
+                  <div
+                    key={id}
+                    className="group grid grid-cols-12 items-center gap-2 sm:gap-4 px-4 py-3 transition-colors hover:bg-white/5"
                   >
                     {/* Rank */}
                     <div className="col-span-1 text-sm font-bold text-orange-500">
@@ -255,7 +261,7 @@ const Charts = () => {
                         onClick={(e) => handlePlayClick(beat, e)}
                       >
                         <img
-                          src={beat.cover}
+                          src={cover}
                           alt={beat.title}
                           className="h-full w-full object-cover"
                         />
@@ -277,11 +283,11 @@ const Charts = () => {
                         </div>
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate font-bold text-foreground group-hover:text-orange-500">
+                        <Link to={`/beat/${id}`} className="truncate block font-bold text-foreground hover:text-orange-500">
                           {beat.title}
-                        </p>
+                        </Link>
                         <p className="truncate text-xs text-muted-foreground">
-                          {beat.producer}
+                          {beat.producerName || beat.producer}
                         </p>
                       </div>
                     </div>
@@ -293,7 +299,7 @@ const Charts = () => {
 
                     {/* Price */}
                     <div className="col-span-2 text-center text-sm font-bold text-orange-500">
-                      ${beat.price.toFixed(2)}
+                      ${Number(beat.price || (beat.licenseTiers && beat.licenseTiers[0]?.price) || 0).toFixed(2)}
                     </div>
 
                     {/* Actions */}
@@ -306,12 +312,12 @@ const Charts = () => {
                         }}
                         className={cn(
                           "hidden sm:flex h-8 w-8 items-center justify-center rounded-full transition-colors",
-                          isLiked(beat.id)
+                          isLiked(id)
                             ? "text-red-500"
                             : "text-muted-foreground hover:text-red-500"
                         )}
                       >
-                        <Heart className={cn("h-4 w-4", isLiked(beat.id) && "fill-current")} />
+                        <Heart className={cn("h-4 w-4", isLiked(id) && "fill-current")} />
                       </button>
                       <button
                         onClick={(e) => handleCartToggle(beat, e)}
@@ -319,13 +325,13 @@ const Charts = () => {
                           "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
                           inCart
                             ? "bg-green-600 text-white hover:bg-red-500"
-                            : "bg-orange-500 text-white hover:bg-orange-600"
+                            : "bg-secondary text-foreground hover:bg-orange-500 hover:text-white"
                         )}
                       >
                         <ShoppingCart className="h-4 w-4" />
                       </button>
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>

@@ -15,6 +15,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+import { showNotification } from "@/components/ui/custom-notification";
 
 const panelTransition = {
   type: "spring" as const,
@@ -42,7 +43,19 @@ const Signup = () => {
         password: formData.password,
         role: roleType,
       });
-      navigate("/home");
+
+      // Show success notification
+      showNotification(
+        "Welcome to BeatBloom!",
+        "Account created successfully. Redirecting...",
+        "success",
+        2500
+      );
+
+      // Brief delay for the notification to be seen
+      setTimeout(() => {
+        navigate("/home");
+      }, 2000);
     } catch {
       // Error is handled in the store
     }

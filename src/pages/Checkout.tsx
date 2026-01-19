@@ -39,7 +39,7 @@ interface PaystackOptions {
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, removeFromCart, clearCart } = useCartStore();
-  const total = items.reduce((sum, item) => sum + item.price, 0);
+  const total = items.reduce((sum, item) => sum + (item.price || 0), 0);
   
   const [email, setEmail] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -86,7 +86,7 @@ const Checkout = () => {
         items: items.map(item => ({
           id: item.id,
           title: item.title,
-          price: item.price,
+          price: item.price || 0,
         })),
         custom_fields: [
           {
@@ -312,7 +312,7 @@ const Checkout = () => {
                     className="flex items-center gap-3 rounded-lg border border-border bg-secondary/50 p-3"
                   >
                     <img
-                      src={item.cover}
+                      src={item.coverImage}
                       alt={item.title}
                       className="h-12 w-12 rounded object-cover"
                     />
@@ -321,12 +321,12 @@ const Checkout = () => {
                         {item.title}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {item.producer}
+                        {item.producerName}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-orange-500">
-                        ${item.price.toFixed(2)}
+                        ${(item.price || 0).toFixed(2)}
                       </span>
                       <button
                         onClick={() => removeFromCart(item.id)}

@@ -12,47 +12,47 @@ import {
   Verified,
   Loader2,
   ShoppingCart,
-  MessageCircle,
-  Plus
+  MessageCircle
 } from "lucide-react";
-import { 
-  producers, 
-  getBeatsByProducerId, 
-  trendingBeats,
-  type Beat, 
-  type Producer 
-} from "@/data/beats";
 import { usePlayerStore } from "@/store/playerStore";
 import { useLikesStore } from "@/store/likesStore";
 import { useCartStore } from "@/store/cartStore";
 import { usePlaylistsStore } from "@/store/playlistsStore";
+import { useBeatsStore } from "@/store/beatsStore";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const ProducerProfile = () => {
   const { id } = useParams<{ id: string }>();
-  const [producer, setProducer] = useState<Producer | null>(null);
-  const [producerBeats, setProducerBeats] = useState<Beat[]>([]);
-  const [activeTab, setActiveTab] = useState<"popular" | "beats" | "about">("popular");
+  const [producer, setProducer] = useState<any>(null);
+  const [producerBeats, setProducerBeats] = useState<any[]>([]);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   
-  const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
+  const { playBeat, currentBeat, isPlaying, togglePlay } = usePlayerStore();
   const { toggleLike, isLiked } = useLikesStore();
   const { addToCart, removeFromCart, isInCart } = useCartStore();
   const { playlists } = usePlaylistsStore();
+  const { getProducer, fetchBeats, trendingBeats } = useBeatsStore();
 
   useEffect(() => {
-    if (id) {
-      // Find producer by ID or username
-      const foundProducer = producers.find(p => p.id === id || p.username.toLowerCase() === id.toLowerCase());
-      if (foundProducer) {
-        setProducer(foundProducer);
-        setProducerBeats(getBeatsByProducerId(foundProducer.id));
+    const loadProducerData = async () => {
+      if (!id) return;
+      setIsPageLoading(true);
+      
+      const data = await getProducer(id);
+      if (data) {
+        setProducer(data);
+        // Fetch discography
+        const beats = await fetchBeats({ producer: data.username });
+        if (beats && beats.length > 0) setProducerBeats(beats);
       }
-    }
-  }, [id]);
+      setIsPageLoading(false);
+    };
+    loadProducerData();
+  }, [id, getProducer, fetchBeats]);
 
-  if (!producer) {
+  if (isPageLoading) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
@@ -60,8 +60,18 @@ const ProducerProfile = () => {
     );
   }
 
-  const handlePlayClick = (beat: Beat) => {
-    if (currentBeat?.id === beat.id) {
+  if (!producer) {
+    return (
+      <div className="flex h-[80vh] flex-col items-center justify-center gap-4">
+        <h2 className="text-2xl font-bold">Producer Not Found</h2>
+        <Link to="/browse" className="text-orange-500 hover:underline">Back to Browse</Link>
+      </div>
+    );
+  }
+
+  const handlePlayClick = (beat: any) => {
+    const normalizedId = beat.id.toString();
+    if (currentBeat?.id.toString() === normalizedId) {
       togglePlay();
     } else {
       playBeat(beat);
@@ -69,23 +79,26 @@ const ProducerProfile = () => {
   };
 
   const formatPlays = (plays: number) => {
+    if (!plays) return "0";
     if (plays >= 1000000) return `${(plays / 1000000).toFixed(1)}M`;
     if (plays >= 1000) return `${(plays / 1000).toFixed(1)}K`;
     return plays.toString();
   };
 
+  const totalPlays = producerBeats.reduce((acc, b) => acc + (b.playsCount || 0), 0);
+  const avatar = producer.avatar || "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1200&q=80";
+
   return (
     <div className="min-h-screen bg-background pb-32">
       {/* Dynamic Header - Spotify Artist Style */}
       <div className="relative h-[350px] md:h-[450px] w-full overflow-hidden">
-        {/* Producer Cover/Background (Using high quality image or blurred avatar) */}
+        {/* Producer Cover/Background */}
         <div className="absolute inset-0">
           <img 
-            src={producer.avatar || "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1200&q=80"} 
+            src={producer.coverImage || avatar} 
             className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
-            alt={producer.name}
+            alt={producer.displayName}
           />
-          {/* Gradients to look like Spotify */}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-black/30" />
           <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-transparent" />
         </div>
@@ -98,22 +111,20 @@ const ProducerProfile = () => {
             className="flex flex-col gap-4"
           >
             <div className="flex items-center gap-2">
-              {producer.verified && (
-                <div className="flex items-center gap-1.5 text-blue-400">
-                  <Verified className="h-5 w-5 fill-current" />
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-white shadow-sm">Verified Artist</span>
-                </div>
-              )}
+              <div className="flex items-center gap-1.5 text-blue-400">
+                <Verified className="h-5 w-5 fill-current" />
+                <span className="text-[11px] font-bold uppercase tracking-widest text-white shadow-sm">Verified Artist</span>
+              </div>
             </div>
             
             <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-black text-white drop-shadow-2xl">
-              {producer.name}
+              {producer.displayName}
             </h1>
 
             <div className="flex items-center gap-6 mt-2 text-white/90 font-medium">
               <span className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                {formatPlays(producerBeats.reduce((acc, b) => acc + (b.plays || 0), 0))} monthly listeners
+                {formatPlays(totalPlays)} monthly listeners
               </span>
             </div>
           </motion.div>
@@ -128,7 +139,7 @@ const ProducerProfile = () => {
             onClick={() => producerBeats.length > 0 && handlePlayClick(producerBeats[0])}
             className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-500 text-white shadow-xl transition-all hover:scale-110 hover:bg-orange-600 active:scale-95"
           >
-            {isPlaying && currentBeat?.producerId === producer.id ? (
+            {isPlaying && producerBeats.some(b => b.id.toString() === currentBeat?.id.toString()) ? (
               <Pause className="h-6 w-6 fill-current" />
             ) : (
               <Play className="ml-1 h-6 w-6 fill-current" />
@@ -170,12 +181,16 @@ const ProducerProfile = () => {
           <section>
             <h2 className="text-2xl font-bold mb-6">Popular</h2>
             <div className="space-y-1">
-              {producerBeats.slice(0, 5).map((beat, index) => {
-                const isCurrent = currentBeat?.id === beat.id;
+              {producerBeats.slice(0, 10).map((beat, index) => {
+                const id = beat.id.toString();
+                const isCurrent = currentBeat?.id.toString() === id;
                 const playing = isCurrent && isPlaying;
+                const cover = beat.coverImage || beat.cover;
+                const price = beat.price || (beat.licenseTiers && beat.licenseTiers[0]?.price) || 0;
+
                 return (
                   <div 
-                    key={beat.id}
+                    key={id}
                     className={cn(
                       "group flex items-center gap-4 rounded-xl p-3 transition-all hover:bg-white/5",
                       isCurrent && "bg-white/10"
@@ -192,42 +207,42 @@ const ProducerProfile = () => {
                     </button>
                     
                     <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted shadow-lg">
-                      <img src={beat.cover} alt={beat.title} className="h-full w-full object-cover" />
+                      <img src={cover} alt={beat.title} className="h-full w-full object-cover" />
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className={cn(
-                        "truncate font-bold transition-colors group-hover:text-white",
+                      <Link to={`/beat/${id}`} className={cn(
+                        "truncate block font-bold transition-colors group-hover:text-white",
                         isCurrent ? "text-orange-500" : "text-white/90"
                       )}>
                         {beat.title}
-                      </p>
+                      </Link>
                       <p className="truncate text-xs text-muted-foreground">
-                        {beat.bpm} BPM • {beat.key}
+                        {beat.bpm} BPM • {beat.musicalKey}
                       </p>
                     </div>
 
                     <div className="hidden md:block w-24 text-right text-xs text-muted-foreground">
-                      {formatPlays(beat.plays || 0)} plays
+                      {formatPlays(beat.playsCount || 0)} plays
                     </div>
 
                     <div className="flex items-center gap-3 ml-4">
                       <button 
                         onClick={() => toggleLike(beat)}
-                        className={cn("transition-colors", isLiked(beat.id) ? "text-red-500" : "text-muted-foreground group-hover:text-white")}
+                        className={cn("transition-colors", isLiked(id) ? "text-red-500" : "text-muted-foreground group-hover:text-white")}
                       >
-                        <Heart className={cn("h-4 w-4", isLiked(beat.id) && "fill-current")} />
+                        <Heart className={cn("h-4 w-4", isLiked(id) && "fill-current")} />
                       </button>
                       
                       <div className="text-sm font-bold text-orange-500 w-16 text-right">
-                        ${beat.price}
+                        ${Number(price).toFixed(2)}
                       </div>
 
                       <button 
-                        onClick={() => isInCart(beat.id) ? removeFromCart(beat.id) : addToCart(beat)}
+                        onClick={() => isInCart(id) ? removeFromCart(id) : addToCart(beat)}
                         className={cn(
                           "rounded-full p-2 transition-all",
-                          isInCart(beat.id) ? "bg-orange-500 text-white" : "text-muted-foreground hover:bg-white/10 hover:text-white"
+                          isInCart(id) ? "bg-orange-500 text-white" : "text-muted-foreground hover:bg-white/10 hover:text-white"
                         )}
                       >
                         <ShoppingCart className="h-4 w-4" />
@@ -237,9 +252,6 @@ const ProducerProfile = () => {
                 );
               })}
             </div>
-            <button className="mt-6 text-sm font-bold text-muted-foreground hover:text-white transition-colors uppercase tracking-widest">
-              See more
-            </button>
           </section>
 
           {/* Producer Beats Collection */}
@@ -252,36 +264,40 @@ const ProducerProfile = () => {
             </div>
             
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {producerBeats.map((beat) => (
-                <Link 
-                  key={beat.id}
-                  to={`/beat/${beat.id}`}
-                  className="group flex flex-col p-4 rounded-2xl bg-white/5 border border-white/5 transition-all hover:bg-white/10 hover:border-white/10"
-                >
-                  <div className="relative aspect-square mb-4 rounded-xl overflow-hidden shadow-2xl">
-                    <img src={beat.cover} alt={beat.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePlayClick(beat);
-                        }}
-                        className="h-12 w-12 rounded-full bg-orange-500 text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110"
-                      >
-                        {currentBeat?.id === beat.id && isPlaying ? (
-                          <Pause className="h-5 w-5 fill-current" />
-                        ) : (
-                          <Play className="h-5 w-5 fill-current ml-0.5" />
-                        )}
-                      </button>
+              {producerBeats.map((beat) => {
+                const id = beat.id.toString();
+                const cover = beat.coverImage || beat.cover;
+                return (
+                  <Link 
+                    key={id}
+                    to={`/beat/${id}`}
+                    className="group flex flex-col p-4 rounded-2xl bg-white/5 border border-white/5 transition-all hover:bg-white/10 hover:border-white/10"
+                  >
+                    <div className="relative aspect-square mb-4 rounded-xl overflow-hidden shadow-2xl">
+                      <img src={cover} alt={beat.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePlayClick(beat);
+                          }}
+                          className="h-12 w-12 rounded-full bg-orange-500 text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110"
+                        >
+                          {currentBeat?.id.toString() === id && isPlaying ? (
+                            <Pause className="h-5 w-5 fill-current" />
+                          ) : (
+                            <Play className="h-5 w-5 fill-current ml-0.5" />
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <h3 className="font-bold text-foreground truncate">{beat.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {beat.bpm} BPM • {beat.key}
-                  </p>
-                </Link>
-              ))}
+                    <h3 className="font-bold text-foreground truncate">{beat.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {beat.bpm} BPM • {beat.musicalKey}
+                    </p>
+                  </Link>
+                );
+              })}
             </div>
           </section>
         </div>
@@ -293,7 +309,7 @@ const ProducerProfile = () => {
             <h2 className="text-2xl font-bold mb-6">About</h2>
             <div className="space-y-6">
               <p className="text-muted-foreground leading-relaxed">
-                {producer.bio}
+                {producer.bio || "No biography available."}
               </p>
               
               <div className="flex flex-col gap-4 pt-4 border-t border-white/10">
@@ -307,7 +323,7 @@ const ProducerProfile = () => {
                   <div className="h-8 w-8 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center">
                     <Clock className="h-4 w-4" />
                   </div>
-                  Active since 2021
+                  Active Producer
                 </div>
                 {producer.location && (
                   <div className="flex items-center gap-3 text-sm font-medium">
@@ -325,29 +341,33 @@ const ProducerProfile = () => {
           <section>
             <h2 className="text-2xl font-bold mb-6">Fans also like</h2>
             <div className="space-y-4">
-              {trendingBeats.filter(b => b.producerId !== producer.id).slice(0, 5).map(beat => (
-                <Link 
-                  key={beat.id}
-                  to={`/beat/${beat.id}`}
-                  className="flex items-center gap-4 group"
-                >
-                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-muted shadow-lg">
-                    <img src={beat.cover} alt={beat.title} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-bold text-foreground group-hover:text-orange-500 transition-colors truncate">
-                      {beat.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Artist • {beat.producer}
-                    </p>
-                  </div>
-                </Link>
-              ))}
+              {trendingBeats.filter(b => b.producerId !== producer.id).slice(0, 5).map(beat => {
+                const id = beat.id.toString();
+                const cover = beat.coverImage || (beat as any).cover;
+                return (
+                  <Link 
+                    key={id}
+                    to={`/beat/${id}`}
+                    className="flex items-center gap-4 group"
+                  >
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-muted shadow-lg">
+                      <img src={cover} alt={beat.title} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-foreground group-hover:text-orange-500 transition-colors truncate">
+                        {beat.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Artist • {beat.producerName}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </section>
 
-          {/* Playlists featuring (Mock data) */}
+          {/* Artist Playlists */}
           <section>
             <h2 className="text-2xl font-bold mb-6">Artist Playlists</h2>
             <div className="space-y-4">
@@ -357,8 +377,8 @@ const ProducerProfile = () => {
                   to={`/playlist/${playlist.id}`}
                   className="flex items-center gap-4 group"
                 >
-                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-muted shadow-lg">
-                    <img src={playlist.cover} alt={playlist.name} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
+                  <div className={cn("h-16 w-16 shrink-0 overflow-hidden rounded-xl shadow-lg flex items-center justify-center", playlist.color)}>
+                    <Music className="h-8 w-8 text-white/50" />
                   </div>
                   <div className="min-w-0">
                     <p className="font-bold text-foreground group-hover:text-orange-500 transition-colors truncate">

@@ -35,7 +35,7 @@ export const AppRoutes = () => {
     <Routes location={location}>
       {/* Auth Routes - Only accessible when NOT logged in */}
       <Route element={<AuthLayout />}>
-        <Route path="/" element={<Welcome />} />
+        <Route path="/welcome" element={<Welcome />} />
         <Route path="/login" element={
           <GuestRoute>
             <Login />
@@ -63,6 +63,7 @@ export const AppRoutes = () => {
         </AnimatePresence>
       }>
         {/* Public Routes - Accessible to everyone */}
+        <Route path="/" element={<Index />} />
         <Route path="/home" element={<Index />} />
         <Route path="/beat/:id" element={<BeatDetail />} />
         <Route path="/browse" element={<Browse />} />

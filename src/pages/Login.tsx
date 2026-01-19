@@ -14,6 +14,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+import { showNotification } from "@/components/ui/custom-notification";
 
 const panelTransition = {
   type: "spring" as const,
@@ -38,7 +39,19 @@ const Login = () => {
         email: formData.email,
         password: formData.password,
       });
-      navigate("/home");
+
+      // Show success notification
+      showNotification(
+        "Welcome back!",
+        "Successfully signed in. Redirecting...",
+        "success",
+        2000
+      );
+
+      // Brief delay
+      setTimeout(() => {
+        navigate("/home");
+      }, 1000);
     } catch {
       // Error is handled in the store
     }

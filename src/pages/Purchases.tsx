@@ -29,7 +29,7 @@ const Purchases = () => {
   const handlePlayClick = (beat: typeof purchases[0]["beat"], e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (currentBeat?.id === beat.id) {
+    if (currentBeat?.id.toString() === beat.id.toString()) {
       togglePlay();
     } else {
       playBeat(beat);
@@ -79,7 +79,7 @@ const Purchases = () => {
           <div className="space-y-3">
             {purchases.map((purchase) => {
               const { beat } = purchase;
-              const isCurrentBeat = currentBeat?.id === beat.id;
+              const isCurrentBeat = currentBeat?.id.toString() === beat.id.toString();
               const isCurrentPlaying = isCurrentBeat && isPlaying;
 
               return (
@@ -91,7 +91,7 @@ const Purchases = () => {
                   {/* Cover with Play Button */}
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg">
                     <img
-                      src={beat.cover}
+                      src={beat.coverImage}
                       alt={beat.title}
                       className="h-full w-full object-cover"
                     />
@@ -115,7 +115,7 @@ const Purchases = () => {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-foreground truncate">{beat.title}</h3>
-                    <p className="text-sm text-muted-foreground truncate">{beat.producer}</p>
+                    <p className="text-sm text-muted-foreground truncate">{beat.producerName}</p>
                     <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
@@ -135,7 +135,7 @@ const Purchases = () => {
                         e.preventDefault();
                         e.stopPropagation();
                         // In a real app, this would trigger file download
-                        window.open(beat.audio, "_blank");
+                        window.open(beat.previewAudioUrl, "_blank");
                       }}
                       className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors"
                     >

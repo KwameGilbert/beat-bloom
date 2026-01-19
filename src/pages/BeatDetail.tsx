@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { 
   ArrowLeft, 
   Play, 
@@ -19,26 +19,65 @@ import {
   FileAudio,
   Sparkles
 } from "lucide-react";
-
-import { featuredBeats, trendingBeats, getProducerById, type Beat, type LicenseTier } from "@/data/beats";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
 import { useLikesStore } from "@/store/likesStore";
+import { useAuthStore } from "@/store/authStore";
+import { useBeatsStore } from "@/store/beatsStore";
 import { BeatCard } from "@/components/shared/BeatCard";
 import { AddToPlaylistModal } from "@/components/shared/AddToPlaylistModal";
 import { cn } from "@/lib/utils";
 
-const allBeats = [...featuredBeats, ...trendingBeats];
-
 const BeatDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
+  const location = useLocation();
+  const [beat, setBeat] = useState<any>(null);
+  const [producerBeats, setProducerBeats] = useState<any[]>([]);
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  
+  const { playBeat, currentBeat, isPlaying, togglePlay, isLoading: isPlayerLoading } = usePlayerStore();
   const { toggleLike, isLiked } = useLikesStore();
+  const { isAuthenticated } = useAuthStore();
+  const { getBeat, beats: allBeats, fetchBeats } = useBeatsStore();
+  
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [selectedTierIndex, setSelectedTierIndex] = useState(0);
 
-  const beat = allBeats.find((b) => b.id === id);
+  useEffect(() => {
+    const loadBeatData = async () => {
+      if (!id) return;
+      setIsPageLoading(true);
+      const data = await getBeat(id);
+      if (data) {
+        setBeat(data);
+        // Fetch more from same producer
+        const pb = await fetchBeats({ producer: data.producerUsername || data.producerId });
+        // Since fetchBeats updates the store, we can filter from store or just use the response if we had it
+        // For now, use the beats from store that match producer
+      }
+      setIsPageLoading(false);
+    };
+    loadBeatData();
+  }, [id, getBeat, fetchBeats]);
+
+  useEffect(() => {
+      if (beat) {
+          const pb = allBeats.filter(b => 
+              (b.producerId === beat.producerId || b.producerUsername === beat.producerUsername) && 
+              b.id.toString() !== beat.id.toString()
+          ).slice(0, 6);
+          setProducerBeats(pb);
+      }
+  }, [allBeats, beat]);
+
+  if (isPageLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
 
   if (!beat) {
     return (
@@ -57,9 +96,17 @@ const BeatDetail = () => {
     );
   }
 
-  const isCurrentBeat = currentBeat?.id === beat.id;
+  const normalizedId = beat.id.toString();
+  const isCurrentBeat = currentBeat?.id.toString() === normalizedId;
   const isPlayingCurrent = isCurrentBeat && isPlaying;
-  const isLoadingCurrent = isCurrentBeat && isLoading;
+  const isLoadingCurrent = isCurrentBeat && isPlayerLoading;
+  
+  const producerName = beat.producerName || beat.producer;
+  const producerId = beat.producerId.toString();
+  const cover = beat.coverImage || beat.cover;
+  const musicalKey = beat.musicalKey || beat.key;
+  const price = beat.price || (beat.licenseTiers && beat.licenseTiers[0]?.price) || 0;
+  const tags = Array.isArray(beat.tags) ? beat.tags : (typeof beat.tags === 'string' ? JSON.parse(beat.tags) : []);
 
   const handlePlayClick = () => {
     if (isCurrentBeat) {
@@ -69,24 +116,16 @@ const BeatDetail = () => {
     }
   };
 
-  // Get producer info
-  const producer = getProducerById(beat.producerId);
-
-  // Get more beats from the same producer
-  const producerBeats = allBeats
-    .filter((b) => b.producerId === beat.producerId && b.id !== beat.id)
-    .slice(0, 6);
-
   return (
     <div className="min-h-screen bg-background">
       {/* Back Button */}
       <div className="relative z-10 border-b border-border px-3 sm:px-4 py-3 sm:py-4 md:px-8">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/browse")}
           className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Discover
+          Back to Browse
         </button>
       </div>
 
@@ -98,14 +137,12 @@ const BeatDetail = () => {
             {/* Cover Image */}
             <div className="group relative w-full aspect-[1/1] max-w-[100%] overflow-hidden rounded-xl md:rounded-2xl bg-secondary shadow-2xl cursor-pointer">
               <img
-                src={beat.cover}
+                src={cover}
                 alt={beat.title}
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
-              {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100 transition-opacity" />
               
-              {/* Play Button Overlay */}
               <div 
                 className={cn(
                   "absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity duration-300",
@@ -129,7 +166,7 @@ const BeatDetail = () => {
             <div className="flex h-12 items-center justify-center rounded-xl bg-secondary/50 px-2">
               <div className="flex h-[80%] w-full items-center justify-center gap-1">
                 {Array.from({ length: 60 }).map((_, i) => {
-                  const height = Math.random() * 100;
+                  const height = Math.random() * 80 + 20;
                   const isActive = isPlayingCurrent && i < 20;
                   return (
                     <div
@@ -151,7 +188,7 @@ const BeatDetail = () => {
             {/* Genre Tag */}
             <div>
               <span className="inline-block rounded-full bg-orange-500/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-orange-500">
-                {beat.tags[0]}
+                {tags[0] || "Instrumental"}
               </span>
             </div>
 
@@ -161,7 +198,7 @@ const BeatDetail = () => {
                 {beat.title}
               </h1>
               <p className="text-base sm:text-lg text-muted-foreground">
-                by <Link to={`/producer/${beat.producerId}`} className="font-medium text-foreground hover:text-orange-500 hover:underline cursor-pointer">{beat.producer}</Link>
+                by <Link to={`/producer/${beat.producerUsername || beat.producerId}`} className="font-medium text-foreground hover:text-orange-500 hover:underline cursor-pointer">{producerName}</Link>
               </p>
             </div>
 
@@ -173,11 +210,11 @@ const BeatDetail = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Music2 className="h-4 w-4" />
-                <span>Key: {beat.key}</span>
+                <span>Key: {musicalKey}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                <span>{beat.duration}</span>
+                <span>{beat.duration ? (typeof beat.duration === 'number' ? `${Math.floor(beat.duration / 60)}:${(beat.duration % 60).toString().padStart(2, '0')}` : beat.duration) : '3:00'}</span>
               </div>
             </div>
 
@@ -206,13 +243,19 @@ const BeatDetail = () => {
               </button>
 
               <button
-                onClick={() => toggleLike(beat)}
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    navigate("/login", { state: { from: location } });
+                    return;
+                  }
+                  toggleLike(beat);
+                }}
                 className={cn(
                   "flex h-12 w-12 items-center justify-center rounded-full border border-border transition-all",
-                  isLiked(beat.id) ? "bg-red-500 text-white" : "bg-secondary text-muted-foreground hover:text-red-500"
+                  isLiked(normalizedId) ? "bg-red-500 text-white" : "bg-secondary text-muted-foreground hover:text-red-500"
                 )}
               >
-                <Heart className={cn("h-5 w-5", isLiked(beat.id) && "fill-current")} />
+                <Heart className={cn("h-5 w-5", isLiked(normalizedId) && "fill-current")} />
               </button>
 
               <button className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground">
@@ -220,7 +263,13 @@ const BeatDetail = () => {
               </button>
 
               <button 
-                onClick={() => setIsPlaylistModalOpen(true)}
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    navigate("/login", { state: { from: location } });
+                    return;
+                  }
+                  setIsPlaylistModalOpen(true);
+                }}
                 className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-border bg-secondary text-muted-foreground transition-colors hover:text-foreground"
                 title="Add to Playlist"
               >
@@ -234,7 +283,7 @@ const BeatDetail = () => {
                 Description
               </h3>
               <p className="text-sm sm:text-base leading-relaxed text-foreground break-words">
-                {beat.description}
+                {beat.description || "No description provided for this beat."}
               </p>
             </div>
 
@@ -246,15 +295,17 @@ const BeatDetail = () => {
               
               {beat.licenseTiers && beat.licenseTiers.length > 0 ? (
                 <>
-                  {/* License Tier Cards */}
                   <div className="grid gap-3 mb-4">
-                    {beat.licenseTiers.map((tier, index) => {
+                    {beat.licenseTiers.map((tier: any, index: number) => {
                       const isSelected = selectedTierIndex === index;
-                      const isExclusive = tier.isExclusive;
+                      const isExclusive = tier.tierType === 'exclusive';
                       
+                      // Convert includedFiles if single string
+                      const includedFiles = Array.isArray(tier.includedFiles) ? tier.includedFiles : (typeof tier.includedFiles === 'string' ? JSON.parse(tier.includedFiles) : []);
+
                       return (
                         <button
-                          key={tier.type}
+                          key={tier.id}
                           onClick={() => setSelectedTierIndex(index)}
                           className={cn(
                             "relative w-full rounded-xl border-2 p-4 text-left transition-all",
@@ -265,7 +316,6 @@ const BeatDetail = () => {
                               : "border-border bg-secondary/30 hover:border-muted-foreground/50"
                           )}
                         >
-                          {/* Selection indicator */}
                           <div className={cn(
                             "absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all",
                             isSelected
@@ -278,18 +328,11 @@ const BeatDetail = () => {
                           </div>
                           
                           <div className="flex items-start gap-3 pr-10">
-                            {/* Tier Icon */}
                             <div className={cn(
                               "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
                               isExclusive ? "bg-purple-500/20 text-purple-500" : "bg-orange-500/20 text-orange-500"
                             )}>
-                              {tier.type === 'exclusive' ? (
-                                <Crown className="h-5 w-5" />
-                              ) : tier.type === 'stems' ? (
-                                <Sparkles className="h-5 w-5" />
-                              ) : (
-                                <FileAudio className="h-5 w-5" />
-                              )}
+                              {tier.tierType === 'exclusive' ? <Crown className="h-5 w-5" /> : <FileAudio className="h-5 w-5" />}
                             </div>
                             
                             <div className="flex-1 min-w-0">
@@ -303,7 +346,7 @@ const BeatDetail = () => {
                               </div>
                               <p className="text-xs text-muted-foreground mb-2">{tier.description}</p>
                               <div className="flex flex-wrap gap-1">
-                                {tier.includedFiles.map((file, idx) => (
+                                {includedFiles.map((file: string, idx: number) => (
                                   <span 
                                     key={idx} 
                                     className="rounded bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
@@ -314,13 +357,12 @@ const BeatDetail = () => {
                               </div>
                             </div>
                             
-                            {/* Price */}
                             <div className="text-right shrink-0">
                               <span className={cn(
                                 "text-xl font-bold",
                                 isExclusive ? "text-purple-500" : "text-orange-500"
                               )}>
-                                ${tier.price.toFixed(2)}
+                                ${Number(tier.price).toFixed(2)}
                               </span>
                             </div>
                           </div>
@@ -329,66 +371,47 @@ const BeatDetail = () => {
                     })}
                   </div>
                   
-                  {/* Action Buttons with selected tier */}
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <AddToCartButtonWithTier beat={beat} selectedTier={beat.licenseTiers[selectedTierIndex]} />
                     <button 
                       onClick={() => {
                         const { addToCart, isInCart } = useCartStore.getState();
                         const selectedTier = beat.licenseTiers![selectedTierIndex];
-                        // Create a beat object with the selected tier's price
                         const beatWithTier = { ...beat, price: selectedTier.price, selectedLicense: selectedTier };
-                        if (!isInCart(beat.id)) {
+                        if (!isInCart(normalizedId)) {
                           addToCart(beatWithTier);
                         }
                         navigate("/checkout");
                       }}
                       className={cn(
                         "flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-bold transition-all",
-                        beat.licenseTiers[selectedTierIndex].isExclusive
+                        beat.licenseTiers[selectedTierIndex].tierType === 'exclusive'
                           ? "border-purple-500 bg-purple-500 text-white hover:bg-purple-600"
                           : "border-border bg-secondary text-foreground hover:bg-secondary/80"
                       )}
                     >
                       <Download className="h-4 w-4" />
-                      Buy Now - ${beat.licenseTiers[selectedTierIndex].price.toFixed(2)}
+                      Buy Now - ${Number(beat.licenseTiers[selectedTierIndex].price).toFixed(2)}
                     </button>
                   </div>
                 </>
               ) : (
-                /* Legacy single price display */
-                <>
-                  <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-2xl sm:text-3xl font-bold text-orange-500">
-                        ${beat.price.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      {beat.includedFiles.map((file, idx) => (
-                        <p key={idx} className="text-xs text-muted-foreground">{file}</p>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <AddToCartButton beat={beat} />
-                    <button 
-                      onClick={() => {
-                        const { addToCart, isInCart } = useCartStore.getState();
-                        if (!isInCart(beat.id)) {
-                          addToCart(beat);
-                        }
-                        navigate("/checkout");
-                      }}
-                      className="flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-full border border-border bg-secondary px-4 py-3 text-sm font-bold text-foreground transition-all hover:bg-secondary/80"
-                    >
-                      <Download className="h-4 w-4" />
-                      Buy Now
-                    </button>
-                  </div>
-                </>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <AddToCartButton beat={beat} />
+                  <button 
+                    onClick={() => {
+                      const { addToCart, isInCart } = useCartStore.getState();
+                      if (!isInCart(normalizedId)) {
+                        addToCart(beat);
+                      }
+                      navigate("/checkout");
+                    }}
+                    className="flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-full border border-border bg-secondary px-4 py-3 text-sm font-bold text-foreground transition-all hover:bg-secondary/80"
+                  >
+                    <Download className="h-4 w-4" />
+                    Buy Now
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -399,10 +422,10 @@ const BeatDetail = () => {
           <div className="mt-12 md:mt-16">
             <div className="mb-4 md:mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="font-display text-xl font-bold text-foreground sm:text-2xl md:text-3xl">
-                More from {beat.producer}
+                More from {producerName}
               </h2>
               <Link
-                to={`/producer/${beat.producerId}`}
+                to={`/producer/${beat.producerUsername || beat.producerId}`}
                 className="text-xs sm:text-sm font-medium text-orange-500 hover:underline whitespace-nowrap"
               >
                 View All
@@ -417,22 +440,21 @@ const BeatDetail = () => {
         )}
 
         {/* About Producer */}
-        {producer && (
+        {beat.producerBio && (
           <div className="mt-8 md:mt-12">
             <h2 className="mb-4 md:mb-6 font-display text-xl font-bold text-foreground sm:text-2xl md:text-3xl">
               About Producer
             </h2>
             <div className="rounded-xl border border-border bg-card p-4 sm:p-6 md:p-8">
               <div className="flex flex-col gap-4 sm:gap-6 md:flex-row md:items-start md:gap-8">
-                {/* Producer Avatar */}
                 <div className="shrink-0 mx-auto md:mx-0">
                   <div className="relative h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32 overflow-hidden rounded-full border-4 border-orange-500/20">
                     <img
-                      src={producer.avatar || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=400&q=80"}
-                      alt={producer.name}
+                      src={beat.producerAvatar || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=400&q=80"}
+                      alt={producerName}
                       className="h-full w-full object-cover"
                     />
-                    {producer.verified && (
+                    {beat.isProducerVerified && (
                       <div className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 shadow-lg">
                         <CheckCircle className="h-5 w-5 text-white" />
                       </div>
@@ -440,50 +462,26 @@ const BeatDetail = () => {
                   </div>
                 </div>
 
-                {/* Producer Info */}
                 <div className="flex-1 min-w-0 text-center md:text-left">
                   <div className="mb-4">
                     <div className="mb-2 flex items-center justify-center md:justify-start gap-3">
                       <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground">
-                        {producer.name}
+                        {producerName}
                       </h3>
-                      {producer.verified && (
+                      {beat.isProducerVerified && (
                         <CheckCircle className="h-6 w-6 text-orange-500" />
                       )}
                     </div>
-                    {producer.location && (
-                      <div className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground">
-                        <MapPin className="h-4 w-4" />
-                        <span className="text-xs sm:text-sm">{producer.location}</span>
-                      </div>
-                    )}
                   </div>
 
                   <p className="mb-4 sm:mb-6 text-sm sm:text-base leading-relaxed text-muted-foreground">
-                    {producer.bio}
+                    {beat.producerBio}
                   </p>
-
-                  {/* Producer Stats */}
-                  <div className="flex flex-wrap justify-center md:justify-start gap-4 sm:gap-6">
-                    <div>
-                      <p className="text-xl sm:text-2xl font-bold text-orange-500">
-                        {producerBeats.length + 1}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Beats</p>
-                    </div>
-                    <div>
-                      <p className="text-xl sm:text-2xl font-bold text-orange-500">
-                        {producer.verified ? "Verified" : "New"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Status</p>
-                    </div>
-                  </div>
                 </div>
 
-                {/* View Profile Button */}
                 <div className="shrink-0 w-full md:w-auto">
                   <Link
-                    to={`/producer/${beat.producerId}`}
+                    to={`/producer/${beat.producerUsername || beat.producerId}`}
                     className="inline-flex w-full md:w-auto items-center justify-center gap-2 rounded-full border border-border bg-secondary px-6 py-3 text-sm sm:text-base font-bold text-foreground transition-all hover:bg-secondary/80"
                   >
                     View Profile
@@ -507,13 +505,14 @@ const BeatDetail = () => {
 };
 
 // Add to Cart Button Component
-const AddToCartButton = ({ beat }: { beat: Beat }) => {
+const AddToCartButton = ({ beat }: { beat: any }) => {
   const { addToCart, removeFromCart, isInCart } = useCartStore();
-  const inCart = isInCart(beat.id);
+  const id = beat.id.toString();
+  const inCart = isInCart(id);
 
   const handleClick = () => {
     if (inCart) {
-      removeFromCart(beat.id);
+      removeFromCart(id);
     } else {
       addToCart(beat);
     }
@@ -536,15 +535,15 @@ const AddToCartButton = ({ beat }: { beat: Beat }) => {
 };
 
 // Add to Cart Button with License Tier
-const AddToCartButtonWithTier = ({ beat, selectedTier }: { beat: Beat; selectedTier: LicenseTier }) => {
+const AddToCartButtonWithTier = ({ beat, selectedTier }: { beat: any; selectedTier: any }) => {
   const { addToCart, removeFromCart, isInCart } = useCartStore();
-  const inCart = isInCart(beat.id);
+  const id = beat.id.toString();
+  const inCart = isInCart(id);
 
   const handleClick = () => {
     if (inCart) {
-      removeFromCart(beat.id);
+      removeFromCart(id);
     } else {
-      // Create a beat object with the selected tier's price and info
       const beatWithTier = { 
         ...beat, 
         price: selectedTier.price, 
@@ -561,13 +560,13 @@ const AddToCartButtonWithTier = ({ beat, selectedTier }: { beat: Beat; selectedT
         "flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-bold shadow-lg transition-all active:scale-95",
         inCart
           ? "bg-green-600 text-white hover:bg-red-500"
-          : selectedTier.isExclusive
+          : selectedTier.tierType === 'exclusive'
             ? "bg-purple-500 text-white hover:bg-purple-600"
             : "bg-orange-500 text-white hover:bg-orange-600"
       )}
     >
       <ShoppingCart className="h-4 w-4" />
-      {inCart ? "Remove from Cart" : `Add to Cart - $${selectedTier.price.toFixed(2)}`}
+      {inCart ? "Remove from Cart" : `Add to Cart - $${Number(selectedTier.price).toFixed(2)}`}
     </button>
   );
 };

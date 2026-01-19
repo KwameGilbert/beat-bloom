@@ -1,13 +1,13 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { type Beat } from "@/data/beats";
+import { type Beat } from "@/lib/marketplace";
 
 interface LikesState {
   likedBeats: Beat[];
   addLike: (beat: Beat) => void;
-  removeLike: (beatId: string) => void;
+  removeLike: (beatId: string | number) => void;
   toggleLike: (beat: Beat) => void;
-  isLiked: (beatId: string) => boolean;
+  isLiked: (beatId: string | number) => boolean;
   clearLikes: () => void;
 }
 
@@ -18,20 +18,21 @@ export const useLikesStore = create<LikesState>()(
 
       addLike: (beat) => {
         const { likedBeats } = get();
-        if (!likedBeats.find((b) => b.id === beat.id)) {
+        if (!likedBeats.find((b) => b.id.toString() === beat.id.toString())) {
           set({ likedBeats: [...likedBeats, beat] });
         }
       },
 
       removeLike: (beatId) => {
+        const idStr = beatId.toString();
         set((state) => ({
-          likedBeats: state.likedBeats.filter((b) => b.id !== beatId),
+          likedBeats: state.likedBeats.filter((b) => b.id.toString() !== idStr),
         }));
       },
 
       toggleLike: (beat) => {
         const { likedBeats, addLike, removeLike } = get();
-        if (likedBeats.find((b) => b.id === beat.id)) {
+        if (likedBeats.find((b) => b.id.toString() === beat.id.toString())) {
           removeLike(beat.id);
         } else {
           addLike(beat);
@@ -39,7 +40,8 @@ export const useLikesStore = create<LikesState>()(
       },
 
       isLiked: (beatId) => {
-        return get().likedBeats.some((b) => b.id === beatId);
+        const idStr = beatId.toString();
+        return get().likedBeats.some((b) => b.id.toString() === idStr);
       },
 
       clearLikes: () => {

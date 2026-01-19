@@ -1,10 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Beat } from "@/data/beats";
-import { featuredBeats, trendingBeats } from "@/data/beats";
-
-// All beats as the default playlist
-const allBeats = [...featuredBeats, ...trendingBeats];
+import type { Beat } from "@/lib/marketplace";
 
 interface PlayerState {
   currentBeat: Beat | null;
@@ -27,13 +23,16 @@ interface PlayerState {
   toggleShuffle: () => void;
   toggleRepeat: () => void;
   closePlayer: () => void;
+  setPlaylist: (playlist: Beat[]) => void;
 }
 
 const MAX_RECENTLY_PLAYED = 20;
 
 // Get a random beat from playlist (for shuffle)
-const getRandomBeat = (playlist: Beat[], currentId: string | undefined): Beat | null => {
-  const available = playlist.filter(b => b.id !== currentId);
+const getRandomBeat = (playlist: Beat[], currentId: string | number | undefined): Beat | null => {
+  if (!currentId) return playlist[0] || null;
+  const idStr = currentId.toString();
+  const available = playlist.filter(b => b.id.toString() !== idStr);
   if (available.length === 0) return playlist[0] || null;
   return available[Math.floor(Math.random() * available.length)];
 };
@@ -48,12 +47,13 @@ export const usePlayerStore = create<PlayerState>()(
       recentlyPlayed: [],
       shuffle: false,
       repeat: "off",
-      playlist: allBeats,
+      playlist: [],
       
       playBeat: (beat) => {
         const { recentlyPlayed } = get();
+        const idStr = beat.id.toString();
         // Remove the beat if it already exists in recently played
-        const filtered = recentlyPlayed.filter((b) => b.id !== beat.id);
+        const filtered = recentlyPlayed.filter((b) => b.id.toString() !== idStr);
         // Add to the beginning of the array
         const updated = [beat, ...filtered].slice(0, MAX_RECENTLY_PLAYED);
         set({ currentBeat: beat, isPlaying: true, recentlyPlayed: updated });
@@ -71,13 +71,14 @@ export const usePlayerStore = create<PlayerState>()(
         if (!currentBeat || playlist.length === 0) return;
 
         let nextBeat: Beat | null = null;
+        const currentIdStr = currentBeat.id.toString();
 
         if (shuffle) {
           // Random track
           nextBeat = getRandomBeat(playlist, currentBeat.id);
         } else {
           // Sequential - always go to next track
-          const currentIndex = playlist.findIndex(b => b.id === currentBeat.id);
+          const currentIndex = playlist.findIndex(b => b.id.toString() === currentIdStr);
           const nextIndex = currentIndex + 1;
           
           if (nextIndex >= playlist.length) {
@@ -89,7 +90,8 @@ export const usePlayerStore = create<PlayerState>()(
         }
 
         if (nextBeat) {
-          const filtered = recentlyPlayed.filter((b) => b.id !== nextBeat!.id);
+          const nextIdStr = nextBeat.id.toString();
+          const filtered = recentlyPlayed.filter((b) => b.id.toString() !== nextIdStr);
           const updated = [nextBeat, ...filtered].slice(0, MAX_RECENTLY_PLAYED);
           set({ currentBeat: nextBeat, isPlaying: true, recentlyPlayed: updated });
         }
@@ -100,13 +102,14 @@ export const usePlayerStore = create<PlayerState>()(
         if (!currentBeat || playlist.length === 0) return;
 
         let prevBeat: Beat | null = null;
+        const currentIdStr = currentBeat.id.toString();
 
         if (shuffle) {
           // Random track
           prevBeat = getRandomBeat(playlist, currentBeat.id);
         } else {
           // Sequential
-          const currentIndex = playlist.findIndex(b => b.id === currentBeat.id);
+          const currentIndex = playlist.findIndex(b => b.id.toString() === currentIdStr);
           const prevIndex = currentIndex - 1;
           
           if (prevIndex < 0) {
@@ -118,7 +121,8 @@ export const usePlayerStore = create<PlayerState>()(
         }
 
         if (prevBeat) {
-          const filtered = recentlyPlayed.filter((b) => b.id !== prevBeat!.id);
+          const prevIdStr = prevBeat.id.toString();
+          const filtered = recentlyPlayed.filter((b) => b.id.toString() !== prevIdStr);
           const updated = [prevBeat, ...filtered].slice(0, MAX_RECENTLY_PLAYED);
           set({ currentBeat: prevBeat, isPlaying: true, recentlyPlayed: updated });
         }
@@ -134,6 +138,8 @@ export const usePlayerStore = create<PlayerState>()(
       }),
 
       closePlayer: () => set({ currentBeat: null, isPlaying: false }),
+
+      setPlaylist: (playlist) => set({ playlist }),
     }),
     {
       name: "beatbloom-player",

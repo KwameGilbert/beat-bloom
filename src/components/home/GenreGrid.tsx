@@ -12,7 +12,7 @@ export const GenreGrid = ({ genres }: GenreGridProps) => {
       {genres.map((genre) => (
         <Link
           key={genre.id}
-          to={`/browse?genre=${genre.name}`}
+          to={`/browse?genre=${genre.slug}`}
           className={cn(
             "group relative flex h-24 flex-col items-center justify-center overflow-hidden rounded-lg p-4 text-center transition-all hover:scale-105 hover:shadow-lg",
             genre.color
