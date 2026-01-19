@@ -15,7 +15,7 @@ import {
   ListPlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Beat } from "@/data/beats";
+import type { Beat } from "@/lib/marketplace";
 
 interface DesktopPlayerProps {
   currentBeat: Beat;
@@ -71,7 +71,7 @@ export const DesktopPlayer = ({
       <div className="flex flex-1 items-center gap-4 min-w-0">
         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md group relative border border-border">
           <img 
-            src={currentBeat.cover} 
+            src={currentBeat.coverImage} 
             alt={currentBeat.title}
             className="h-full w-full object-cover" 
           />

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Beat } from "@/lib/marketplace";
+import { marketplaceService } from "@/lib/marketplace";
 
 interface PlayerState {
   currentBeat: Beat | null;
@@ -49,7 +50,7 @@ export const usePlayerStore = create<PlayerState>()(
       repeat: "off",
       playlist: [],
       
-      playBeat: (beat) => {
+      playBeat: async (beat) => {
         const { recentlyPlayed } = get();
         const idStr = beat.id.toString();
         // Remove the beat if it already exists in recently played
@@ -57,6 +58,13 @@ export const usePlayerStore = create<PlayerState>()(
         // Add to the beginning of the array
         const updated = [beat, ...filtered].slice(0, MAX_RECENTLY_PLAYED);
         set({ currentBeat: beat, isPlaying: true, recentlyPlayed: updated });
+
+        // Record play on backend
+        try {
+          await marketplaceService.recordPlay(beat.id);
+        } catch (error) {
+          console.error("Failed to record play on backend:", error);
+        }
       },
       
       pause: () => set({ isPlaying: false }),

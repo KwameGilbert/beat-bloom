@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { type Beat } from "@/lib/marketplace";
+import { type Beat, marketplaceService } from "@/lib/marketplace";
 
 interface LikesState {
   likedBeats: Beat[];
@@ -30,12 +30,23 @@ export const useLikesStore = create<LikesState>()(
         }));
       },
 
-      toggleLike: (beat) => {
+      toggleLike: async (beat) => {
         const { likedBeats, addLike, removeLike } = get();
-        if (likedBeats.find((b) => b.id.toString() === beat.id.toString())) {
+        const isCurrentlyLiked = likedBeats.find((b) => b.id.toString() === beat.id.toString());
+        
+        if (isCurrentlyLiked) {
           removeLike(beat.id);
         } else {
           addLike(beat);
+        }
+
+        // Backend integration
+        try {
+          // marketplaceService.toggleLike internally uses api.post which includes token if available
+          await marketplaceService.toggleLike(beat.id);
+        } catch (error) {
+          console.error("Failed to sync like with backend:", error);
+          // Optional: Revert local state if not authenticated or error
         }
       },
 

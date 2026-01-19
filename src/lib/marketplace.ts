@@ -20,25 +20,30 @@ export interface LicenseTier {
 }
 
 export interface Beat {
-  id: number;
-  producerId: number;
-  genreId?: number;
+  id: number | string;
+  producerId: number | string;
+  genreId?: number | string;
   title: string;
   slug: string;
   description?: string;
   bpm: number;
   musicalKey: string;
+  key?: string; // Backward compatibility
   duration?: string;
   durationSeconds?: number;
   coverImage?: string;
+  cover?: string; // Backward compatibility
   previewAudioUrl?: string;
+  audio?: string; // Backward compatibility
   tags: string[];
   playsCount: number;
+  plays?: number; // Backward compatibility
   likesCount: number;
   isExclusiveSold: boolean;
   status: 'draft' | 'active' | 'archived' | 'soldExclusive';
   isFeatured: boolean;
   producerName: string;
+  producer?: string; // Backward compatibility
   producerUsername: string;
   genreName?: string;
   licenseTiers?: LicenseTier[];
@@ -105,8 +110,15 @@ export const marketplaceService = {
   /**
    * Record a play for a beat
    */
-  async recordPlay(id: string | number): Promise<void> {
-    return api.post(`/beats/${id}/play`);
+  async recordPlay(id: string | number, details: { duration?: number; sessionId?: string } = {}): Promise<void> {
+    return api.post(`/activity/plays/${id}`, details);
+  },
+
+  /**
+   * Toggle like on a beat
+   */
+  async toggleLike(id: string | number): Promise<SingleResponse<{ liked: boolean }>> {
+    return api.post<SingleResponse<{ liked: boolean }>>(`/activity/likes/${id}`);
   },
 
   /**
