@@ -1,6 +1,6 @@
 import { Music, Users, Clock, X, Search as SearchIcon } from "lucide-react";
 import { motion } from "framer-motion";
-import { type Beat, type Producer } from "@/data/beats";
+import { type Beat, type Producer } from "@/lib/marketplace";
 
 interface SearchPanelProps {
   searchQuery: string;
@@ -99,14 +99,14 @@ export const SearchPanel = ({
                           className="flex items-center gap-3 rounded-xl p-2 text-left transition-all hover:bg-secondary/80 group"
                         >
                           <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted shadow-sm group-hover:shadow-md transition-all">
-                            <img src={beat.cover} alt="" className="h-full w-full object-cover" />
+                            <img src={beat.coverImage} alt="" className="h-full w-full object-cover" />
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-bold text-foreground transition-colors group-hover:text-orange-500">
                               {beat.title}
                             </p>
                             <p className="truncate text-xs text-muted-foreground">
-                              {beat.producer} • {beat.bpm} BPM
+                              {beat.producerName} • {beat.bpm} BPM
                             </p>
                           </div>
                           <div className="text-xs font-bold text-orange-500 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
@@ -137,10 +137,10 @@ export const SearchPanel = ({
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-bold text-foreground transition-colors group-hover:text-orange-500">
-                              {producer.name}
+                              {producer.displayName}
                             </p>
                             <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                              Artist {producer.verified && (
+                              Artist {producer.isVerified && (
                                 <span className="inline-block h-3 w-3 fill-blue-500 text-blue-500">
                                   <svg viewBox="0 0 24 24" className="fill-current"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7l-3.3-3.3 1.4-1.4 1.9 1.9 4.3-4.3 1.4 1.4-5.7 5.7z"/></svg>
                                 </span>

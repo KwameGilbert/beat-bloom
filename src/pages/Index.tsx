@@ -4,19 +4,19 @@ import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { GenreGrid } from "@/components/home/GenreGrid";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { BeatCard } from "@/components/shared/BeatCard";
-import { genres } from "@/data/beats";
 import { useBeatsStore } from "@/store/beatsStore";
 
 const Index = () => {
-  const { trendingBeats, isLoading, fetchTrending } = useBeatsStore();
+  const { trendingBeats, genres, isLoading, fetchTrending, fetchGenres } = useBeatsStore();
 
   useEffect(() => {
     fetchTrending(12);
-  }, [fetchTrending]);
+    fetchGenres();
+  }, [fetchTrending, fetchGenres]);
 
   // For featured, we'll just use the first few trending for now until we have a featured endpoint
-  const featuredBeats = trendingBeats.slice(0, 3) as any[];
-  const newReleases = [...trendingBeats].reverse().slice(0, 6) as any[];
+  const featuredBeats = trendingBeats.slice(0, 3);
+  const newReleases = [...trendingBeats].reverse().slice(0, 6);
 
   if (isLoading && trendingBeats.length === 0) {
     return (
@@ -49,14 +49,16 @@ const Index = () => {
       </section>
 
       {/* Genres Section */}
-      <section className="space-y-6">
-        <SectionHeader 
-          title="Browse by Genre" 
-          subtitle="Find beats that match your style"
-          actionHref="/browse"
-        />
-        <GenreGrid genres={genres} />
-      </section>
+      {genres.length > 0 && (
+        <section className="space-y-6">
+          <SectionHeader 
+            title="Browse by Genre" 
+            subtitle="Find beats that match your style"
+            actionHref="/browse"
+          />
+          <GenreGrid genres={genres} />
+        </section>
+      )}
 
       {/* New Releases Section */}
       <section className="space-y-6">
