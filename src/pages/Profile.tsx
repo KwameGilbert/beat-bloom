@@ -16,33 +16,46 @@ import {
   Loader2,
   DollarSign,
   Download,
-  TrendingUp
+  TrendingUp,
+  ShoppingBag
 } from "lucide-react";
 import { type Beat } from "@/lib/marketplace";
-import { useBeatsStore } from "@/store/beatsStore";
+import { cn } from "@/lib/utils";
 import { useLikesStore } from "@/store/likesStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
-import { useUserStore } from "@/store/userStore";
-import { cn } from "@/lib/utils";
+import { useProfileStore } from "@/store/profileStore";
+import { format } from "date-fns";
 
-type ProfileTab = "beats" | "liked" | "analytics";
+type ProfileTab = "beats" | "liked" | "analytics" | "purchases";
 
 const Profile = () => {
-  const [activeTab, setActiveTab] = useState<ProfileTab>("beats");
+  const [activeTab, setActiveTab] = useState<ProfileTab>("purchases");
   const navigate = useNavigate();
   const { likedBeats, toggleLike, isLiked } = useLikesStore();
-  const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
+  const { playBeat, currentBeat, isPlaying, togglePlay, isLoading: isPlayerLoading } = usePlayerStore();
   const { addToCart, removeFromCart, isInCart } = useCartStore();
-  const { user } = useUserStore();
-  const { trendingBeats, fetchTrending } = useBeatsStore();
+  const { profileData, isLoading, fetchProfile } = useProfileStore();
 
-  // Fetch beats on mount
+  // Fetch profile on mount
   useEffect(() => {
-    fetchTrending(12);
-  }, [fetchTrending]);
+    fetchProfile();
+  }, [fetchProfile]);
 
-  const allBeats = trendingBeats;
+  const user = profileData?.user;
+  const purchases = profileData?.purchases || [];
+  const liked = profileData?.likes || [];
+  const stats = profileData?.stats;
+
+  if (isLoading && !profileData) {
+    return (
+      <div className="flex h-[80vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) {
@@ -81,23 +94,24 @@ const Profile = () => {
   };
 
   const tabs = [
-    { id: "beats" as ProfileTab, label: "My Beats", icon: Music },
+    { id: "purchases" as ProfileTab, label: "Purchases", icon: ShoppingBag },
     { id: "liked" as ProfileTab, label: "Liked", icon: Heart },
+    { id: "beats" as ProfileTab, label: "My Beats", icon: Music },
     { id: "analytics" as ProfileTab, label: "Analytics", icon: BarChart3 },
   ];
 
   const renderBeatCard = (beat: Beat) => {
-    const isCurrentBeat = currentBeat?.id === beat.id;
+    const isCurrentBeat = currentBeat?.id.toString() === beat.id.toString();
     const isPlayingCurrent = isCurrentBeat && isPlaying;
-    const isLoadingCurrent = isCurrentBeat && isLoading;
+    const isLoadingCurrent = isCurrentBeat && isPlayerLoading;
     const inCart = isInCart(beat.id);
     const liked = isLiked(beat.id);
 
     return (
-      <Link
+      <button
         key={beat.id}
-        to={`/beat/${beat.id}`}
-        className="group block"
+        onClick={() => navigate(`/beat/${beat.id}`)}
+        className="group block text-left"
       >
         <div className="overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-border/80 hover:shadow-lg">
           {/* Cover Image */}
@@ -154,7 +168,7 @@ const Profile = () => {
             {/* Price & Actions */}
             <div className="mt-3 flex items-center justify-between">
               <span className="text-lg font-bold text-orange-500">
-                ${(beat.price || 0).toFixed(2)}
+                ${Number(beat.price || 0).toFixed(2)}
               </span>
               <div className="flex items-center gap-1">
                 <button
@@ -183,7 +197,7 @@ const Profile = () => {
             </div>
           </div>
         </div>
-      </Link>
+      </button>
     );
   };
 
@@ -192,7 +206,7 @@ const Profile = () => {
       {/* Cover Image */}
       <div className="relative h-48 sm:h-56 md:h-64">
         <img
-          src={user.cover}
+          src={user.avatar || "https://images.unsplash.com/photo-1614149162883-504ce4d13909?w=1200&q=80"}
           alt="Cover"
           className="h-full w-full object-cover"
         />
@@ -206,7 +220,7 @@ const Profile = () => {
           <div className="mb-4">
             <div className="h-24 w-24 sm:h-28 sm:w-28 overflow-hidden rounded-xl border-4 border-background bg-secondary shadow-xl">
               <img
-                src={user.avatar}
+                src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"}
                 alt={user.name}
                 className="h-full w-full object-cover"
               />
@@ -232,7 +246,7 @@ const Profile = () => {
               </span>
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                Joined {user.joinedDate}
+                Joined {format(new Date(user.createdAt), 'MMMM yyyy')}
               </span>
             </div>
 
@@ -269,28 +283,28 @@ const Profile = () => {
                 <Music className="h-4 w-4" />
                 Beats
               </div>
-              <p className="text-2xl font-bold text-foreground">{user.stats.beats}</p>
+              <p className="text-2xl font-bold text-foreground">0</p>
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
                 <TrendingUp className="h-4 w-4" />
-                Total Plays
+                Likes
               </div>
-              <p className="text-2xl font-bold text-foreground">{formatNumber(user.stats.totalPlays)}</p>
+              <p className="text-2xl font-bold text-foreground">{stats?.likesCount || 0}</p>
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-                <Download className="h-4 w-4" />
-                Sales
+                <ShoppingBag className="h-4 w-4" />
+                Purchases
               </div>
-              <p className="text-2xl font-bold text-foreground">{user.stats.sales}</p>
+              <p className="text-2xl font-bold text-foreground">{stats?.purchasesCount || 0}</p>
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
                 <DollarSign className="h-4 w-4" />
-                Earnings
+                Spending
               </div>
-              <p className="text-2xl font-bold text-foreground">${user.stats.earnings.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-foreground">$0</p>
             </div>
           </div>
         </div>
@@ -320,6 +334,33 @@ const Profile = () => {
         </div>
 
         {/* Tab Content */}
+        {activeTab === "purchases" && (
+          <div>
+            <h2 className="mb-6 text-xl font-bold text-foreground">My Purchases</h2>
+            
+            {purchases.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
+                {purchases.map((purchase: any) => renderBeatCard(purchase.beat || purchase))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-16">
+                <ShoppingBag className="mb-4 h-12 w-12 text-muted-foreground" />
+                <p className="mb-2 text-lg font-bold text-foreground">No purchases yet</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap text-center">
+                  Beats you buy will appear here.{"\n"}
+                  Start browsing to find your next hit!
+                </p>
+                <Link
+                  to="/browse"
+                  className="mt-6 rounded-full bg-orange-500 px-6 py-2 text-sm font-bold text-white hover:bg-orange-600"
+                >
+                  Browse Beats
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === "beats" && (
           <div>
             {/* Header */}
@@ -331,9 +372,13 @@ const Profile = () => {
               </button>
             </div>
 
-            {/* Beats Grid */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
-              {allBeats.map(renderBeatCard)}
+            {/* Beats Grid (Empty for now as most users are buyers) */}
+            <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-16">
+              <Upload className="mb-4 h-12 w-12 text-muted-foreground" />
+              <p className="mb-2 text-lg font-bold text-foreground">No beats published</p>
+              <p className="text-sm text-muted-foreground">
+                Apply as a producer to start selling your beats
+              </p>
             </div>
           </div>
         )}
@@ -342,9 +387,9 @@ const Profile = () => {
           <div>
             <h2 className="mb-6 text-xl font-bold text-foreground">Liked Beats</h2>
             
-            {likedBeats.length > 0 ? (
+            {liked.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
-                {likedBeats.map(renderBeatCard)}
+                {liked.map(renderBeatCard)}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-16">

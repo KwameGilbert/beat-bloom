@@ -38,7 +38,10 @@ const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    // Only show splash if it hasn't been shown in this session
+    return sessionStorage.getItem('hasShownSplash') !== 'true';
+  });
 
   useEffect(() => {
     // Apply dark mode based on system preference or saved theme
@@ -60,11 +63,15 @@ const App = () => {
       document.documentElement.classList.add("dark");
     }
 
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, []);
+    // If splash is currently showing, set timer to hide it and mark as shown
+    if (showSplash) {
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+        sessionStorage.setItem('hasShownSplash', 'true');
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [showSplash]);
 
   return (
     <QueryClientProvider client={queryClient}>

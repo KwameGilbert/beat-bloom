@@ -248,7 +248,7 @@ export const MobileFullPlayer = ({
               )}
             >
               <ShoppingCart className="h-4 w-4" />
-              {isInCart ? "In Cart - Checkout" : `Buy $${currentBeat.price}`}
+              {isInCart ? "In Cart - Checkout" : `Buy $${currentBeat.price ? Number(currentBeat.price).toFixed(2) : '0.00'}`}
             </button>
             <button 
               onClick={onAddToPlaylist}

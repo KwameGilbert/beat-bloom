@@ -48,7 +48,8 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
     if (inCart) {
       removeFromCart(id);
     } else {
-      addToCart(beat);
+      const defaultTierId = beat.licenseTiers?.[0]?.id;
+      addToCart(beat, defaultTierId);
     }
   };
 

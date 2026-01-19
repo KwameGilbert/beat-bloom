@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
   Home, 
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePlaylistsStore, playlistColors } from "@/store/playlistsStore";
+import { useAuthStore } from "@/store/authStore";
 
 const mainNav = [
   { name: "Discover", icon: Home, path: "/home" },
@@ -34,14 +35,25 @@ interface SidebarProps {
 
 export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation();
-  const { playlists, createPlaylist } = usePlaylistsStore();
+  const { playlists, createPlaylist, fetchPlaylists } = usePlaylistsStore();
+  const { user, isAuthenticated } = useAuthStore();
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [newColor, setNewColor] = useState(playlistColors[0].value);
 
-  const handleCreate = () => {
+  // Check if user is a producer
+  const isProducer = isAuthenticated && (user?.role === 'producer' || user?.producer);
+
+  // Fetch playlists when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchPlaylists();
+    }
+  }, [isAuthenticated, fetchPlaylists]);
+
+  const handleCreate = async () => {
     if (newName.trim()) {
-      createPlaylist(newName.trim(), newColor);
+      await createPlaylist(newName.trim(), newColor);
       setNewName("");
       setNewColor(playlistColors[0].value);
       setIsCreating(false);
@@ -107,19 +119,21 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             })}
           </div>
 
-          {/* Producer Actions */}
-          <div>
-            <Link
-              to="/upload"
-              onClick={onClose}
-              className="group flex w-full items-center gap-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-orange-600/10 px-4 py-3 text-sm font-bold text-orange-500 transition-all hover:from-orange-500 hover:to-orange-600 hover:text-white shadow-sm shadow-orange-500/5 active:scale-[0.98]"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 text-white shadow-md">
-                <UploadCloud className="h-4 w-4" />
-              </div>
-              Upload Beat
-            </Link>
-          </div>
+          {/* Producer Actions - Only show for producers */}
+          {isProducer && (
+            <div>
+              <Link
+                to="/upload"
+                onClick={onClose}
+                className="group flex w-full items-center gap-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-orange-600/10 px-4 py-3 text-sm font-bold text-orange-500 transition-all hover:from-orange-500 hover:to-orange-600 hover:text-white shadow-sm shadow-orange-500/5 active:scale-[0.98]"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 text-white shadow-md">
+                  <UploadCloud className="h-4 w-4" />
+                </div>
+                Upload Beat
+              </Link>
+            </div>
+          )}
 
           {/* Library Section */}
           <div>

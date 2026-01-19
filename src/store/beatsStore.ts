@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Beat, Producer, Pagination, Genre } from "@/lib/marketplace";
 import { marketplaceService } from "@/lib/marketplace";
+import { pagesService } from "@/lib/pages";
 
 interface BeatsState {
   // Beats
@@ -25,6 +26,8 @@ interface BeatsState {
   fetchTrending: (limit?: number) => Promise<Beat[]>;
   fetchProducers: (params?: Record<string, any>) => Promise<void>;
   fetchGenres: () => Promise<Genre[]>;
+  fetchHomePage: () => Promise<void>;
+  getBeatPageData: (id: string | number) => Promise<any>;
   getBeat: (id: string | number) => Promise<Beat | null>;
   getProducer: (username: string) => Promise<Producer | null>;
 }
@@ -100,6 +103,32 @@ export const useBeatsStore = create<BeatsState>((set) => ({
     } catch (error: any) {
       set({ isLoadingGenres: false });
       return [];
+    }
+  },
+
+  fetchHomePage: async () => {
+    set({ isLoading: true });
+    try {
+      const response = await pagesService.getHomePage();
+      if (response.success) {
+        set({
+          trendingBeats: response.data.trendingBeats,
+          genres: response.data.genres,
+          producers: response.data.featuredProducers,
+          isLoading: false
+        });
+      }
+    } catch (error) {
+      set({ isLoading: false });
+    }
+  },
+
+  getBeatPageData: async (id) => {
+    try {
+      const response = await pagesService.getBeatDetail(id);
+      return response.data;
+    } catch (error) {
+      return null;
     }
   },
 

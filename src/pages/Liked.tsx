@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   Heart, 
@@ -11,13 +12,22 @@ import {
 import { useLikesStore } from "@/store/likesStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
+import { useAuthStore } from "@/store/authStore";
 import { type Beat } from "@/lib/marketplace";
 import { cn } from "@/lib/utils";
 
 const Liked = () => {
-  const { likedBeats, removeLike } = useLikesStore();
+  const { likedBeats, removeLike, fetchLikedBeats, isLoading: isLoadingLikes } = useLikesStore();
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
   const { addToCart, removeFromCart, isInCart } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
+
+  // Fetch liked beats from API when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchLikedBeats();
+    }
+  }, [isAuthenticated, fetchLikedBeats]);
 
   const handlePlayClick = (beat: Beat, e: React.MouseEvent) => {
     e.preventDefault();
@@ -44,6 +54,15 @@ const Liked = () => {
     e.stopPropagation();
     removeLike(beatId);
   };
+
+  // Loading state
+  if (isLoadingLikes) {
+    return (
+      <div className="flex h-[80vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
 
   // Empty state
   if (likedBeats.length === 0) {
@@ -180,7 +199,7 @@ const Liked = () => {
                     {/* Price & Actions */}
                     <div className="mt-3 flex items-center justify-between">
                       <span className="text-lg font-bold text-orange-500">
-                        ${(beat.price || 0).toFixed(2)}
+                        ${Number(beat.price || 0).toFixed(2)}
                       </span>
                       <div className="flex items-center gap-1">
                         <button

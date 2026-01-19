@@ -1,13 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Beat } from "@/lib/marketplace";
+import { api } from "@/lib/api";
 
 export interface Playlist {
-  id: string;
+  id: string | number;
   name: string;
   color: string;
   beats: Beat[];
+  beatsCount?: number;
+  description?: string;
+  isPublic?: boolean;
   createdAt: string;
+  updatedAt?: string;
 }
 
 // Available playlist colors
@@ -20,19 +25,21 @@ export const playlistColors = [
   { name: "Cyan", value: "bg-cyan-500", hex: "#06b6d4" },
   { name: "Green", value: "bg-green-500", hex: "#22c55e" },
   { name: "Yellow", value: "bg-yellow-500", hex: "#eab308" },
-  
 ];
 
 interface PlaylistsState {
   playlists: Playlist[];
-  createPlaylist: (name: string, color?: string) => Playlist;
-  deletePlaylist: (playlistId: string) => void;
-  renamePlaylist: (playlistId: string, newName: string) => void;
-  changePlaylistColor: (playlistId: string, newColor: string) => void;
-  addBeatToPlaylist: (playlistId: string, beat: Beat) => void;
-  removeBeatFromPlaylist: (playlistId: string, beatId: string | number) => void;
-  isBeatInPlaylist: (playlistId: string, beatId: string | number) => boolean;
-  getPlaylist: (playlistId: string) => Playlist | undefined;
+  isLoading: boolean;
+  hasFetched: boolean;
+  fetchPlaylists: () => Promise<void>;
+  createPlaylist: (name: string, color?: string) => Promise<Playlist | undefined>;
+  deletePlaylist: (playlistId: string | number) => Promise<void>;
+  renamePlaylist: (playlistId: string | number, newName: string) => Promise<void>;
+  changePlaylistColor: (playlistId: string | number, newColor: string) => Promise<void>;
+  addBeatToPlaylist: (playlistId: string | number, beat: Beat) => Promise<void>;
+  removeBeatFromPlaylist: (playlistId: string | number, beatId: string | number) => Promise<void>;
+  isBeatInPlaylist: (playlistId: string | number, beatId: string | number) => boolean;
+  getPlaylist: (playlistId: string | number) => Playlist | undefined;
   getPlaylistsContainingBeat: (beatId: string | number) => Playlist[];
 }
 
@@ -41,25 +48,60 @@ const generateId = () => `playlist_${Date.now()}_${Math.random().toString(36).su
 export const usePlaylistsStore = create<PlaylistsState>()(
   persist(
     (set, get) => ({
-      playlists: [
-        // Default playlists
-        {
-          id: "favorites",
-          name: "My Favorites",
-          color: "bg-red-500",
-          beats: [],
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: "workout",
-          name: "Workout Vibes",
-          color: "bg-green-500",
-          beats: [],
-          createdAt: new Date().toISOString(),
-        },
-      ],
+      playlists: [],
+      isLoading: false,
+      hasFetched: false,
 
-      createPlaylist: (name, color = "bg-orange-500") => {
+      fetchPlaylists: async () => {
+        const { hasFetched, isLoading } = get();
+        if (hasFetched || isLoading) return;
+
+        set({ isLoading: true });
+        try {
+          const response = await api.get<{ success: boolean; data: Playlist[] }>('/playlists');
+          if (response.success && response.data) {
+            // Normalize playlists - ensure beats array exists
+            const playlists = response.data.map(p => ({
+              ...p,
+              beats: p.beats || [],
+            }));
+            set({ 
+              playlists,
+              hasFetched: true,
+              isLoading: false 
+            });
+          } else {
+            set({ isLoading: false, hasFetched: true });
+          }
+        } catch (error) {
+          console.error("Failed to fetch playlists:", error);
+          set({ isLoading: false, hasFetched: true });
+        }
+      },
+
+      createPlaylist: async (name, color = "bg-orange-500") => {
+        // Try backend first
+        try {
+          const response = await api.post<{ success: boolean; data: Playlist }>('/playlists', {
+            name,
+            color,
+          });
+          
+          if (response.success && response.data) {
+            const newPlaylist = {
+              ...response.data,
+              beats: response.data.beats || [],
+            };
+            set((state) => ({
+              playlists: [...state.playlists, newPlaylist],
+            }));
+            return newPlaylist;
+          }
+        } catch (error) {
+          console.error("Failed to create playlist on backend:", error);
+        }
+
+        // Fallback to local creation if backend fails
         const newPlaylist: Playlist = {
           id: generateId(),
           name,
@@ -73,32 +115,57 @@ export const usePlaylistsStore = create<PlaylistsState>()(
         return newPlaylist;
       },
 
-      deletePlaylist: (playlistId) => {
+      deletePlaylist: async (playlistId) => {
+        // Optimistic update
         set((state) => ({
-          playlists: state.playlists.filter((p) => p.id !== playlistId),
+          playlists: state.playlists.filter((p) => p.id.toString() !== playlistId.toString()),
         }));
+
+        // Sync with backend
+        try {
+          await api.delete(`/playlists/${playlistId}`);
+        } catch (error) {
+          console.error("Failed to delete playlist on backend:", error);
+        }
       },
 
-      renamePlaylist: (playlistId, newName) => {
+      renamePlaylist: async (playlistId, newName) => {
+        // Optimistic update
         set((state) => ({
           playlists: state.playlists.map((p) =>
-            p.id === playlistId ? { ...p, name: newName } : p
+            p.id.toString() === playlistId.toString() ? { ...p, name: newName } : p
           ),
         }));
+
+        // Sync with backend
+        try {
+          await api.patch(`/playlists/${playlistId}`, { name: newName });
+        } catch (error) {
+          console.error("Failed to rename playlist on backend:", error);
+        }
       },
 
-      changePlaylistColor: (playlistId, newColor) => {
+      changePlaylistColor: async (playlistId, newColor) => {
+        // Optimistic update
         set((state) => ({
           playlists: state.playlists.map((p) =>
-            p.id === playlistId ? { ...p, color: newColor } : p
+            p.id.toString() === playlistId.toString() ? { ...p, color: newColor } : p
           ),
         }));
+
+        // Sync with backend
+        try {
+          await api.patch(`/playlists/${playlistId}`, { color: newColor });
+        } catch (error) {
+          console.error("Failed to update playlist color on backend:", error);
+        }
       },
 
-      addBeatToPlaylist: (playlistId, beat) => {
+      addBeatToPlaylist: async (playlistId, beat) => {
+        // Optimistic update
         set((state) => ({
           playlists: state.playlists.map((p) => {
-            if (p.id === playlistId) {
+            if (p.id.toString() === playlistId.toString()) {
               // Don't add duplicates
               if (p.beats.some((b) => b.id.toString() === beat.id.toString())) return p;
               return { ...p, beats: [...p.beats, beat] };
@@ -106,28 +173,43 @@ export const usePlaylistsStore = create<PlaylistsState>()(
             return p;
           }),
         }));
+
+        // Sync with backend
+        try {
+          await api.post(`/playlists/${playlistId}/beats`, { beatId: beat.id });
+        } catch (error) {
+          console.error("Failed to add beat to playlist on backend:", error);
+        }
       },
 
-      removeBeatFromPlaylist: (playlistId, beatId) => {
+      removeBeatFromPlaylist: async (playlistId, beatId) => {
         const idStr = beatId.toString();
+        // Optimistic update
         set((state) => ({
           playlists: state.playlists.map((p) => {
-            if (p.id === playlistId) {
+            if (p.id.toString() === playlistId.toString()) {
               return { ...p, beats: p.beats.filter((b) => b.id.toString() !== idStr) };
             }
             return p;
           }),
         }));
+
+        // Sync with backend
+        try {
+          await api.delete(`/playlists/${playlistId}/beats/${beatId}`);
+        } catch (error) {
+          console.error("Failed to remove beat from playlist on backend:", error);
+        }
       },
 
       isBeatInPlaylist: (playlistId, beatId) => {
         const idStr = beatId.toString();
-        const playlist = get().playlists.find((p) => p.id === playlistId);
+        const playlist = get().playlists.find((p) => p.id.toString() === playlistId.toString());
         return playlist?.beats.some((b) => b.id.toString() === idStr) ?? false;
       },
 
       getPlaylist: (playlistId) => {
-        return get().playlists.find((p) => p.id === playlistId);
+        return get().playlists.find((p) => p.id.toString() === playlistId.toString());
       },
 
       getPlaylistsContainingBeat: (beatId) => {

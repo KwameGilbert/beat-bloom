@@ -191,7 +191,7 @@ const Recent = () => {
 
                   {/* Price */}
                   <div className="col-span-2 text-center text-sm font-bold text-foreground">
-                    ${(beat.price || 0).toFixed(2)}
+                    ${Number(beat.price || 0).toFixed(2)}
                   </div>
 
                   {/* Actions */}

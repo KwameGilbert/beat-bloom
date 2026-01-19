@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   Download, 
@@ -14,8 +15,12 @@ import { usePlayerStore } from "@/store/playerStore";
 import { cn } from "@/lib/utils";
 
 const Purchases = () => {
-  const { purchases } = usePurchasesStore();
-  const { currentBeat, isPlaying, playBeat, togglePlay, isLoading } = usePlayerStore();
+  const { purchases, fetchPurchases, isLoading: isLoadingPurchases, error } = usePurchasesStore();
+  const { currentBeat, isPlaying, playBeat, togglePlay, isLoading: isPlayerLoading } = usePlayerStore();
+
+  useEffect(() => {
+    fetchPurchases();
+  }, [fetchPurchases]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -25,6 +30,14 @@ const Purchases = () => {
       day: "numeric",
     });
   };
+
+  if (isLoadingPurchases && purchases.length === 0) {
+    return (
+      <div className="flex h-[80vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
 
   const handlePlayClick = (beat: typeof purchases[0]["beat"], e: React.MouseEvent) => {
     e.preventDefault();
@@ -77,8 +90,12 @@ const Purchases = () => {
         ) : (
           /* Purchases List */
           <div className="space-y-3">
-            {purchases.map((purchase) => {
-              const { beat } = purchase;
+            {purchases.map((purchase: any) => {
+              // Handle both new nested structure and potential old flat structure from stale localStorage
+              const beat = purchase.beat || purchase;
+              
+              if (!beat || !beat.id) return null;
+              
               const isCurrentBeat = currentBeat?.id.toString() === beat.id.toString();
               const isCurrentPlaying = isCurrentBeat && isPlaying;
 
@@ -102,7 +119,7 @@ const Purchases = () => {
                         isCurrentBeat ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                       )}
                     >
-                      {isCurrentBeat && isLoading ? (
+                      {isCurrentBeat && isPlayerLoading ? (
                         <Loader2 className="h-6 w-6 text-white animate-spin" />
                       ) : isCurrentPlaying ? (
                         <Pause className="h-6 w-6 text-white fill-current" />
@@ -119,10 +136,10 @@ const Purchases = () => {
                     <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {formatDate(purchase.purchasedAt)}
+                        {formatDate(purchase.purchasedAt || new Date().toISOString())}
                       </span>
                       <span className="text-green-500 font-medium">
-                        ${purchase.amount.toFixed(2)}
+                        ${Number(purchase.amount || beat.price || 0).toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -173,7 +190,7 @@ const Purchases = () => {
             </div>
             <div className="rounded-xl border border-border bg-card p-4 text-center">
               <p className="text-2xl font-bold text-green-500">
-                ${purchases.reduce((acc, p) => acc + p.amount, 0).toFixed(2)}
+                ${purchases.reduce((acc: number, p: any) => acc + (p.amount || p.beat?.price || p.price || 0), 0).toFixed(2)}
               </p>
               <p className="text-sm text-muted-foreground">Total Spent</p>
             </div>

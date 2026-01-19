@@ -11,13 +11,11 @@ import {
   Clock,
   Music2,
   Loader2,
-  MapPin,
   CheckCircle,
   ListPlus,
   Check,
   Crown,
-  FileAudio,
-  Sparkles
+  FileAudio
 } from "lucide-react";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
@@ -39,7 +37,7 @@ const BeatDetail = () => {
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading: isPlayerLoading } = usePlayerStore();
   const { toggleLike, isLiked } = useLikesStore();
   const { isAuthenticated } = useAuthStore();
-  const { getBeat, beats: allBeats, fetchBeats } = useBeatsStore();
+  const { getBeatPageData } = useBeatsStore();
   
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [selectedTierIndex, setSelectedTierIndex] = useState(0);
@@ -48,28 +46,15 @@ const BeatDetail = () => {
     const loadBeatData = async () => {
       if (!id) return;
       setIsPageLoading(true);
-      const data = await getBeat(id);
-      if (data) {
-        setBeat(data);
-        // Fetch more from same producer
-        const pb = await fetchBeats({ producer: data.producerUsername || data.producerId });
-        // Since fetchBeats updates the store, we can filter from store or just use the response if we had it
-        // For now, use the beats from store that match producer
+      const data = await getBeatPageData(id);
+      if (data && data.beat) {
+        setBeat(data.beat);
+        setProducerBeats(data.relatedBeats || []);
       }
       setIsPageLoading(false);
     };
     loadBeatData();
-  }, [id, getBeat, fetchBeats]);
-
-  useEffect(() => {
-      if (beat) {
-          const pb = allBeats.filter(b => 
-              (b.producerId === beat.producerId || b.producerUsername === beat.producerUsername) && 
-              b.id.toString() !== beat.id.toString()
-          ).slice(0, 6);
-          setProducerBeats(pb);
-      }
-  }, [allBeats, beat]);
+  }, [id, getBeatPageData]);
 
   if (isPageLoading) {
     return (
@@ -102,10 +87,8 @@ const BeatDetail = () => {
   const isLoadingCurrent = isCurrentBeat && isPlayerLoading;
   
   const producerName = beat.producerName || beat.producer;
-  const producerId = beat.producerId.toString();
   const cover = beat.coverImage || beat.cover;
   const musicalKey = beat.musicalKey || beat.key;
-  const price = beat.price || (beat.licenseTiers && beat.licenseTiers[0]?.price) || 0;
   const tags = Array.isArray(beat.tags) ? beat.tags : (typeof beat.tags === 'string' ? JSON.parse(beat.tags) : []);
 
   const handlePlayClick = () => {
@@ -377,9 +360,8 @@ const BeatDetail = () => {
                       onClick={() => {
                         const { addToCart, isInCart } = useCartStore.getState();
                         const selectedTier = beat.licenseTiers![selectedTierIndex];
-                        const beatWithTier = { ...beat, price: selectedTier.price, selectedLicense: selectedTier };
                         if (!isInCart(normalizedId)) {
-                          addToCart(beatWithTier);
+                          addToCart(beat, selectedTier.id);
                         }
                         navigate("/checkout");
                       }}
@@ -544,12 +526,7 @@ const AddToCartButtonWithTier = ({ beat, selectedTier }: { beat: any; selectedTi
     if (inCart) {
       removeFromCart(id);
     } else {
-      const beatWithTier = { 
-        ...beat, 
-        price: selectedTier.price, 
-        selectedLicense: selectedTier 
-      };
-      addToCart(beatWithTier);
+      addToCart(beat, selectedTier.id);
     }
   };
 

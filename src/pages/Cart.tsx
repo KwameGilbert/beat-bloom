@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   ShoppingCart, 
@@ -18,10 +19,13 @@ import type { Beat } from "@/lib/marketplace";
 
 const Cart = () => {
   const navigate = useNavigate();
-  const { items, removeFromCart, clearCart } = useCartStore();
+  const { items, subtotal, processingFee, total, removeFromCart, clearCart, fetchCart, isLoading: isLoadingCart } = useCartStore();
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
 
-  const total = items.reduce((sum, item) => sum + (item.price || 0), 0);
+  // Fetch cart on mount
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
 
   const handlePlayClick = (beat: Beat) => {
     if (currentBeat?.id === beat.id) {
@@ -30,6 +34,15 @@ const Cart = () => {
       playBeat(beat);
     }
   };
+
+  // Loading state
+  if (isLoadingCart) {
+    return (
+      <div className="flex h-[80vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
 
   // Empty cart state
   if (items.length === 0) {
@@ -167,19 +180,36 @@ const Cart = () => {
                           </div>
                         </div>
 
-                        {/* Included Files */}
-                        {beat.licenseTiers && beat.licenseTiers.length > 0 && (
-                          <div className="mt-2 text-xs text-muted-foreground">
-                            Includes: {beat.licenseTiers[0].includedFiles?.join(", ")}
-                          </div>
-                        )}
+                        {/* License Tier & Included Files */}
+                        <div className="mt-2 space-y-1">
+                          {beat.tierName && (
+                            <div className="text-xs">
+                              <span className="font-medium text-foreground">{beat.tierName}</span>
+                              <span className="text-muted-foreground"> License</span>
+                            </div>
+                          )}
+                          {beat.includedFiles && beat.includedFiles.length > 0 && (
+                            <div className="text-xs text-muted-foreground">
+                              Includes: {Array.isArray(beat.includedFiles) 
+                                ? beat.includedFiles.join(", ") 
+                                : beat.includedFiles}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Price & Remove */}
                       <div className="flex flex-col items-end justify-between">
-                        <p className="text-xl font-bold text-orange-500">
-                          ${(beat.price || 0).toFixed(2)}
-                        </p>
+                        <div className="text-right">
+                          <p className="text-xl font-bold text-orange-500">
+                            ${Number(beat.price || 0).toFixed(2)}
+                          </p>
+                          {beat.tierType && (
+                            <p className="text-xs text-muted-foreground capitalize">
+                              {beat.tierType}
+                            </p>
+                          )}
+                        </div>
                         <button
                           onClick={() => removeFromCart(beat.id)}
                           className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-red-500"
@@ -205,11 +235,11 @@ const Cart = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
-                  <span className="text-foreground">${total.toFixed(2)}</span>
+                  <span className="text-foreground">${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Sales Tax</span>
-                  <span className="text-foreground">$0.00</span>
+                  <span className="text-muted-foreground">Processing Fee</span>
+                  <span className="text-foreground">${processingFee.toFixed(2)}</span>
                 </div>
               </div>
 

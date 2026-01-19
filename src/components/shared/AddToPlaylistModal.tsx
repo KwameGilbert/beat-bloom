@@ -35,21 +35,23 @@ export const AddToPlaylistModal = ({ isOpen, onClose, beat }: AddToPlaylistModal
   const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null);
   const [editName, setEditName] = useState("");
 
-  const handleCreatePlaylist = () => {
+  const handleCreatePlaylist = async () => {
     if (newPlaylistName.trim()) {
-      const playlist = createPlaylist(newPlaylistName.trim(), selectedColor);
-      addBeatToPlaylist(playlist.id, beat);
+      const playlist = await createPlaylist(newPlaylistName.trim(), selectedColor);
+      if (playlist) {
+        await addBeatToPlaylist(playlist.id, beat);
+      }
       setNewPlaylistName("");
       setSelectedColor(playlistColors[0].value);
       setIsCreating(false);
     }
   };
 
-  const handleToggleBeat = (playlistId: string) => {
+  const handleToggleBeat = async (playlistId: string | number) => {
     if (isBeatInPlaylist(playlistId, beat.id)) {
-      removeBeatFromPlaylist(playlistId, beat.id);
+      await removeBeatFromPlaylist(playlistId, beat.id);
     } else {
-      addBeatToPlaylist(playlistId, beat);
+      await addBeatToPlaylist(playlistId, beat);
     }
   };
 
@@ -60,18 +62,18 @@ export const AddToPlaylistModal = ({ isOpen, onClose, beat }: AddToPlaylistModal
     setSelectedColor(playlist.color);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (editingPlaylist && editName.trim()) {
-      renamePlaylist(editingPlaylist.id, editName.trim());
-      changePlaylistColor(editingPlaylist.id, selectedColor);
+      await renamePlaylist(editingPlaylist.id, editName.trim());
+      await changePlaylistColor(editingPlaylist.id, selectedColor);
       setEditingPlaylist(null);
     }
   };
 
-  const handleDelete = (playlistId: string, e: React.MouseEvent) => {
+  const handleDelete = async (playlistId: string | number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm("Are you sure you want to delete this playlist?")) {
-      deletePlaylist(playlistId);
+      await deletePlaylist(playlistId);
     }
   };
 

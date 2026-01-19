@@ -7,14 +7,19 @@ import {
   ShoppingBag,
   Trash2,
   Music,
-  CreditCard
+  CreditCard,
+  Loader2
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { usePurchasesStore } from "@/store/purchasesStore";
 import { cn } from "@/lib/utils";
+import marketplaceService from "@/lib/marketplace";
 
 // Paystack public key - Replace with your actual key
-const PAYSTACK_PUBLIC_KEY = "pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+const PAYSTACK_PUBLIC_KEY = "pk_test_ec6249c3ede8ab8493f94674dc2308bf6cc4fb49";
+
+// Currency conversion rate (1 USD to GHS)
+const USD_TO_GHS_RATE = 15.5; 
 
 // Declare Paystack inline handler type
 declare global {
@@ -38,13 +43,18 @@ interface PaystackOptions {
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, removeFromCart, clearCart } = useCartStore();
-  const total = items.reduce((sum, item) => sum + (item.price || 0), 0);
+  const { items, subtotal, processingFee, total, removeFromCart, clearCart, fetchCart, isLoading: isLoadingCart } = useCartStore();
   
   const [email, setEmail] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [paystackLoaded, setPaystackLoaded] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+
+  // Fetch cart on mount to ensure fresh totals
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
 
   // Load Paystack script
   useEffect(() => {
@@ -63,7 +73,7 @@ const Checkout = () => {
     return `BEATBLOOM_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  const handlePaystackPayment = () => {
+  const handlePaystackPayment = async () => {
     if (!email.includes("@")) {
       alert("Please enter a valid email address");
       return;
@@ -75,48 +85,85 @@ const Checkout = () => {
     }
 
     setIsProcessing(true);
+    setOrderError(null);
 
-    const handler = window.PaystackPop.setup({
-      key: PAYSTACK_PUBLIC_KEY,
-      email: email,
-      amount: Math.round(total * 100), // Paystack expects amount in cents
-      currency: "USD", // US Dollars
-      ref: generateReference(),
-      metadata: {
+    try {
+      // 1. Generate unique reference for this transaction
+      const reference = generateReference();
+      
+      // 2. Create the pending order on our backend FIRST
+      const orderResponse = await marketplaceService.createOrder({
         items: items.map(item => ({
-          id: item.id,
-          title: item.title,
-          price: item.price || 0,
+          beatId: item.id,
+          licenseTierId: item.licenseTierId
         })),
-        custom_fields: [
-          {
-            display_name: "Cart Items",
-            variable_name: "cart_items",
-            value: items.map(i => i.title).join(", "),
-          },
-        ],
-      },
-      callback: (response) => {
-        // Payment successful
-        console.log("Payment successful!", response.reference);
-        
-        // Add items to purchases
-        usePurchasesStore.getState().addPurchases(items, response.reference, total);
-        
-        setIsProcessing(false);
-        setIsComplete(true);
-        clearCart();
-      },
-      onClose: () => {
-        setIsProcessing(false);
-        // User closed the popup
-      },
-    });
+        paymentMethod: "paystack",
+        paymentReference: reference,
+        email: email
+      });
 
-    handler.openIframe();
+      if (!orderResponse.success) {
+        throw new Error("Failed to initialize order on server");
+      }
+
+      const amountInGHS = total * USD_TO_GHS_RATE;
+
+      // 3. Open Paystack popup using the same reference
+      const handler = window.PaystackPop.setup({
+        key: PAYSTACK_PUBLIC_KEY,
+        email: email,
+        amount: Math.round(amountInGHS * 100),
+        currency: "GHS",
+        ref: reference,
+        metadata: {
+          items: items.map(item => ({
+            id: item.id,
+            title: item.title,
+            price: item.price || 0,
+          })),
+        },
+        callback: async (response: any) => {
+          // Payment successful on Paystack side
+          console.log("Payment successful on Paystack!", response.reference);
+          
+          try {
+            // 4. Verify the payment on the backend (Server-to-Server check)
+            // This will mark the order as 'completed' and trigger fulfillment
+            await marketplaceService.verifyPayment(response.reference);
+
+            // 5. Success UI update
+            setIsComplete(true);
+            clearCart();
+          } catch (error) {
+            console.error("Payment verification failed:", error);
+            setOrderError("Payment was successful but verification failed. Please contact support with reference: " + response.reference);
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        onClose: () => {
+          setIsProcessing(false);
+        },
+      });
+
+      handler.openIframe();
+    } catch (error: any) {
+      console.error("Order initialization failed:", error);
+      setOrderError(error.message || "Could not initialize order. Please try again.");
+      setIsProcessing(false);
+    }
   };
 
   const isEmailValid = email.includes("@") && email.includes(".");
+
+  // Loading state
+  if (isLoadingCart && items.length === 0) {
+    return (
+      <div className="flex h-[80vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
 
   // Empty cart state
   if (items.length === 0 && !isComplete) {
@@ -212,6 +259,11 @@ const Checkout = () => {
         <div className="grid gap-8 lg:grid-cols-5">
           {/* Payment Form */}
           <div className="lg:col-span-3">
+            {orderError && (
+              <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/20 p-4 text-red-500 text-sm">
+                {orderError}
+              </div>
+            )}
             <div className="space-y-6">
               {/* Contact Information */}
               <div className="rounded-xl border border-border bg-card p-6">
@@ -259,7 +311,13 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground mt-2">
+                  Total in GHS: <span className="font-bold text-foreground">GH₵ {(total * USD_TO_GHS_RATE).toFixed(2)}</span>
+                  <br />
+                  <span className="opacity-70">(Rate: $1 = GH₵ {USD_TO_GHS_RATE.toFixed(2)})</span>
+                </p>
+
+                <p className="text-xs text-muted-foreground mt-4">
                   You'll be redirected to Paystack's secure payment page to complete your purchase.
                   We accept Visa, Mastercard, Verve, and bank transfers.
                 </p>
@@ -287,7 +345,7 @@ const Checkout = () => {
                 ) : !paystackLoaded ? (
                   "Loading..."
                 ) : (
-                  `Pay $${total.toFixed(2)}`
+                  `Pay GH₵ ${(total * USD_TO_GHS_RATE).toFixed(2)}`
                 )}
               </button>
 
@@ -322,11 +380,14 @@ const Checkout = () => {
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {item.producerName}
+                        {item.tierName && (
+                          <span className="ml-2 text-orange-500">• {item.tierName}</span>
+                        )}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-orange-500">
-                        ${(item.price || 0).toFixed(2)}
+                        ${Number(item.price || 0).toFixed(2)}
                       </span>
                       <button
                         onClick={() => removeFromCart(item.id)}
@@ -343,15 +404,20 @@ const Checkout = () => {
               <div className="space-y-2 border-t border-border pt-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
-                  <span className="text-foreground">${total.toFixed(2)}</span>
+                  <span className="text-foreground">${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Processing Fee</span>
-                  <span className="text-foreground">$0.00</span>
+                  <span className="text-foreground">${processingFee.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between border-t border-border pt-2">
-                  <span className="text-lg font-bold text-foreground">Total</span>
-                  <span className="text-xl font-bold text-orange-500">${total.toFixed(2)}</span>
+                <div className="flex flex-col items-end border-t border-border pt-2">
+                  <div className="flex w-full justify-between">
+                    <span className="text-lg font-bold text-foreground">Total</span>
+                    <span className="text-xl font-bold text-orange-500">${total.toFixed(2)}</span>
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground mt-1">
+                    ≈ GH₵ {(total * USD_TO_GHS_RATE).toFixed(2)}
+                  </span>
                 </div>
               </div>
 

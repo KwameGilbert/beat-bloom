@@ -7,12 +7,11 @@ import { BeatCard } from "@/components/shared/BeatCard";
 import { useBeatsStore } from "@/store/beatsStore";
 
 const Index = () => {
-  const { trendingBeats, genres, isLoading, fetchTrending, fetchGenres } = useBeatsStore();
+  const { trendingBeats, genres, isLoading, fetchHomePage } = useBeatsStore();
 
   useEffect(() => {
-    fetchTrending(12);
-    fetchGenres();
-  }, [fetchTrending, fetchGenres]);
+    fetchHomePage();
+  }, [fetchHomePage]);
 
   // For featured, we'll just use the first few trending for now until we have a featured endpoint
   const featuredBeats = trendingBeats.slice(0, 3);

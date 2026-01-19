@@ -40,6 +40,10 @@ export interface Beat {
   isFeatured: boolean;
   producerName: string;
   producerUsername: string;
+  producerAvatar?: string;
+  producerBio?: string;
+  producerLocation?: string;
+  producerIsVerified?: boolean;
   genreName?: string;
   licenseTiers?: LicenseTier[];
   price?: number;
@@ -153,6 +157,54 @@ export const marketplaceService = {
    */
   async getGenre(slug: string): Promise<SingleResponse<Genre>> {
     return api.get<SingleResponse<Genre>>(`/genres/${slug}`);
+  },
+
+  /**
+   * Get platform fee settings
+   */
+  async getFeeSettings(): Promise<SingleResponse<{
+    platformCommissionRate: number;
+    processingFeePercentage: number;
+    processingFeeFixed: number;
+  }>> {
+    return api.get('/settings/fees');
+  },
+
+  /**
+   * Calculate fees for an amount
+   */
+  async calculateFees(amount: number): Promise<SingleResponse<{
+    subtotal: number;
+    processingFee: number;
+    platformFee: number;
+    producerEarnings: number;
+    total: number;
+    platformCommissionRate: number;
+  }>> {
+    return api.post('/settings/fees/calculate', { amount });
+  },
+  /**
+   * Get user's purchased beats
+   */
+  async getPurchases(): Promise<SingleResponse<any[]>> {
+    return api.get<SingleResponse<any[]>>('/orders/purchases');
+  },
+  /**
+   * Create an order
+   */
+  async createOrder(data: {
+    items: { beatId: number | string; licenseTierId: number | string }[];
+    paymentMethod: string;
+    paymentReference: string;
+    email: string;
+  }): Promise<SingleResponse<any>> {
+    return api.post<SingleResponse<any>>('/orders', data);
+  },
+  /**
+   * Verify a payment
+   */
+  async verifyPayment(reference: string): Promise<SingleResponse<any>> {
+    return api.get<SingleResponse<any>>(`/payments/verify/paystack/${reference}`);
   },
 };
 

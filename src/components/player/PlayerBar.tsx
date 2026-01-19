@@ -54,7 +54,11 @@ export const PlayerBar = () => {
       displayName: currentBeat.producerName,
       username: currentBeat.producerUsername,
       id: currentBeat.producerId,
-    } as any; // Simplification or fetch from store if full producer object is needed
+      avatar: currentBeat.producerAvatar,
+      bio: currentBeat.producerBio,
+      location: currentBeat.producerLocation,
+      isVerified: currentBeat.producerIsVerified,
+    } as any;
   }, [currentBeat]);
 
   // Setup audio event listeners
@@ -172,7 +176,8 @@ export const PlayerBar = () => {
   const handleBuyClick = useCallback(() => {
     if (!currentBeat) return;
     if (!isInCart(currentBeat.id)) {
-      addToCart(currentBeat);
+      const defaultTierId = currentBeat.licenseTiers?.[0]?.id;
+      addToCart(currentBeat, defaultTierId);
     }
     setIsMobileOpen(false);
     navigate("/checkout");
