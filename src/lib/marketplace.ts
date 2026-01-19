@@ -193,7 +193,7 @@ export const marketplaceService = {
    * Create an order
    */
   async createOrder(data: {
-    items: { beatId: number | string; licenseTierId: number | string }[];
+    items: { beatId: number | string; licenseTierId?: number | string }[];
     paymentMethod: string;
     paymentReference: string;
     email: string;
@@ -205,6 +205,19 @@ export const marketplaceService = {
    */
   async verifyPayment(reference: string): Promise<SingleResponse<any>> {
     return api.get<SingleResponse<any>>(`/payments/verify/paystack/${reference}`);
+  },
+
+  /**
+   * Get user's purchased license tiers for a specific beat
+   */
+  async getPurchasedTiersForBeat(beatId: string | number): Promise<SingleResponse<{
+    licenseTierId: number;
+    licenseType: string;
+    purchasedAt: string;
+    tierName: string;
+    tierType: string;
+  }[]>> {
+    return api.get(`/orders/purchases/beat/${beatId}`);
   },
 };
 

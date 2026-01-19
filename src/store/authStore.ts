@@ -24,7 +24,7 @@ interface AuthState {
   logout: () => Promise<void>;
   refreshTokens: () => Promise<boolean>;
   fetchProfile: () => Promise<void>;
-  updateProfile: (data: UpdateProfileData) => Promise<void>;
+  updateProfile: (data: UpdateProfileData | FormData) => Promise<void>;
   updateSettings: (data: UpdateSettingsData) => Promise<void>;
   clearError: () => void;
   setUser: (user: User) => void;
@@ -154,7 +154,7 @@ export const useAuthStore = create<AuthState>()(
       /**
        * Update user profile
        */
-      updateProfile: async (data: UpdateProfileData) => {
+      updateProfile: async (data: UpdateProfileData | FormData) => {
         set({ isLoading: true, error: null });
         try {
           const response = await authService.updateProfile(data);

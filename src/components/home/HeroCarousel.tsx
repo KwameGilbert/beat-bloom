@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Play, Pause, ShoppingCart, Heart, ChevronLeft, ChevronRight, Loader2, Check } from "lucide-react";
 import { usePlayerStore } from "@/store/playerStore";
 import { useLikesStore } from "@/store/likesStore";
 import { useCartStore } from "@/store/cartStore";
+import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 
 interface HeroCarouselProps {
@@ -12,16 +13,19 @@ interface HeroCarouselProps {
 }
 
 export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
   const { toggleLike, isLiked } = useLikesStore();
   const { addToCart, removeFromCart, isInCart } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     if (beats.length <= 1) return;
     const interval = setInterval(() => {
       handleNext();
-    }, 8000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [currentIndex, beats.length]);
 
@@ -62,6 +66,10 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
   };
 
   const handleLikeClick = () => {
+      if (!isAuthenticated) {
+        navigate("/login", { state: { from: location } });
+        return;
+      }
       toggleLike(currentFeaturedBeat);
   };
 

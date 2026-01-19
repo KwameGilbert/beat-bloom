@@ -136,7 +136,7 @@ export const authService = {
   /**
    * Update user profile
    */
-  async updateProfile(data: UpdateProfileData): Promise<{ data: User }> {
+  async updateProfile(data: UpdateProfileData | FormData): Promise<{ data: User }> {
     return api.patch('/auth/me', data);
   },
 

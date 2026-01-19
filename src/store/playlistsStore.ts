@@ -43,8 +43,6 @@ interface PlaylistsState {
   getPlaylistsContainingBeat: (beatId: string | number) => Playlist[];
 }
 
-const generateId = () => `playlist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
 export const usePlaylistsStore = create<PlaylistsState>()(
   persist(
     (set, get) => ({
@@ -53,14 +51,14 @@ export const usePlaylistsStore = create<PlaylistsState>()(
       hasFetched: false,
 
       fetchPlaylists: async () => {
-        const { hasFetched, isLoading } = get();
-        if (hasFetched || isLoading) return;
+        const { isLoading } = get();
+        if (isLoading) return;
 
         set({ isLoading: true });
         try {
           const response = await api.get<{ success: boolean; data: Playlist[] }>('/playlists');
           if (response.success && response.data) {
-            // Normalize playlists - ensure beats array exists
+            // Replace all playlists with backend data to avoid stale local IDs
             const playlists = response.data.map(p => ({
               ...p,
               beats: p.beats || [],
@@ -80,7 +78,6 @@ export const usePlaylistsStore = create<PlaylistsState>()(
       },
 
       createPlaylist: async (name, color = "bg-orange-500") => {
-        // Try backend first
         try {
           const response = await api.post<{ success: boolean; data: Playlist }>('/playlists', {
             name,
@@ -97,22 +94,11 @@ export const usePlaylistsStore = create<PlaylistsState>()(
             }));
             return newPlaylist;
           }
+          throw new Error("Failed to create playlist");
         } catch (error) {
-          console.error("Failed to create playlist on backend:", error);
+          console.error("Failed to create playlist:", error);
+          throw error; // Re-throw so the UI can handle the error
         }
-
-        // Fallback to local creation if backend fails
-        const newPlaylist: Playlist = {
-          id: generateId(),
-          name,
-          color,
-          beats: [],
-          createdAt: new Date().toISOString(),
-        };
-        set((state) => ({
-          playlists: [...state.playlists, newPlaylist],
-        }));
-        return newPlaylist;
       },
 
       deletePlaylist: async (playlistId) => {

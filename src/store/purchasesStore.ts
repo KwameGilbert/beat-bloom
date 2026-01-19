@@ -7,6 +7,13 @@ interface Purchase {
   purchasedAt: string;
   transactionRef: string;
   amount: number;
+  // License information
+  licenseTierId?: number;
+  tierName?: string;
+  tierType?: string;
+  licenseName?: string;
+  isExclusive?: boolean;
+  includedFiles?: string[];
 }
 
 interface PurchasesState {
@@ -16,6 +23,7 @@ interface PurchasesState {
   addPurchase: (beat: Beat, transactionRef: string, amount: number) => void;
   addPurchases: (beats: Beat[], transactionRef: string, totalAmount: number) => void;
   isPurchased: (beatId: string | number) => boolean;
+  isPurchasedWithTier: (beatId: string | number, tierId: string | number) => boolean;
   getPurchase: (beatId: string | number) => Purchase | undefined;
   fetchPurchases: () => Promise<void>;
   clearPurchases: () => void;
@@ -66,6 +74,14 @@ export const usePurchasesStore = create<PurchasesState>()(
         return get().purchases.some((p) => p.beat?.id.toString() === idStr);
       },
 
+      isPurchasedWithTier: (beatId, tierId) => {
+        const beatIdStr = beatId.toString();
+        const tierIdStr = tierId.toString();
+        return get().purchases.some(
+          (p) => p.beat?.id.toString() === beatIdStr && p.licenseTierId?.toString() === tierIdStr
+        );
+      },
+
       getPurchase: (beatId) => {
         const idStr = beatId.toString();
         return get().purchases.find((p) => p.beat?.id.toString() === idStr);
@@ -88,6 +104,7 @@ export const usePurchasesStore = create<PurchasesState>()(
                 producerUsername: p.producerUsername || "unknown",
                 bpm: p.bpm || 0,
                 musicalKey: p.musicalKey || "N/A",
+                duration: p.duration || "",
                 tags: [],
                 playsCount: 0,
                 likesCount: 0,
@@ -99,7 +116,14 @@ export const usePurchasesStore = create<PurchasesState>()(
               } as Beat,
               purchasedAt: p.purchasedAt,
               transactionRef: p.orderItemId?.toString() || "N/A",
-              amount: parseFloat(p.price || 0), 
+              amount: parseFloat(p.price || 0),
+              // License info
+              licenseTierId: p.licenseTierId,
+              tierName: p.tierName || p.licenseName || "Unknown",
+              tierType: p.tierType || p.licenseType || "mp3",
+              licenseName: p.licenseName,
+              isExclusive: p.isExclusive || false,
+              includedFiles: p.includedFiles || [],
             }));
             set({ purchases: mappedPurchases, isLoading: false });
           } else {

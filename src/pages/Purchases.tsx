@@ -15,7 +15,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { cn } from "@/lib/utils";
 
 const Purchases = () => {
-  const { purchases, fetchPurchases, isLoading: isLoadingPurchases, error } = usePurchasesStore();
+  const { purchases, fetchPurchases, isLoading: isLoadingPurchases } = usePurchasesStore();
   const { currentBeat, isPlaying, playBeat, togglePlay, isLoading: isPlayerLoading } = usePlayerStore();
 
   useEffect(() => {
@@ -101,7 +101,7 @@ const Purchases = () => {
 
               return (
                 <Link
-                  key={`${beat.id}-${purchase.purchasedAt}`}
+                  key={`${beat.id}-${purchase.licenseTierId || purchase.purchasedAt}`}
                   to={`/beat/${beat.id}`}
                   className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:bg-secondary/50"
                 >
@@ -131,17 +131,41 @@ const Purchases = () => {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-foreground truncate">{beat.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-foreground truncate">{beat.title}</h3>
+                      {purchase.isExclusive && (
+                        <span className="shrink-0 rounded bg-gradient-to-r from-purple-500 to-pink-500 px-2 py-0.5 text-[10px] font-bold text-white uppercase">
+                          Exclusive
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground truncate">{beat.producerName}</p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      {/* License Type Badge */}
+                      <span className="rounded bg-orange-500/20 text-orange-500 px-2 py-0.5 text-xs font-medium">
+                        {purchase.tierName || purchase.tierType?.toUpperCase() || "License"}
+                      </span>
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Calendar className="h-3 w-3" />
                         {formatDate(purchase.purchasedAt || new Date().toISOString())}
                       </span>
-                      <span className="text-green-500 font-medium">
+                      <span className="text-green-500 text-xs font-medium">
                         ${Number(purchase.amount || beat.price || 0).toFixed(2)}
                       </span>
                     </div>
+                    {/* Included Files */}
+                    {purchase.includedFiles && purchase.includedFiles.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {(Array.isArray(purchase.includedFiles) 
+                          ? purchase.includedFiles 
+                          : JSON.parse(purchase.includedFiles || '[]')
+                        ).map((file: string) => (
+                          <span key={file} className="rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                            {file}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions */}

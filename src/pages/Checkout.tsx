@@ -122,24 +122,27 @@ const Checkout = () => {
             price: item.price || 0,
           })),
         },
-        callback: async (response: any) => {
+        callback: (response: { reference: string }) => {
           // Payment successful on Paystack side
           console.log("Payment successful on Paystack!", response.reference);
           
-          try {
-            // 4. Verify the payment on the backend (Server-to-Server check)
-            // This will mark the order as 'completed' and trigger fulfillment
-            await marketplaceService.verifyPayment(response.reference);
+          // Handle async verification inside a regular function
+          (async () => {
+            try {
+              // 4. Verify the payment on the backend (Server-to-Server check)
+              // This will mark the order as 'completed' and trigger fulfillment
+              await marketplaceService.verifyPayment(response.reference);
 
-            // 5. Success UI update
-            setIsComplete(true);
-            clearCart();
-          } catch (error) {
-            console.error("Payment verification failed:", error);
-            setOrderError("Payment was successful but verification failed. Please contact support with reference: " + response.reference);
-          } finally {
-            setIsProcessing(false);
-          }
+              // 5. Success UI update
+              setIsComplete(true);
+              clearCart();
+            } catch (error) {
+              console.error("Payment verification failed:", error);
+              setOrderError("Payment was successful but verification failed. Please contact support with reference: " + response.reference);
+            } finally {
+              setIsProcessing(false);
+            }
+          })();
         },
         onClose: () => {
           setIsProcessing(false);

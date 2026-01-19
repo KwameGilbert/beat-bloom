@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { type Beat, marketplaceService } from "@/lib/marketplace";
+import { useAuthStore } from "@/store/authStore";
 import { api } from "@/lib/api";
 
 interface LikesState {
@@ -46,13 +47,23 @@ export const useLikesStore = create<LikesState>()(
           addLike(beat);
         }
 
-        // Backend integration
+        const isAuthenticated = useAuthStore.getState().isAuthenticated;
+        
+        if (!isAuthenticated) {
+          return;
+        }
+
         try {
           // marketplaceService.toggleLike internally uses api.post which includes token if available
           await marketplaceService.toggleLike(beat.id);
         } catch (error) {
           console.error("Failed to sync like with backend:", error);
-          // Optional: Revert local state if not authenticated or error
+          // Revert local state on error
+          if (isCurrentlyLiked) {
+            addLike(beat);
+          } else {
+            removeLike(beat.id);
+          }
         }
       },
 

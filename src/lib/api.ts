@@ -68,9 +68,13 @@ async function apiFetch<T>(
   const url = `${API_BASE_URL}${endpoint}`;
   
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
     ...options.headers,
   };
+
+  // Only set Content-Type to JSON if it's not FormData
+  if (!(options.body instanceof FormData)) {
+    (headers as Record<string, string>)['Content-Type'] = 'application/json';
+  }
 
   // Add auth header if token exists
   const token = getAccessToken();
@@ -113,21 +117,21 @@ export const api = {
     apiFetch<T>(endpoint, {
       ...options,
       method: 'POST',
-      body: body ? JSON.stringify(body) : undefined,
+      body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
     }),
 
   patch: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     apiFetch<T>(endpoint, {
       ...options,
       method: 'PATCH',
-      body: body ? JSON.stringify(body) : undefined,
+      body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
     }),
 
   put: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     apiFetch<T>(endpoint, {
       ...options,
       method: 'PUT',
-      body: body ? JSON.stringify(body) : undefined,
+      body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
     }),
 
   delete: <T>(endpoint: string, options?: RequestInit) =>
