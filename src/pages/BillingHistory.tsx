@@ -11,16 +11,15 @@ import {
   CreditCard,
   ExternalLink
 } from "lucide-react";
-import { featuredBeats } from "@/data/beats";
 import { cn } from "@/lib/utils";
 
-// Mock Transaction Data
+// Mock Transaction Data with inline beat titles
 const dummyTransactions = [
-  { id: "TX-90210", date: "2026-01-14", beat: featuredBeats[0], type: "purchase", amount: 150.00, status: "completed", method: "Mastercard" },
-  { id: "TX-90211", date: "2026-01-12", beat: featuredBeats[1], type: "sale", amount: 250.00, status: "completed", method: "PayPal Balance" },
+  { id: "TX-90210", date: "2026-01-14", beatTitle: "Midnight Vibes", type: "purchase", amount: 150.00, status: "completed", method: "Mastercard" },
+  { id: "TX-90211", date: "2026-01-12", beatTitle: "Urban Dreams", type: "sale", amount: 250.00, status: "completed", method: "PayPal Balance" },
   { id: "TX-90212", date: "2026-01-10", type: "withdrawal", amount: 500.00, status: "completed", method: "Bank Transfer" },
-  { id: "TX-90213", date: "2026-01-08", beat: featuredBeats[2], type: "purchase", amount: 200.00, status: "completed", method: "Visa" },
-  { id: "TX-90214", date: "2026-01-05", beat: featuredBeats[3], type: "sale", amount: 180.00, status: "completed", method: "PayPal Balance" },
+  { id: "TX-90213", date: "2026-01-08", beatTitle: "Neon Nights", type: "purchase", amount: 200.00, status: "completed", method: "Visa" },
+  { id: "TX-90214", date: "2026-01-05", beatTitle: "Summer Waves", type: "sale", amount: 180.00, status: "completed", method: "PayPal Balance" },
 ];
 
 const BillingHistory = () => {
@@ -115,8 +114,8 @@ const BillingHistory = () => {
                         </div>
                         <div>
                           <p className="font-bold text-foreground">
-                            {tx.type === "purchase" ? `Purchase: ${tx.beat?.title}` : 
-                             tx.type === "sale" ? `Sale: ${tx.beat?.title}` :
+                            {tx.type === "purchase" ? `Purchase: ${tx.beatTitle}` : 
+                             tx.type === "sale" ? `Sale: ${tx.beatTitle}` :
                              "Funds Withdrawal"}
                           </p>
                           <p className="text-[10px] text-muted-foreground font-mono">{tx.id}</p>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   MapPin, 
@@ -18,15 +18,13 @@ import {
   Download,
   TrendingUp
 } from "lucide-react";
-import { featuredBeats, trendingBeats, type Beat } from "@/data/beats";
+import { type Beat } from "@/lib/marketplace";
+import { useBeatsStore } from "@/store/beatsStore";
 import { useLikesStore } from "@/store/likesStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
 import { useUserStore } from "@/store/userStore";
 import { cn } from "@/lib/utils";
-
-// Combine all beats as user's published beats (mock data)
-const allBeats = [...featuredBeats, ...trendingBeats];
 
 type ProfileTab = "beats" | "liked" | "analytics";
 
@@ -37,6 +35,14 @@ const Profile = () => {
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
   const { addToCart, removeFromCart, isInCart } = useCartStore();
   const { user } = useUserStore();
+  const { trendingBeats, fetchTrending } = useBeatsStore();
+
+  // Fetch beats on mount
+  useEffect(() => {
+    fetchTrending(12);
+  }, [fetchTrending]);
+
+  const allBeats = trendingBeats;
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) {
@@ -97,7 +103,7 @@ const Profile = () => {
           {/* Cover Image */}
           <div className="relative aspect-square overflow-hidden">
             <img
-              src={beat.cover}
+              src={beat.coverImage}
               alt={beat.title}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
@@ -132,7 +138,7 @@ const Profile = () => {
               {beat.title}
             </h3>
             <p className="truncate text-sm text-muted-foreground">
-              {beat.producer}
+              {beat.producerName}
             </p>
 
             {/* Tags */}
@@ -141,14 +147,14 @@ const Profile = () => {
                 {beat.bpm} BPM
               </span>
               <span className="rounded bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
-                {beat.key}
+                {beat.musicalKey}
               </span>
             </div>
 
             {/* Price & Actions */}
             <div className="mt-3 flex items-center justify-between">
               <span className="text-lg font-bold text-orange-500">
-                ${beat.price.toFixed(2)}
+                ${(beat.price || 0).toFixed(2)}
               </span>
               <div className="flex items-center gap-1">
                 <button

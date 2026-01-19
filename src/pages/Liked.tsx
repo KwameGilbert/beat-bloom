@@ -11,7 +11,7 @@ import {
 import { useLikesStore } from "@/store/likesStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
-import { type Beat } from "@/data/beats";
+import { type Beat } from "@/lib/marketplace";
 import { cn } from "@/lib/utils";
 
 const Liked = () => {
@@ -129,7 +129,7 @@ const Liked = () => {
                   {/* Cover Image */}
                   <div className="relative aspect-square overflow-hidden">
                     <img
-                      src={beat.cover}
+                      src={beat.coverImage}
                       alt={beat.title}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
@@ -164,7 +164,7 @@ const Liked = () => {
                       {beat.title}
                     </h3>
                     <p className="truncate text-sm text-muted-foreground">
-                      {beat.producer}
+                      {beat.producerName}
                     </p>
 
                     {/* Tags */}
@@ -173,18 +173,18 @@ const Liked = () => {
                         {beat.bpm} BPM
                       </span>
                       <span className="rounded bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
-                        {beat.key}
+                        {beat.musicalKey}
                       </span>
                     </div>
 
                     {/* Price & Actions */}
                     <div className="mt-3 flex items-center justify-between">
                       <span className="text-lg font-bold text-orange-500">
-                        ${beat.price.toFixed(2)}
+                        ${(beat.price || 0).toFixed(2)}
                       </span>
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={(e) => handleUnlike(beat.id, e)}
+                          onClick={(e) => handleUnlike(beat.id.toString(), e)}
                           className="flex h-8 w-8 items-center justify-center rounded-full text-red-500 transition-colors hover:bg-red-500/10"
                           title="Remove from liked"
                         >

@@ -14,14 +14,14 @@ import {
 import { useCartStore } from "@/store/cartStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { cn } from "@/lib/utils";
-import type { Beat } from "@/data/beats";
+import type { Beat } from "@/lib/marketplace";
 
 const Cart = () => {
   const navigate = useNavigate();
   const { items, removeFromCart, clearCart } = useCartStore();
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
 
-  const total = items.reduce((sum, item) => sum + item.price, 0);
+  const total = items.reduce((sum, item) => sum + (item.price || 0), 0);
 
   const handlePlayClick = (beat: Beat) => {
     if (currentBeat?.id === beat.id) {
@@ -120,7 +120,7 @@ const Cart = () => {
                         onClick={() => handlePlayClick(beat)}
                       >
                         <img
-                          src={beat.cover}
+                          src={beat.coverImage}
                           alt={beat.title}
                           className="h-full w-full object-cover"
                         />
@@ -149,12 +149,12 @@ const Cart = () => {
                           >
                             {beat.title}
                           </Link>
-                          <p className="text-sm text-muted-foreground">by {beat.producer}</p>
+                          <p className="text-sm text-muted-foreground">by {beat.producerName}</p>
                           
                           {/* Tags & Specs */}
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             <span className="inline-block rounded bg-orange-500/20 px-2 py-0.5 text-xs font-medium text-orange-500">
-                              {beat.tags[0]}
+                              {beat.tags?.[0] || beat.genreName || 'Beat'}
                             </span>
                             <span className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Music2 className="h-3 w-3" />
@@ -168,15 +168,17 @@ const Cart = () => {
                         </div>
 
                         {/* Included Files */}
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          Includes: {beat.includedFiles.join(", ")}
-                        </div>
+                        {beat.licenseTiers && beat.licenseTiers.length > 0 && (
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            Includes: {beat.licenseTiers[0].includedFiles?.join(", ")}
+                          </div>
+                        )}
                       </div>
 
                       {/* Price & Remove */}
                       <div className="flex flex-col items-end justify-between">
                         <p className="text-xl font-bold text-orange-500">
-                          ${beat.price.toFixed(2)}
+                          ${(beat.price || 0).toFixed(2)}
                         </p>
                         <button
                           onClick={() => removeFromCart(beat.id)}

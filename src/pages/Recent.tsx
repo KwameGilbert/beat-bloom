@@ -12,7 +12,7 @@ import {
 import { usePlayerStore } from "@/store/playerStore";
 import { useLikesStore } from "@/store/likesStore";
 import { useCartStore } from "@/store/cartStore";
-import { type Beat } from "@/data/beats";
+import { type Beat } from "@/lib/marketplace";
 import { cn } from "@/lib/utils";
 
 const Recent = () => {
@@ -153,7 +153,7 @@ const Recent = () => {
                       onClick={(e) => handlePlayClick(beat, e)}
                     >
                       <img
-                        src={beat.cover}
+                        src={beat.coverImage}
                         alt={beat.title}
                         className="h-full w-full object-cover"
                       />
@@ -179,7 +179,7 @@ const Recent = () => {
                         {beat.title}
                       </p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {beat.producer}
+                        {beat.producerName}
                       </p>
                     </div>
                   </div>
@@ -191,7 +191,7 @@ const Recent = () => {
 
                   {/* Price */}
                   <div className="col-span-2 text-center text-sm font-bold text-foreground">
-                    ${beat.price.toFixed(2)}
+                    ${(beat.price || 0).toFixed(2)}
                   </div>
 
                   {/* Actions */}

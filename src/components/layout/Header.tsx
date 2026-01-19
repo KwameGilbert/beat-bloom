@@ -3,11 +3,10 @@ import { Bell, Search, ShoppingCart, User, Menu, Sun, Moon, X } from "lucide-rea
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCartStore } from "@/store/cartStore";
 import { useThemeStore } from "@/store/themeStore";
-import { featuredBeats, trendingBeats, producers } from "@/data/beats";
+import { useBeatsStore } from "@/store/beatsStore";
 import { useAuthStore } from "@/store/authStore";
 import { AnimatePresence } from "framer-motion";
 import { SearchPanel } from "./SearchPanel";
-import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -19,6 +18,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   const itemCount = useCartStore((state) => state.items.length);
   const { theme, toggleTheme } = useThemeStore();
   const { isAuthenticated } = useAuthStore();
+  const { trendingBeats, producers } = useBeatsStore();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -50,21 +50,21 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
     localStorage.setItem("recentSearches", JSON.stringify(newRecent));
   };
 
-  // Combine all beats for searching
-  const allBeats = [...featuredBeats, ...trendingBeats];
+  // Use beats from store for searching
+  const allBeats = trendingBeats;
 
   // Filter results
   const filteredBeats = searchQuery.trim() === "" 
     ? [] 
     : allBeats.filter(beat => 
         beat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        beat.producer.toLowerCase().includes(searchQuery.toLowerCase())
+        beat.producerName.toLowerCase().includes(searchQuery.toLowerCase())
       ).slice(0, 5);
 
   const filteredProducers = searchQuery.trim() === ""
     ? []
     : producers.filter(producer => 
-        producer.name.toLowerCase().includes(searchQuery.toLowerCase())
+        producer.displayName.toLowerCase().includes(searchQuery.toLowerCase())
       ).slice(0, 3);
 
   // Handle click outside
