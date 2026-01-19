@@ -547,8 +547,9 @@ export const genres: Genre[] = [
 ];
 
 // Helper functions
-export const getProducerById = (id: string): Producer | undefined => {
-  return producers.find(p => p.id === id);
+export const getProducerById = (id: string | number): Producer | undefined => {
+  const idStr = id.toString();
+  return producers.find(p => p.id.toString() === idStr);
 };
 
 export const getBeatsByProducerId = (producerId: string): Beat[] => {

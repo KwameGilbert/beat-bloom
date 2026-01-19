@@ -71,7 +71,7 @@ export const DesktopPlayer = ({
       <div className="flex flex-1 items-center gap-4 min-w-0">
         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md group relative border border-border">
           <img 
-            src={currentBeat.coverImage} 
+            src={currentBeat.coverImage } 
             alt={currentBeat.title}
             className="h-full w-full object-cover" 
           />
@@ -84,7 +84,7 @@ export const DesktopPlayer = ({
             {currentBeat.title}
           </Link>
           <Link to={`/producer/${currentBeat.producerId}`} className="text-xs text-muted-foreground hover:text-orange-500 hover:underline truncate">
-            {currentBeat.producer}
+            {currentBeat.producerName }
           </Link>
         </div>
         <button 
@@ -172,7 +172,7 @@ export const DesktopPlayer = ({
             {currentBeat.bpm} BPM
           </span>
           <span className="rounded bg-secondary px-2 py-1 text-xs font-medium text-foreground pointer-events-none border border-border whitespace-nowrap">
-            {currentBeat.key}
+            {currentBeat.musicalKey}
           </span>
         </div>
 

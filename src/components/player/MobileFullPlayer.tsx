@@ -18,7 +18,7 @@ import {
   ListPlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Beat, Producer } from "@/data/beats";
+import type { Beat, Producer } from "@/lib/marketplace";
 
 interface MobileFullPlayerProps {
   currentBeat: Beat;
@@ -103,7 +103,7 @@ export const MobileFullPlayer = ({
         <div className="flex flex-1 items-center justify-center px-8 min-h-[300px]">
           <div className="relative aspect-square w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl shadow-orange-500/10 border border-border">
             <img 
-              src={currentBeat.cover} 
+              src={currentBeat.coverImage} 
               alt={currentBeat.title}
               className="h-full w-full object-cover"
             />
@@ -121,13 +121,13 @@ export const MobileFullPlayer = ({
               </Link>
               <div className="flex flex-wrap items-center gap-2">
                 <Link to={`/producer/${currentBeat.producerId}`} onClick={onMinimize}>
-                  <p className="text-lg text-muted-foreground truncate mr-1 hover:text-orange-500">{currentBeat.producer}</p>
+                  <p className="text-lg text-muted-foreground truncate mr-1 hover:text-orange-500">{currentBeat.producerName}</p>
                 </Link>
                 <span className="rounded bg-secondary px-2 py-0.5 text-xs font-medium text-foreground pointer-events-none border border-border">
                   {currentBeat.bpm} BPM
                 </span>
                 <span className="rounded bg-secondary px-2 py-0.5 text-xs font-medium text-foreground pointer-events-none border border-border">
-                  {currentBeat.key}
+                  {currentBeat.musicalKey}
                 </span>
               </div>
             </div>
@@ -271,14 +271,14 @@ export const MobileFullPlayer = ({
                 <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border border-border group-hover/prod:border-orange-500 transition-colors">
                   <img 
                     src={producer.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"} 
-                    alt={producer.name}
+                    alt={producer.displayName}
                     className="h-full w-full object-cover"
                   />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-bold text-foreground group-hover/prod:text-orange-500 transition-colors">{producer.name}</h4>
-                    {producer.verified && (
+                    <h4 className="font-bold text-foreground group-hover/prod:text-orange-500 transition-colors">{producer.displayName}</h4>
+                    {producer.isVerified && (
                       <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-orange-500 text-white">
                         <Check className="h-3 w-3" />
                       </span>

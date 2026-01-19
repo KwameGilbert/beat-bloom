@@ -28,22 +28,17 @@ export interface Beat {
   description?: string;
   bpm: number;
   musicalKey: string;
-  key?: string; // Backward compatibility
   duration?: string;
   durationSeconds?: number;
   coverImage?: string;
-  cover?: string; // Backward compatibility
   previewAudioUrl?: string;
-  audio?: string; // Backward compatibility
   tags: string[];
   playsCount: number;
-  plays?: number; // Backward compatibility
   likesCount: number;
   isExclusiveSold: boolean;
   status: 'draft' | 'active' | 'archived' | 'soldExclusive';
   isFeatured: boolean;
   producerName: string;
-  producer?: string; // Backward compatibility
   producerUsername: string;
   genreName?: string;
   licenseTiers?: LicenseTier[];
@@ -52,8 +47,8 @@ export interface Beat {
 }
 
 export interface Producer {
-  id: number;
-  userId: number;
+  id: number | string;
+  userId: number | string;
   username: string;
   displayName: string;
   avatar?: string;
@@ -64,6 +59,16 @@ export interface Producer {
   isVerified: boolean;
   beats?: Beat[];
   createdAt: string;
+}
+
+export interface Genre {
+  id: number | string;
+  name: string;
+  slug: string;
+  description?: string;
+  imageUrl?: string;
+  beatCount?: number;
+  isActive: boolean;
 }
 
 export interface Pagination {
@@ -134,6 +139,20 @@ export const marketplaceService = {
    */
   async getProducer(username: string): Promise<SingleResponse<Producer>> {
     return api.get<SingleResponse<Producer>>(`/producers/${username}`);
+  },
+
+  /**
+   * Get all genres
+   */
+  async getGenres(): Promise<SingleResponse<Genre[]>> {
+    return api.get<SingleResponse<Genre[]>>(`/genres`);
+  },
+
+  /**
+   * Get genre by slug
+   */
+  async getGenre(slug: string): Promise<SingleResponse<Genre>> {
+    return api.get<SingleResponse<Genre>>(`/genres/${slug}`);
   },
 };
 

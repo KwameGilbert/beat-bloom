@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
 import { useLikesStore } from "@/store/likesStore";
-import { getProducerById } from "@/data/beats";
 import { AddToPlaylistModal } from "@/components/shared/AddToPlaylistModal";
 import { audioManager } from "@/lib/audioManager";
 
@@ -50,9 +49,13 @@ export const PlayerBar = () => {
 
   // Get producer info from current beat
   const producer = useMemo(() => {
-    if (!currentBeat?.producerId) return null;
-    return getProducerById(currentBeat.producerId) ?? null;
-  }, [currentBeat?.producerId]);
+    if (!currentBeat) return null;
+    return {
+      displayName: currentBeat.producerName,
+      username: currentBeat.producerUsername,
+      id: currentBeat.producerId,
+    } as any; // Simplification or fetch from store if full producer object is needed
+  }, [currentBeat]);
 
   // Setup audio event listeners
   useEffect(() => {
@@ -103,13 +106,12 @@ export const PlayerBar = () => {
 
   // Handle Track Change - use the singleton audio manager
   useEffect(() => {
-    if (currentBeat?.audio) {
+    const audioUrl = currentBeat?.previewAudioUrl;
+    if (audioUrl) {
       setIsLoading(true);
-      // Don't close the mobile player when track changes (e.g., next/previous)
-      // setIsMobileOpen(false) was causing the player to collapse on track change
       
       // Use the audio manager to play - it handles stopping previous audio
-      audioManager.play(currentBeat.audio)
+      audioManager.play(audioUrl)
         .then(() => {
           // Successfully started playing
         })
@@ -117,18 +119,19 @@ export const PlayerBar = () => {
           pause();
         });
     }
-  }, [currentBeat?.id, currentBeat?.audio, setIsLoading, pause]);
+  }, [currentBeat?.id, currentBeat?.previewAudioUrl, setIsLoading, pause]);
 
   // Handle Play/Pause state changes
   useEffect(() => {
-    if (currentBeat?.audio) {
+    const audioUrl = currentBeat?.previewAudioUrl;
+    if (audioUrl) {
       if (isPlaying) {
         audioManager.resume().catch(() => pause());
       } else {
         audioManager.pause();
       }
     }
-  }, [isPlaying, currentBeat?.audio, pause]);
+  }, [isPlaying, currentBeat?.previewAudioUrl, pause]);
 
   // Handle Volume changes
   useEffect(() => {
@@ -181,7 +184,7 @@ export const PlayerBar = () => {
     const shareUrl = `${window.location.origin}/beat/${currentBeat.id}`;
     const shareData = {
       title: currentBeat.title,
-      text: `Check out "${currentBeat.title}" by ${currentBeat.producer} on BeatBloom!`,
+      text: `Check out "${currentBeat.title}" by ${currentBeat.producerName} on BeatBloom!`,
       url: shareUrl,
     };
 

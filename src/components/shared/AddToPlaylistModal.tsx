@@ -8,7 +8,7 @@ import {
   Trash2
 } from "lucide-react";
 import { usePlaylistsStore, playlistColors, type Playlist } from "@/store/playlistsStore";
-import type { Beat } from "@/data/beats";
+import type { Beat } from "@/lib/marketplace";
 import { cn } from "@/lib/utils";
 
 interface AddToPlaylistModalProps {
@@ -104,11 +104,11 @@ export const AddToPlaylistModal = ({ isOpen, onClose, beat }: AddToPlaylistModal
         {!isCreating && !editingPlaylist && (
           <div className="flex items-center gap-3 border-b border-border px-6 py-3 bg-secondary/30">
             <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg">
-              <img src={beat.cover} alt={beat.title} className="h-full w-full object-cover" />
+              <img src={beat.coverImage} alt={beat.title} className="h-full w-full object-cover" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-medium text-foreground truncate">{beat.title}</p>
-              <p className="text-sm text-muted-foreground truncate">{beat.producer}</p>
+              <p className="text-sm text-muted-foreground truncate">{beat.producerName}</p>
             </div>
           </div>
         )}

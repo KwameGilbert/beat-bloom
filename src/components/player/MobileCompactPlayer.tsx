@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Play, Pause, SkipForward, X, Loader2 } from "lucide-react";
-import type { Beat } from "@/data/beats";
+import type { Beat } from "@/lib/marketplace";
 
 interface MobileCompactPlayerProps {
   currentBeat: Beat;
@@ -41,7 +41,7 @@ export const MobileCompactPlayer = ({
       <div className="flex items-center gap-3 overflow-hidden">
         <div className="h-10 w-10 shrink-0 overflow-hidden rounded bg-secondary">
           <img 
-            src={currentBeat.cover} 
+            src={currentBeat.coverImage} 
             alt={currentBeat.title}
             className="h-full w-full object-cover"
           />
@@ -59,7 +59,7 @@ export const MobileCompactPlayer = ({
             onClick={(e) => e.stopPropagation()} 
             className="truncate text-xs text-muted-foreground hover:text-orange-500"
           >
-            {currentBeat.producer}
+            {currentBeat.producerName}
           </Link>
         </div>
       </div>
