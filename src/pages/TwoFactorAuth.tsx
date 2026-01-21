@@ -6,7 +6,7 @@
  */
 
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ShieldCheck, Construction } from "lucide-react";
+import { ArrowLeft, Construction } from "lucide-react";
 
 const TwoFactorAuth = () => {
   const navigate = useNavigate();
