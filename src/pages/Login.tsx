@@ -57,10 +57,19 @@ const Login = () => {
     }
   };
 
-  const handleSocialLogin = () => {
-    // TODO: Implement OAuth social login
-    // For now, switch to email login
-    setAuthMethod("email");
+  const handleGoogleLogin = () => {
+    // Redirect to backend Google OAuth endpoint
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    window.location.href = `${apiUrl}/api/auth/google`;
+  };
+
+  const handleAppleLogin = () => {
+    // Apple OAuth - not yet implemented
+    showNotification(
+      "Coming Soon",
+      "Apple Sign-In will be available soon.",
+      "info"
+    );
   };
 
   return (
@@ -143,7 +152,7 @@ const Login = () => {
                   className="space-y-3 w-full"
                 >
                   <button
-                    onClick={handleSocialLogin}
+                    onClick={handleAppleLogin}
                     disabled={isLoading}
                     className="flex w-full items-center justify-center gap-3 rounded-2xl bg-zinc-950 px-6 py-4 text-sm font-bold text-white transition-all hover:bg-zinc-900 active:scale-95 disabled:opacity-50 shadow-lg dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white"
                   >
@@ -152,7 +161,7 @@ const Login = () => {
                   </button>
                   
                   <button
-                    onClick={handleSocialLogin}
+                    onClick={handleGoogleLogin}
                     disabled={isLoading}
                     className="flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 text-sm font-bold text-white transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50 shadow-lg"
                   >

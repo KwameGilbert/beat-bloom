@@ -23,6 +23,7 @@ import TwoFactorAuth from "../pages/TwoFactorAuth";
 import PayoutMethods from "../pages/PayoutMethods";
 import BillingHistory from "../pages/BillingHistory";
 import ProducerProfile from "../pages/ProducerProfile";
+import OAuthCallback from "../pages/OAuthCallback";
 
 import { Layout } from "../components/layout/Layout";
 import { AuthLayout } from "../components/auth/AuthLayout";
@@ -46,6 +47,9 @@ export const AppRoutes = () => {
             <Signup />
           </GuestRoute>
         } />
+        
+        {/* OAuth Callback - handles redirect from Google, etc. */}
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
       </Route>
       
       {/* Main App Routes */}

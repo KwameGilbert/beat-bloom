@@ -61,10 +61,19 @@ const Signup = () => {
     }
   };
 
-  const handleSocialSignup = () => {
-    // TODO: Implement OAuth social signup
-    // For now, switch to email signup
-    setAuthMethod("email");
+  const handleGoogleSignup = () => {
+    // Redirect to backend Google OAuth endpoint (same flow creates account if needed)
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    window.location.href = `${apiUrl}/api/auth/google`;
+  };
+
+  const handleAppleSignup = () => {
+    // Apple OAuth - not yet implemented
+    showNotification(
+      "Coming Soon",
+      "Apple Sign-In will be available soon.",
+      "info"
+    );
   };
 
   return (
@@ -147,7 +156,7 @@ const Signup = () => {
                   className="space-y-3 w-full"
                 >
                   <button
-                    onClick={handleSocialSignup}
+                    onClick={handleAppleSignup}
                     className="flex w-full items-center justify-center gap-3 rounded-2xl bg-zinc-950 px-6 py-4 text-sm font-bold text-white transition-all hover:bg-zinc-900 active:scale-95 shadow-lg dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white"
                   >
                     <Apple className="h-5 w-5" />
@@ -155,7 +164,7 @@ const Signup = () => {
                   </button>
                   
                   <button
-                    onClick={handleSocialSignup}
+                    onClick={handleGoogleSignup}
                     className="flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 text-sm font-bold text-white transition-all hover:bg-blue-700 active:scale-95 shadow-lg shadow-blue-600/10"
                   >
                     <Chrome className="h-5 w-5" />
