@@ -64,7 +64,7 @@ const Signup = () => {
   const handleGoogleSignup = () => {
     // Redirect to backend Google OAuth endpoint (same flow creates account if needed)
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-    window.location.href = `${apiUrl}/api/auth/google`;
+    window.location.href = `${apiUrl}/auth/google`;
   };
 
   const handleAppleSignup = () => {
