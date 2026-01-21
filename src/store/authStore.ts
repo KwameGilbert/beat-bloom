@@ -34,6 +34,7 @@ interface AuthState {
   // disable2FA: () => Promise<void>;
   clearError: () => void;
   setUser: (user: User) => void;
+  setOAuthTokens: (accessToken: string, refreshToken: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -275,6 +276,17 @@ export const useAuthStore = create<AuthState>()(
        * Set user directly (for optimistic updates)
        */
       setUser: (user: User) => set({ user }),
+
+      /**
+       * Set OAuth tokens (for OAuth callback flow)
+       */
+      setOAuthTokens: (accessToken: string, refreshToken: string) => {
+        set({
+          accessToken,
+          refreshToken,
+          isAuthenticated: true,
+        });
+      },
     }),
     {
       name: 'beatbloom-auth',

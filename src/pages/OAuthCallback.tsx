@@ -11,7 +11,7 @@ import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 const OAuthCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { fetchProfile } = useAuthStore();
+  const { fetchProfile, setOAuthTokens } = useAuthStore();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -40,9 +40,8 @@ const OAuthCallback = () => {
       }
 
       try {
-        // Store tokens in localStorage (same as regular login)
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("refreshToken", refreshToken);
+        // Store tokens in auth store (this persists them automatically)
+        setOAuthTokens(accessToken, refreshToken);
 
         // Fetch user profile to populate the auth store
         await fetchProfile();
@@ -61,7 +60,7 @@ const OAuthCallback = () => {
     };
 
     handleCallback();
-  }, [searchParams, fetchProfile, navigate]);
+  }, [searchParams, fetchProfile, setOAuthTokens, navigate]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
