@@ -28,9 +28,10 @@ interface AuthState {
   updateSettings: (data: UpdateSettingsData) => Promise<void>;
   changePassword: (data: ChangePasswordData) => Promise<void>;
   deleteAccount: () => Promise<void>;
-  setup2FA: () => Promise<{ secret: string; qrCode: string }>;
-  verify2FA: (code: string) => Promise<string[]>;
-  disable2FA: () => Promise<void>;
+  // TODO: Re-enable when 2FA is fully implemented
+  // setup2FA: () => Promise<{ secret: string; qrCode: string }>;
+  // verify2FA: (code: string) => Promise<string[]>;
+  // disable2FA: () => Promise<void>;
   clearError: () => void;
   setUser: (user: User) => void;
 }
@@ -222,9 +223,8 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      /**
-       * 2FA Actions
-       */
+      // TODO: Re-enable when 2FA is fully implemented
+      /*
       setup2FA: async () => {
         set({ isLoading: true, error: null });
         try {
@@ -242,7 +242,6 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await authService.verify2FA(code);
-          // Refresh profile after 2FA activation
           await get().fetchProfile();
           set({ isLoading: false });
           return response.data.backupCodes;
@@ -265,6 +264,7 @@ export const useAuthStore = create<AuthState>()(
           throw error;
         }
       },
+      */
 
       /**
        * Clear error message

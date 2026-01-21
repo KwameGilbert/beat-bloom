@@ -8,7 +8,7 @@ import {
   Lock, 
   Eye, 
   CreditCard, 
-  ShieldCheck,
+  // ShieldCheck, // TODO: Re-enable when 2FA is implemented
   ChevronRight,
   LogOut,
   Trash2,
@@ -76,7 +76,8 @@ const Settings = () => {
       items: [
         { icon: Mail, label: "Email Address", value: user.email },
         { icon: Lock, label: "Password", value: "••••••••", path: "/settings/password" },
-        { icon: ShieldCheck, label: "Two-Factor Auth", value: user.mfaEnabled ? "On" : "Off", path: "/settings/2fa" },
+        // TODO: Re-enable when 2FA is fully implemented
+        // { icon: ShieldCheck, label: "Two-Factor Auth", value: user.mfaEnabled ? "On" : "Off", path: "/settings/2fa" },
       ]
     },
     {

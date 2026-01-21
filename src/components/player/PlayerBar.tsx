@@ -49,6 +49,7 @@ export const PlayerBar = () => {
 
   // Get producer info from current beat
   const producer = useMemo(() => {
+    
     if (!currentBeat) return null;
     return {
       displayName: currentBeat.producerName,
