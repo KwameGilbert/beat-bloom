@@ -41,6 +41,7 @@ interface PlaylistsState {
   isBeatInPlaylist: (playlistId: string | number, beatId: string | number) => boolean;
   getPlaylist: (playlistId: string | number) => Playlist | undefined;
   getPlaylistsContainingBeat: (beatId: string | number) => Playlist[];
+  clearPlaylists: () => void;
 }
 
 export const usePlaylistsStore = create<PlaylistsState>()(
@@ -148,12 +149,17 @@ export const usePlaylistsStore = create<PlaylistsState>()(
       },
 
       addBeatToPlaylist: async (playlistId, beat) => {
+        // Check if beat is already in playlist
+        const playlist = get().playlists.find(p => p.id.toString() === playlistId.toString());
+        if (playlist?.beats.some((b) => b.id.toString() === beat.id.toString())) {
+          // Already in playlist, no action needed
+          return;
+        }
+
         // Optimistic update
         set((state) => ({
           playlists: state.playlists.map((p) => {
             if (p.id.toString() === playlistId.toString()) {
-              // Don't add duplicates
-              if (p.beats.some((b) => b.id.toString() === beat.id.toString())) return p;
               return { ...p, beats: [...p.beats, beat] };
             }
             return p;
@@ -163,8 +169,21 @@ export const usePlaylistsStore = create<PlaylistsState>()(
         // Sync with backend
         try {
           await api.post(`/playlists/${playlistId}/beats`, { beatId: beat.id });
-        } catch (error) {
+        } catch (error: any) {
+          // If it's a duplicate error, the beat is already there - no need to revert
+          if (error?.message?.includes('already exists')) {
+            return;
+          }
+          // For other errors, revert the optimistic update
           console.error("Failed to add beat to playlist on backend:", error);
+          set((state) => ({
+            playlists: state.playlists.map((p) => {
+              if (p.id.toString() === playlistId.toString()) {
+                return { ...p, beats: p.beats.filter((b) => b.id.toString() !== beat.id.toString()) };
+              }
+              return p;
+            }),
+          }));
         }
       },
 
@@ -201,6 +220,10 @@ export const usePlaylistsStore = create<PlaylistsState>()(
       getPlaylistsContainingBeat: (beatId) => {
         const idStr = beatId.toString();
         return get().playlists.filter((p) => p.beats.some((b) => b.id.toString() === idStr));
+      },
+
+      clearPlaylists: () => {
+        set({ playlists: [], hasFetched: false });
       },
     }),
     {

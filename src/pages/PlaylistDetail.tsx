@@ -8,12 +8,14 @@ import {
   Pencil,
   MoreVertical,
   Loader2,
-  Shuffle
+  Shuffle,
+  AlertTriangle
 } from "lucide-react";
 import { usePlaylistsStore, playlistColors } from "@/store/playlistsStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 const PlaylistDetail = () => {
   const { playlistId } = useParams();
@@ -25,6 +27,7 @@ const PlaylistDetail = () => {
   const [editName, setEditName] = useState("");
   const [editColor, setEditColor] = useState("");
   const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const playlist = getPlaylist(playlistId || "");
 
@@ -91,10 +94,13 @@ const PlaylistDetail = () => {
   };
 
   const handleDelete = () => {
-    if (confirm("Are you sure you want to delete this playlist?")) {
-      deletePlaylist(playlist.id);
-      navigate("/");
-    }
+    setShowMenu(false);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    deletePlaylist(playlist.id);
+    navigate("/");
   };
 
   return (
@@ -298,6 +304,54 @@ const PlaylistDetail = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowDeleteConfirm(false)}
+            />
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="fixed left-1/2 top-1/2 z-[101] w-[90%] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-background p-6 shadow-2xl"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500/10 mb-4">
+                  <AlertTriangle className="h-7 w-7 text-red-500" />
+                </div>
+                <h3 className="text-lg font-bold text-foreground mb-2">Delete Playlist</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Are you sure you want to delete "{playlist.name}"? This action cannot be undone.
+                </p>
+                <div className="flex w-full gap-3">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 rounded-xl border border-border bg-secondary px-4 py-3 text-sm font-bold text-foreground hover:bg-secondary/80 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className="flex-1 rounded-xl bg-red-500 px-4 py-3 text-sm font-bold text-white hover:bg-red-600 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

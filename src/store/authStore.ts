@@ -8,6 +8,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authService, type User, type RegisterData, type LoginData, type UpdateProfileData, type UpdateSettingsData, type ChangePasswordData, ApiError } from '@/lib/auth';
+import { usePlaylistsStore } from './playlistsStore';
+import { useThemeStore } from './themeStore';
 
 interface AuthState {
   // State
@@ -65,6 +67,11 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
+
+          // Sync theme from database
+          if (user.theme) {
+            useThemeStore.getState().setThemeOnly(user.theme);
+          }
         } catch (error) {
           const message = error instanceof ApiError ? error.message : 'Registration failed';
           set({ isLoading: false, error: message });
@@ -89,6 +96,11 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
+
+          // Sync theme from database
+          if (user.theme) {
+            useThemeStore.getState().setThemeOnly(user.theme);
+          }
         } catch (error) {
           const message = error instanceof ApiError ? error.message : 'Login failed';
           set({ isLoading: false, error: message });
@@ -105,6 +117,9 @@ export const useAuthStore = create<AuthState>()(
         } catch {
           // Ignore logout errors
         } finally {
+          // Clear playlists store
+          usePlaylistsStore.getState().clearPlaylists();
+          
           set({
             user: null,
             accessToken: null,
@@ -143,6 +158,11 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await authService.getProfile();
           set({ user: response.data, isLoading: false });
+
+          // Sync theme from database
+          if (response.data.theme) {
+            useThemeStore.getState().setThemeOnly(response.data.theme);
+          }
         } catch (error) {
           if (error instanceof ApiError && error.status === 401) {
             // Try to refresh token
@@ -166,6 +186,11 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await authService.updateProfile(data);
           set({ user: response.data, isLoading: false });
+
+          // Sync theme from database
+          if (response.data.theme) {
+            useThemeStore.getState().setThemeOnly(response.data.theme);
+          }
         } catch (error) {
           const message = error instanceof ApiError ? error.message : 'Profile update failed';
           set({ isLoading: false, error: message });
@@ -181,6 +206,11 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await authService.updateSettings(data);
           set({ user: response.data, isLoading: false });
+
+          // Sync theme from database
+          if (response.data.theme) {
+            useThemeStore.getState().setThemeOnly(response.data.theme);
+          }
         } catch (error) {
           const message = error instanceof ApiError ? error.message : 'Settings update failed';
           set({ isLoading: false, error: message });
@@ -275,7 +305,13 @@ export const useAuthStore = create<AuthState>()(
       /**
        * Set user directly (for optimistic updates)
        */
-      setUser: (user: User) => set({ user }),
+      setUser: (user: User) => {
+        set({ user });
+        // Sync theme from database
+        if (user.theme) {
+          useThemeStore.getState().setThemeOnly(user.theme);
+        }
+      },
 
       /**
        * Set OAuth tokens (for OAuth callback flow)

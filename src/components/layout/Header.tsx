@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { Bell, Search, ShoppingCart, User, Menu, Sun, Moon, X } from "lucide-react";
+import { Bell, Search, ShoppingCart, User, Menu, Sun, Moon, X, Settings, LogOut } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCartStore } from "@/store/cartStore";
 import { useThemeStore } from "@/store/themeStore";
 import { useBeatsStore } from "@/store/beatsStore";
 import { useAuthStore } from "@/store/authStore";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { SearchPanel } from "./SearchPanel";
 
 interface HeaderProps {
@@ -17,14 +17,16 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   const location = useLocation();
   const itemCount = useCartStore((state) => state.items.length);
   const { theme, toggleTheme } = useThemeStore();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, logout, user } = useAuthStore();
   const { trendingBeats, producers } = useBeatsStore();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   // Load recent searches
   useEffect(() => {
@@ -67,20 +69,24 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
         producer.displayName.toLowerCase().includes(searchQuery.toLowerCase())
       ).slice(0, 3);
 
-  // Handle click outside
+  // Handle click outside for search and profile dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setIsSearchOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Close search on route change
+  // Close dropdowns on route change
   useEffect(() => {
     setIsSearchOpen(false);
+    setIsProfileOpen(false);
     setSearchQuery("");
   }, [location.pathname]);
 
@@ -199,12 +205,66 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
             </Link>
 
             {isAuthenticated ? (
-              <Link to="/profile">
-                <button className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-border bg-secondary/50 text-foreground/80 transition-all hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <div ref={profileRef} className="relative">
+                <button 
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-border bg-secondary/50 text-foreground/80 transition-all hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
                   <User className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="sr-only">Profile</span>
+                  <span className="sr-only">Profile menu</span>
                 </button>
-              </Link>
+
+                {/* Profile Dropdown */}
+                <AnimatePresence>
+                  {isProfileOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2 w-56 origin-top-right rounded-xl border border-border bg-background/95 backdrop-blur-xl p-2 shadow-xl"
+                    >
+                      {/* User Info */}
+                      <div className="px-3 py-2 mb-1 border-b border-border">
+                        <p className="font-bold text-sm text-foreground truncate">{user?.name || 'User'}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                      </div>
+
+                      {/* Menu Items */}
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+                        onClick={() => setIsProfileOpen(false)}
+                      >
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        Profile
+                      </Link>
+                      <Link
+                        to="/settings"
+                        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+                        onClick={() => setIsProfileOpen(false)}
+                      >
+                        <Settings className="h-4 w-4 text-muted-foreground" />
+                        Settings
+                      </Link>
+                      
+                      <div className="my-1 border-t border-border" />
+                      
+                      <button
+                        onClick={async () => {
+                          setIsProfileOpen(false);
+                          await logout();
+                          navigate('/login');
+                        }}
+                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             ) : (
               <div className="flex items-center gap-1">
                 <Link to="/login">

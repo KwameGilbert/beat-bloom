@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Play, Pause, ShoppingCart, Heart, ChevronLeft, ChevronRight, Loader2, Check } from "lucide-react";
+import { Play, Pause, ShoppingCart, Heart, ChevronLeft, ChevronRight, Loader2, Check, ListPlus } from "lucide-react";
 import { usePlayerStore } from "@/store/playerStore";
 import { useLikesStore } from "@/store/likesStore";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
+import { AddToPlaylistModal } from "@/components/shared/AddToPlaylistModal";
 import { cn } from "@/lib/utils";
 
 interface HeroCarouselProps {
@@ -16,18 +17,38 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
   const { toggleLike, isLiked } = useLikesStore();
   const { addToCart, removeFromCart, isInCart } = useCartStore();
   const { isAuthenticated } = useAuthStore();
 
+  // Check if ANY beat from this carousel is currently playing
+  const isAnyCarouselBeatPlaying = beats.some(b => 
+    currentBeat?.id.toString() === b.id.toString() && isPlaying
+  );
+
+  // Find index of currently playing beat in carousel
+  const playingBeatIndex = beats.findIndex(b => 
+    currentBeat?.id.toString() === b.id.toString()
+  );
+
+  // Auto-scroll to playing beat when it starts playing
   useEffect(() => {
-    if (beats.length <= 1) return;
+    if (isPlaying && playingBeatIndex !== -1 && playingBeatIndex !== currentIndex) {
+      setCurrentIndex(playingBeatIndex);
+    }
+  }, [isPlaying, playingBeatIndex]);
+
+  useEffect(() => {
+    // Don't auto-scroll if a carousel beat is playing
+    if (beats.length <= 1 || isAnyCarouselBeatPlaying) return;
+    
     const interval = setInterval(() => {
       handleNext();
     }, 5000);
     return () => clearInterval(interval);
-  }, [currentIndex, beats.length]);
+  }, [currentIndex, beats.length, isAnyCarouselBeatPlaying]);
 
   const handleNext = () => {
     if (beats.length === 0) return;
@@ -196,6 +217,19 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
             >
                <Heart className={cn("h-4 w-4 md:h-5 md:w-5", isCurrentLiked && "fill-current")} />
             </button>
+            <button 
+              onClick={() => {
+                if (!isAuthenticated) {
+                  navigate("/login", { state: { from: location } });
+                  return;
+                }
+                setIsPlaylistModalOpen(true);
+              }}
+              className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition-colors hover:bg-white/10 hover:text-purple-500"
+              title="Add to Playlist"
+            >
+              <ListPlus className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </div>
@@ -216,6 +250,19 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
           </button>
         </div>
       )}
+
+      {/* Add to Playlist Modal */}
+      <AddToPlaylistModal
+        isOpen={isPlaylistModalOpen}
+        onClose={() => setIsPlaylistModalOpen(false)}
+        beat={{
+          ...currentFeaturedBeat,
+          id: id,
+          title: title,
+          coverImage: cover,
+          producerName: producerName
+        }}
+      />
     </div>
   );
 };

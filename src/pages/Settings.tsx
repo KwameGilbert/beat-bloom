@@ -54,15 +54,11 @@ const Settings = () => {
   };
 
   const handleThemeToggle = async () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
     try {
-      // Update local theme first for instant feedback
+      // themeStore handles both local state and backend sync internally now
       toggleTheme();
-      // Then sync with backend
-      await updateSettings({ theme: newTheme });
     } catch (err: any) {
-       // If backend fails, we might want to revert local theme or just notify
-       console.error("Failed to sync theme with backend", err);
+       console.error("Failed to toggle theme", err);
     }
   };
 
