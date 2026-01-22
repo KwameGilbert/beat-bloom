@@ -195,9 +195,9 @@ export const DesktopPlayer = ({
             step={0.01}
             value={volume}
             onChange={onVolumeChange}
-            className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-800/50 accent-white hover:accent-orange-500"
+            className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-800/50 accent-orange-500 hover:accent-orange-400"
             style={{
-              background: `linear-gradient(to right, white ${volume * 100}%, #27272a ${volume * 100}%)`
+              background: `linear-gradient(to right, #f97316 ${volume * 100}%, #27272a ${volume * 100}%)`
             }}
           />
         </div>

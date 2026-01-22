@@ -30,6 +30,7 @@ interface BeatsState {
   getBeatPageData: (id: string | number) => Promise<any>;
   getBeat: (id: string | number) => Promise<Beat | null>;
   getProducer: (username: string) => Promise<Producer | null>;
+  searchBeats: (query: string) => Promise<{ beats: Beat[]; producers: Producer[] }>;
 }
 
 export const useBeatsStore = create<BeatsState>((set) => ({
@@ -147,6 +148,25 @@ export const useBeatsStore = create<BeatsState>((set) => ({
       return response.data;
     } catch (error) {
       return null;
+    }
+  },
+
+  searchBeats: async (query) => {
+    if (!query.trim()) {
+      return { beats: [], producers: [] };
+    }
+    try {
+      // Search beats with the query
+      const beatsResponse = await marketplaceService.getBeats({ search: query, limit: 5 });
+      // Search producers with the query
+      const producersResponse = await marketplaceService.getProducers({ search: query, limit: 3 });
+      return {
+        beats: beatsResponse.data || [],
+        producers: producersResponse.data || [],
+      };
+    } catch (error) {
+      console.error('Search failed:', error);
+      return { beats: [], producers: [] };
     }
   },
 }));

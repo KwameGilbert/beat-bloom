@@ -93,12 +93,17 @@ const Profile = () => {
     toggleLike(beat);
   };
 
-  const tabs = [
+  const allTabs = [
     { id: "purchases" as ProfileTab, label: "Purchases", icon: ShoppingBag },
     { id: "liked" as ProfileTab, label: "Liked", icon: Heart },
-    { id: "beats" as ProfileTab, label: "My Beats", icon: Music },
-    { id: "analytics" as ProfileTab, label: "Analytics", icon: BarChart3 },
+    { id: "beats" as ProfileTab, label: "My Beats", icon: Music, producerOnly: true },
+    { id: "analytics" as ProfileTab, label: "Analytics", icon: BarChart3, producerOnly: true },
   ];
+
+  // Filter tabs based on user role
+  const tabs = user?.role === 'producer' 
+    ? allTabs 
+    : allTabs.filter(tab => !tab.producerOnly);
 
   const renderBeatCard = (beat: Beat) => {
     const isCurrentBeat = currentBeat?.id.toString() === beat.id.toString();
@@ -363,13 +368,14 @@ const Profile = () => {
 
         {activeTab === "beats" && (
           <div>
-            {/* Header */}
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-xl font-bold text-foreground">Published Beats</h2>
-              <button className="flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600">
-                <Upload className="h-4 w-4" />
-                Upload New Beat
-              </button>
+              {user?.role === 'producer' && (
+                <button className="flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600">
+                  <Upload className="h-4 w-4" />
+                  Upload New Beat
+                </button>
+              )}
             </div>
 
             {/* Beats Grid (Empty for now as most users are buyers) */}
