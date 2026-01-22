@@ -12,14 +12,14 @@ interface PlayerState {
   shuffle: boolean;
   repeat: "off" | "one" | "all";
   playlist: Beat[];
-  playBeat: (beat: Beat) => void;
+  playBeat: (beat: Beat, playlist?: Beat[]) => void;
   pause: () => void;
   resume: () => void;
   togglePlay: () => void;
   setVolume: (volume: number) => void;
   setIsLoading: (isLoading: boolean) => void;
   clearRecentlyPlayed: () => void;
-  nextTrack: () => void;
+  nextTrack: () => Promise<void>;
   previousTrack: () => void;
   toggleShuffle: () => void;
   toggleRepeat: () => void;
@@ -50,14 +50,27 @@ export const usePlayerStore = create<PlayerState>()(
       repeat: "off",
       playlist: [],
       
-      playBeat: async (beat) => {
+      playBeat: async (beat, playlist) => {
         const { recentlyPlayed } = get();
         const idStr = beat.id.toString();
         // Remove the beat if it already exists in recently played
         const filtered = recentlyPlayed.filter((b) => b.id.toString() !== idStr);
         // Add to the beginning of the array
         const updated = [beat, ...filtered].slice(0, MAX_RECENTLY_PLAYED);
-        set({ currentBeat: beat, isPlaying: true, recentlyPlayed: updated });
+        
+        // Set both currentBeat and playlist if provided
+        const stateUpdate: Partial<PlayerState> = { 
+          currentBeat: beat, 
+          isPlaying: true, 
+          recentlyPlayed: updated 
+        };
+        
+        // If a playlist is provided, use it; otherwise keep existing playlist
+        if (playlist && playlist.length > 0) {
+          stateUpdate.playlist = playlist;
+        }
+        
+        set(stateUpdate as any);
 
         // Record play on backend
         try {
@@ -74,8 +87,38 @@ export const usePlayerStore = create<PlayerState>()(
       setIsLoading: (isLoading) => set({ isLoading }),
       clearRecentlyPlayed: () => set({ recentlyPlayed: [] }),
 
-      nextTrack: () => {
-        const { currentBeat, playlist, shuffle, recentlyPlayed } = get();
+      nextTrack: async () => {
+        const { currentBeat, playlist, shuffle, repeat, recentlyPlayed } = get();
+        
+        // If no playlist but we have a current beat, try to fetch trending as new playlist
+        if (playlist.length === 0 && currentBeat) {
+          try {
+            const response = await marketplaceService.getTrending(20);
+            if (response.data && response.data.length > 0) {
+              // Filter out current beat and set as new playlist
+              const newPlaylist = response.data.filter(
+                (b: Beat) => b.id.toString() !== currentBeat.id.toString()
+              );
+              if (newPlaylist.length > 0) {
+                const nextBeat = newPlaylist[0];
+                const nextIdStr = nextBeat.id.toString();
+                const filtered = recentlyPlayed.filter((b) => b.id.toString() !== nextIdStr);
+                const updated = [nextBeat, ...filtered].slice(0, MAX_RECENTLY_PLAYED);
+                set({ 
+                  currentBeat: nextBeat, 
+                  isPlaying: true, 
+                  recentlyPlayed: updated,
+                  playlist: response.data 
+                });
+                return;
+              }
+            }
+          } catch (error) {
+            console.error("Failed to fetch trending for continuous playback:", error);
+          }
+          return;
+        }
+
         if (!currentBeat || playlist.length === 0) return;
 
         let nextBeat: Beat | null = null;
@@ -90,8 +133,39 @@ export const usePlayerStore = create<PlayerState>()(
           const nextIndex = currentIndex + 1;
           
           if (nextIndex >= playlist.length) {
-            // End of playlist - wrap to beginning
-            nextBeat = playlist[0];
+            // End of playlist
+            if (repeat === "all") {
+              // Loop back to beginning
+              nextBeat = playlist[0];
+            } else {
+              // Fetch trending beats as the next playlist for continuous playback
+              try {
+                const response = await marketplaceService.getTrending(20);
+                if (response.data && response.data.length > 0) {
+                  // Filter out beats already in current playlist to get fresh content
+                  const playlistIds = new Set(playlist.map(b => b.id.toString()));
+                  const newBeats = response.data.filter(
+                    (b: Beat) => !playlistIds.has(b.id.toString())
+                  );
+                  
+                  if (newBeats.length > 0) {
+                    nextBeat = newBeats[0];
+                    // Update playlist with trending beats
+                    set({ playlist: response.data });
+                  } else {
+                    // All trending are in playlist, just wrap around
+                    nextBeat = playlist[0];
+                  }
+                } else {
+                  // No trending available, wrap around
+                  nextBeat = playlist[0];
+                }
+              } catch (error) {
+                console.error("Failed to fetch next playlist:", error);
+                // Fallback to wrapping around
+                nextBeat = playlist[0];
+              }
+            }
           } else {
             nextBeat = playlist[nextIndex];
           }

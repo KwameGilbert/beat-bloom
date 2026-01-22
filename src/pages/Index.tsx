@@ -42,7 +42,7 @@ const Index = () => {
         />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {trendingBeats.map((beat) => (
-            <BeatCard key={beat.id} beat={beat} />
+            <BeatCard key={beat.id} beat={beat} playlist={trendingBeats} />
           ))}
         </div>
       </section>
@@ -69,7 +69,7 @@ const Index = () => {
         />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {newReleases.map((beat) => (
-            <BeatCard key={`new-${beat.id}`} beat={beat} />
+            <BeatCard key={`new-${beat.id}`} beat={beat} playlist={newReleases} />
           ))}
         </div>
       </section>

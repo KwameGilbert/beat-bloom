@@ -11,9 +11,10 @@ import { cn } from "@/lib/utils";
 
 interface BeatCardProps {
   beat: any;
+  playlist?: any[]; // Optional list of beats for next/previous navigation
 }
 
-export const BeatCard = ({ beat }: BeatCardProps) => {
+export const BeatCard = ({ beat, playlist }: BeatCardProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
@@ -55,7 +56,7 @@ export const BeatCard = ({ beat }: BeatCardProps) => {
     if (isCurrentBeat) {
       togglePlay();
     } else {
-      playBeat(beat);
+      playBeat(beat, playlist);
     }
   };
 

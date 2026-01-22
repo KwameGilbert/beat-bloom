@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Bell, Search, ShoppingCart, User, Menu, Sun, Moon, X, Settings, LogOut } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCartStore } from "@/store/cartStore";
@@ -7,6 +7,7 @@ import { useBeatsStore } from "@/store/beatsStore";
 import { useAuthStore } from "@/store/authStore";
 import { AnimatePresence, motion } from "framer-motion";
 import { SearchPanel } from "./SearchPanel";
+import type { Beat, Producer } from "@/lib/marketplace";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -18,15 +19,19 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   const itemCount = useCartStore((state) => state.items.length);
   const { theme, toggleTheme } = useThemeStore();
   const { isAuthenticated, logout, user } = useAuthStore();
-  const { trendingBeats, producers } = useBeatsStore();
+  const { searchBeats } = useBeatsStore();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [filteredBeats, setFilteredBeats] = useState<Beat[]>([]);
+  const [filteredProducers, setFilteredProducers] = useState<Producer[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load recent searches
   useEffect(() => {
@@ -52,22 +57,42 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
     localStorage.setItem("recentSearches", JSON.stringify(newRecent));
   };
 
-  // Use beats from store for searching
-  const allBeats = trendingBeats;
+  // Debounced search function that calls backend
+  const performSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setFilteredBeats([]);
+      setFilteredProducers([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      const results = await searchBeats(query);
+      setFilteredBeats(results.beats);
+      setFilteredProducers(results.producers);
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [searchBeats]);
 
-  // Filter results
-  const filteredBeats = searchQuery.trim() === "" 
-    ? [] 
-    : allBeats.filter(beat => 
-        beat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        beat.producerName.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 5);
+  // Handle search query changes with debounce
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    
+    debounceRef.current = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 300); // 300ms debounce
 
-  const filteredProducers = searchQuery.trim() === ""
-    ? []
-    : producers.filter(producer => 
-        producer.displayName.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 3);
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [searchQuery, performSearch]);
 
   // Handle click outside for search and profile dropdown
   useEffect(() => {

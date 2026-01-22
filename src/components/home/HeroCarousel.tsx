@@ -82,7 +82,7 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
       if (currentBeat?.id.toString() === id) {
           togglePlay();
       } else {
-          playBeat(currentFeaturedBeat);
+          playBeat(currentFeaturedBeat, beats);
       }
   };
 
