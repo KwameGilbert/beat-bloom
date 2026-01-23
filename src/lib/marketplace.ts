@@ -97,8 +97,8 @@ export const marketplaceService = {
   /**
    * Get all beats with filters
    */
-  async getBeats(params: Record<string, any> = {}): Promise<ListResponse<Beat>> {
-    const query = new URLSearchParams(params).toString();
+  async getBeats(params: Record<string, string | number | boolean> = {}): Promise<ListResponse<Beat>> {
+    const query = new URLSearchParams(params as Record<string, string>).toString();
     return api.get<ListResponse<Beat>>(`/beats?${query}`);
   },
 
@@ -133,8 +133,8 @@ export const marketplaceService = {
   /**
    * Get all producers
    */
-  async getProducers(params: Record<string, any> = {}): Promise<ListResponse<Producer>> {
-    const query = new URLSearchParams(params).toString();
+  async getProducers(params: Record<string, string | number | boolean> = {}): Promise<ListResponse<Producer>> {
+    const query = new URLSearchParams(params as Record<string, string>).toString();
     return api.get<ListResponse<Producer>>(`/producers?${query}`);
   },
 
@@ -186,8 +186,8 @@ export const marketplaceService = {
   /**
    * Get user's purchased beats
    */
-  async getPurchases(): Promise<SingleResponse<any[]>> {
-    return api.get<SingleResponse<any[]>>('/orders/purchases');
+  async getPurchases(): Promise<SingleResponse<unknown[]>> {
+    return api.get<SingleResponse<unknown[]>>('/orders/purchases');
   },
   /**
    * Create an order
@@ -197,14 +197,14 @@ export const marketplaceService = {
     paymentMethod: string;
     paymentReference: string;
     email: string;
-  }): Promise<SingleResponse<any>> {
-    return api.post<SingleResponse<any>>('/orders', data);
+  }): Promise<SingleResponse<unknown>> {
+    return api.post<SingleResponse<unknown>>('/orders', data);
   },
   /**
    * Verify a payment
    */
-  async verifyPayment(reference: string): Promise<SingleResponse<any>> {
-    return api.get<SingleResponse<any>>(`/payments/verify/paystack/${reference}`);
+  async verifyPayment(reference: string): Promise<SingleResponse<unknown>> {
+    return api.get<SingleResponse<unknown>>(`/payments/verify/paystack/${reference}`);
   },
 
   /**

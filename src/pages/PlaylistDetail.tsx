@@ -16,6 +16,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import type { Beat } from "@/lib/marketplace";
 
 const PlaylistDetail = () => {
   const { playlistId } = useParams();
@@ -49,10 +50,10 @@ const PlaylistDetail = () => {
     );
   }
 
-  const handlePlayClick = (beat: typeof playlist.beats[0], e: React.MouseEvent) => {
+  const handlePlayClick = (beat: Beat, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (currentBeat?.id === beat.id) {
+    if (currentBeat?.id?.toString() === beat.id.toString()) {
       togglePlay();
     } else {
       playBeat(beat);
@@ -72,7 +73,7 @@ const PlaylistDetail = () => {
     }
   };
 
-  const handleRemoveBeat = (beatId: string, e: React.MouseEvent) => {
+  const handleRemoveBeat = (beatId: string | number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     removeBeatFromPlaylist(playlist.id, beatId);
@@ -240,7 +241,7 @@ const PlaylistDetail = () => {
         ) : (
           <div className="space-y-2">
             {playlist.beats.map((beat, index) => {
-              const isCurrentBeat = currentBeat?.id === beat.id;
+              const isCurrentBeat = currentBeat?.id?.toString() === beat.id.toString();
               const isCurrentPlaying = isCurrentBeat && isPlaying;
 
               return (
@@ -257,7 +258,7 @@ const PlaylistDetail = () => {
                   {/* Cover */}
                   <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg">
                     <img
-                      src={beat.cover}
+                      src={beat.coverImage}
                       alt={beat.title}
                       className="h-full w-full object-cover"
                     />
@@ -286,7 +287,7 @@ const PlaylistDetail = () => {
                     )}>
                       {beat.title}
                     </p>
-                    <p className="text-sm text-muted-foreground truncate">{beat.producer}</p>
+                    <p className="text-sm text-muted-foreground truncate">{beat.producerName}</p>
                   </div>
 
                   {/* Duration & Actions */}

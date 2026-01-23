@@ -27,11 +27,11 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [filteredBeats, setFilteredBeats] = useState<Beat[]>([]);
   const [filteredProducers, setFilteredProducers] = useState<Producer[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  // const [isSearching, setIsSearching] = useState(false); // Removed unused state
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load recent searches
   useEffect(() => {
@@ -65,7 +65,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
       return;
     }
     
-    setIsSearching(true);
+    // setIsSearching(true);
     try {
       const results = await searchBeats(query);
       setFilteredBeats(results.beats);
@@ -73,7 +73,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
     } catch (error) {
       console.error('Search error:', error);
     } finally {
-      setIsSearching(false);
+      // setIsSearching(false);
     }
   }, [searchBeats]);
 

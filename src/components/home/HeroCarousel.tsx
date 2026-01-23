@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Play, Pause, ShoppingCart, Heart, ChevronLeft, ChevronRight, Loader2, Check, ListPlus } from "lucide-react";
@@ -9,8 +9,10 @@ import { useAuthStore } from "@/store/authStore";
 import { AddToPlaylistModal } from "@/components/shared/AddToPlaylistModal";
 import { cn } from "@/lib/utils";
 
+import type { Beat } from "@/lib/marketplace";
+
 interface HeroCarouselProps {
-  beats: any[];
+  beats: Beat[];
 }
 
 export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
@@ -38,7 +40,17 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
     if (isPlaying && playingBeatIndex !== -1 && playingBeatIndex !== currentIndex) {
       setCurrentIndex(playingBeatIndex);
     }
-  }, [isPlaying, playingBeatIndex]);
+  }, [isPlaying, playingBeatIndex, currentIndex]);
+
+  const handleNext = useCallback(() => {
+    if (beats.length === 0) return;
+    setCurrentIndex((prev) => (prev + 1) % beats.length);
+  }, [beats.length]);
+
+  const handlePrev = useCallback(() => {
+    if (beats.length === 0) return;
+    setCurrentIndex((prev) => (prev - 1 + beats.length) % beats.length);
+  }, [beats.length]);
 
   useEffect(() => {
     // Don't auto-scroll if a carousel beat is playing
@@ -48,17 +60,7 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
       handleNext();
     }, 5000);
     return () => clearInterval(interval);
-  }, [currentIndex, beats.length, isAnyCarouselBeatPlaying]);
-
-  const handleNext = () => {
-    if (beats.length === 0) return;
-    setCurrentIndex((prev) => (prev + 1) % beats.length);
-  };
-
-  const handlePrev = () => {
-    if (beats.length === 0) return;
-    setCurrentIndex((prev) => (prev - 1 + beats.length) % beats.length);
-  };
+  }, [currentIndex, beats.length, isAnyCarouselBeatPlaying, handleNext]);
 
   const currentFeaturedBeat = beats[currentIndex];
   if (!currentFeaturedBeat) return null;
@@ -66,11 +68,11 @@ export const HeroCarousel = ({ beats }: HeroCarouselProps) => {
   // Normalize
   const id = currentFeaturedBeat.id.toString();
   const title = currentFeaturedBeat.title;
-  const producerName = currentFeaturedBeat.producerName || currentFeaturedBeat.producer;
+  const producerName = currentFeaturedBeat.producerName;
   const producerId = currentFeaturedBeat.producerId.toString();
-  const cover = currentFeaturedBeat.coverImage || currentFeaturedBeat.cover;
+  const cover = currentFeaturedBeat.coverImage;
   const bpm = currentFeaturedBeat.bpm;
-  const musicalKey = currentFeaturedBeat.musicalKey || currentFeaturedBeat.key;
+  const musicalKey = currentFeaturedBeat.musicalKey;
   const duration = currentFeaturedBeat.duration || "3:00";
   const price = currentFeaturedBeat.price || (currentFeaturedBeat.licenseTiers && currentFeaturedBeat.licenseTiers[0]?.price) || 29.99;
   const tags = currentFeaturedBeat.tags || [];
