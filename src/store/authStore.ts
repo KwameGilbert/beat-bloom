@@ -29,6 +29,8 @@ interface AuthState {
   updateProfile: (data: UpdateProfileData | FormData) => Promise<void>;
   updateSettings: (data: UpdateSettingsData) => Promise<void>;
   changePassword: (data: ChangePasswordData) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (email: string, otp: string, password: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
   // TODO: Re-enable when 2FA is fully implemented
   // setup2FA: () => Promise<{ secret: string; qrCode: string }>;
@@ -228,6 +230,36 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: false });
         } catch (error) {
           const message = error instanceof ApiError ? error.message : 'Password change failed';
+          set({ isLoading: false, error: message });
+          throw error;
+        }
+      },
+
+      /**
+       * Request password reset
+       */
+      forgotPassword: async (email: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          await authService.forgotPassword(email);
+          set({ isLoading: false });
+        } catch (error) {
+          const message = error instanceof ApiError ? error.message : 'Request failed';
+          set({ isLoading: false, error: message });
+          throw error;
+        }
+      },
+
+      /**
+       * Reset password with OTP
+       */
+      resetPassword: async (email: string, otp: string, password: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          await authService.resetPassword(email, otp, password);
+          set({ isLoading: false });
+        } catch (error) {
+          const message = error instanceof ApiError ? error.message : 'Reset failed';
           set({ isLoading: false, error: message });
           throw error;
         }

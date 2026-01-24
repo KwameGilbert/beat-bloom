@@ -26,6 +26,9 @@ import ProducerProfile from "../pages/ProducerProfile";
 import OAuthCallback from "../pages/OAuthCallback";
 import VerifyEmail from "../pages/VerifyEmail";
 
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
+
 import { Layout } from "../components/layout/Layout";
 import { AuthLayout } from "../components/auth/AuthLayout";
 import { ProtectedRoute, GuestRoute } from "../components/auth/ProtectedRoute";
@@ -46,6 +49,16 @@ export const AppRoutes = () => {
         <Route path="/signup" element={
           <GuestRoute>
             <Signup />
+          </GuestRoute>
+        } />
+        <Route path="/forgot-password" element={
+          <GuestRoute>
+            <ForgotPassword />
+          </GuestRoute>
+        } />
+        <Route path="/reset-password" element={
+          <GuestRoute>
+            <ResetPassword />
           </GuestRoute>
         } />
         

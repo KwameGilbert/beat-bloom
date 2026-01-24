@@ -171,10 +171,10 @@ export const authService = {
   },
 
   /**
-   * Reset password with token
+   * Reset password with OTP
    */
-  async resetPassword(token: string, password: string): Promise<{ success: boolean }> {
-    return api.post('/auth/reset-password', { token, password });
+  async resetPassword(email: string, otp: string, password: string): Promise<{ success: boolean }> {
+    return api.post('/auth/reset-password', { email, otp, password });
   },
 
   /**
