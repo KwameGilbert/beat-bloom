@@ -42,6 +42,20 @@ const ForgotPassword = () => {
     }
   };
 
+  const handleResend = async () => {
+    clearError();
+    try {
+      await forgotPassword(email);
+      showNotification(
+        "Code Resent",
+        "A new verification code has been sent to your email.",
+        "success"
+      );
+    } catch {
+      // Error is handled in the store
+    }
+  };
+
   if (isSubmitted) {
     return (
       <motion.div 
@@ -71,10 +85,11 @@ const ForgotPassword = () => {
         </button>
 
         <button
-          onClick={() => setIsSubmitted(false)}
-          className="mt-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          onClick={handleResend}
+          disabled={isLoading}
+          className="mt-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
         >
-          Didn't get the code? Try again
+          {isLoading ? "Sending..." : "Didn't get the code? Try again"}
         </button>
       </motion.div>
     );
@@ -97,7 +112,7 @@ const ForgotPassword = () => {
       </button>
 
       <div className="mb-8 flex flex-col items-center text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-xl shadow-blue-500/30">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-xl shadow-orange-500/30">
           <KeyRound className="h-8 w-8 text-white" />
         </div>
         <h1 className="mt-6 font-display text-3xl font-bold text-foreground">Forgot Password?</h1>
@@ -124,14 +139,14 @@ const ForgotPassword = () => {
         <div className="space-y-2">
           <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-1">Email Address</label>
           <div className="relative group">
-            <Mail className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
+            <Mail className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-orange-500" />
             <input 
               type="email" 
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="alex@example.com"
-              className="w-full rounded-2xl border border-border bg-secondary/30 py-4 pl-12 pr-4 text-sm text-foreground focus:border-blue-500 focus:bg-background focus:outline-none transition-all"
+              className="w-full rounded-2xl border border-border bg-secondary/30 py-4 pl-12 pr-4 text-sm text-foreground focus:border-orange-500 focus:bg-background focus:outline-none transition-all"
             />
           </div>
         </div>
@@ -139,7 +154,7 @@ const ForgotPassword = () => {
         <button
           type="submit"
           disabled={isLoading || !email}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 py-4 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 py-4 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:bg-orange-700 active:scale-95 disabled:opacity-50"
         >
           {isLoading ? (
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
@@ -154,7 +169,7 @@ const ForgotPassword = () => {
 
       <p className="mt-8 text-sm text-center text-muted-foreground">
         Remember your password?{" "}
-        <Link to="/login" className="font-bold text-blue-500 hover:underline">
+        <Link to="/login" className="font-bold text-orange-500 hover:underline">
           Back to Login
         </Link>
       </p>

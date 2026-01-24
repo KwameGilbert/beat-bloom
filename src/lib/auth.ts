@@ -178,6 +178,20 @@ export const authService = {
   },
 
   /**
+   * Verify password reset OTP
+   */
+  async verifyOTP(email: string, otp: string): Promise<{ success: boolean; message: string }> {
+    return api.post('/auth/verify-otp', { email, otp });
+  },
+
+  /**
+   * Resend password reset OTP
+   */
+  async resendOTP(email: string): Promise<{ success: boolean; message: string }> {
+    return api.post('/auth/resend-otp', { email });
+  },
+
+  /**
    * Verify email with token
    */
   async verifyEmail(token: string): Promise<{ data: { verified: boolean } }> {

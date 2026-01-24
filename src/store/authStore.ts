@@ -30,6 +30,8 @@ interface AuthState {
   updateSettings: (data: UpdateSettingsData) => Promise<void>;
   changePassword: (data: ChangePasswordData) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
+  verifyOTP: (email: string, otp: string) => Promise<void>;
+  resendOTP: (email: string) => Promise<void>;
   resetPassword: (email: string, otp: string, password: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
   // TODO: Re-enable when 2FA is fully implemented
@@ -245,6 +247,36 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: false });
         } catch (error) {
           const message = error instanceof ApiError ? error.message : 'Request failed';
+          set({ isLoading: false, error: message });
+          throw error;
+        }
+      },
+
+      /**
+       * Verify password reset OTP
+       */
+      verifyOTP: async (email: string, otp: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          await authService.verifyOTP(email, otp);
+          set({ isLoading: false });
+        } catch (error) {
+          const message = error instanceof ApiError ? error.message : 'Verification failed';
+          set({ isLoading: false, error: message });
+          throw error;
+        }
+      },
+
+      /**
+       * Resend password reset OTP
+       */
+      resendOTP: async (email: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          await authService.resendOTP(email);
+          set({ isLoading: false });
+        } catch (error) {
+          const message = error instanceof ApiError ? error.message : 'Resend failed';
           set({ isLoading: false, error: message });
           throw error;
         }
