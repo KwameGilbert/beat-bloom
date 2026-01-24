@@ -78,6 +78,7 @@ export interface LoginData {
 
 export interface UpdateProfileData {
   name?: string;
+  username?: string;
   phone?: string;
   avatar?: string;
   coverImage?: string;
@@ -102,6 +103,13 @@ export interface ChangePasswordData {
  * Auth API Service
  */
 export const authService = {
+  /**
+   * Check username availability
+   */
+  async checkUsername(username: string): Promise<{ data: { available: boolean } }> {
+    return api.get<{ data: { available: boolean } }>(`/auth/check-username?username=${username}`);
+  },
+
   /**
    * Register a new user
    */

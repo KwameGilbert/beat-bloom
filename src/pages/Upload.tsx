@@ -38,8 +38,11 @@ const Upload = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isPublishing, setIsPublishing] = useState(false);
   const previewInputRef = useRef<HTMLInputElement>(null);
-  const masterInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const mp3InputRef = useRef<HTMLInputElement>(null);
+  const wavInputRef = useRef<HTMLInputElement>(null);
+  const stemsInputRef = useRef<HTMLInputElement>(null);
+  const exclusiveInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -50,27 +53,33 @@ const Upload = () => {
     tags: [] as string[],
     price: "29.99",
     previewFile: null as File | null,
-    masterFile: null as File | null,
     coverFile: null as File | null,
     coverPreview: "",
-    // License tier pricing
+    // License tier pricing & files
     licenseTiers: {
-      mp3: { enabled: true, price: "29.99" },
-      wav: { enabled: true, price: "49.99" },
-      stems: { enabled: false, price: "99.99" },
-      exclusive: { enabled: false, price: "499.99" }
+      mp3: { enabled: true, price: "29.99", file: null as File | null },
+      wav: { enabled: true, price: "49.99", file: null as File | null },
+      stems: { enabled: false, price: "99.99", file: null as File | null },
+      exclusive: { enabled: false, price: "499.99", file: null as File | null }
     }
   });
 
   const [tagInput, setTagInput] = useState("");
 
-  const handleAudioChange = (type: "preview" | "master", e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAudioChange = (type: "preview" | "mp3" | "wav" | "stems" | "exclusive", e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData(prev => ({ 
-        ...prev, 
-        [type === "preview" ? "previewFile" : "masterFile"]: file 
-      }));
+      if (type === "preview") {
+        setFormData(prev => ({ ...prev, previewFile: file }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          licenseTiers: {
+            ...prev.licenseTiers,
+            [type]: { ...prev.licenseTiers[type as keyof typeof prev.licenseTiers], file: file }
+          }
+        }));
+      }
     }
   };
 
@@ -115,7 +124,7 @@ const Upload = () => {
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 4));
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
-  const isStep1Complete = formData.previewFile && formData.masterFile && formData.coverFile;
+  const isStep1Complete = !!(formData.previewFile && formData.coverFile);
 
   return (
     <div className="min-h-screen bg-background pb-32 pt-6">
@@ -180,7 +189,7 @@ const Upload = () => {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-10"
                 >
-                  <div className="grid gap-10 lg:grid-cols-3">
+                  <div className="grid gap-10 lg:grid-cols-2">
                     {/* Preview Audio Upload */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
@@ -215,46 +224,6 @@ const Upload = () => {
                             <div className="mt-6 text-center">
                               <span className="block font-bold text-foreground">Preview Audio</span>
                               <span className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">MP3 tagged recommended</span>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Master Audio Upload */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Unlockable Master</label>
-                        <span className="flex items-center gap-1 rounded bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-bold text-orange-500">
-                          <Lock className="h-3 w-3" /> Private
-                        </span>
-                      </div>
-                      <div 
-                        onClick={() => masterInputRef.current?.click()}
-                        className={cn(
-                          "group relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-border bg-secondary/30 transition-all hover:border-orange-500 hover:bg-secondary/50",
-                          formData.masterFile && "border-solid border-green-500 bg-green-500/5 hover:border-green-600"
-                        )}
-                      >
-                        <input type="file" ref={masterInputRef} className="hidden" accept="audio/*" onChange={(e) => handleAudioChange("master", e)} />
-                        {formData.masterFile ? (
-                          <div className="flex flex-col items-center gap-3 text-center px-4">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-green-500 text-white shadow-lg shadow-green-500/20">
-                              <FileAudio className="h-8 w-8" />
-                            </div>
-                            <div className="space-y-1">
-                              <span className="block text-sm font-black text-foreground truncate max-w-[140px]">{formData.masterFile.name}</span>
-                              <span className="text-[10px] font-bold text-muted-foreground uppercase">Click to change</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-zinc-950/10 dark:bg-zinc-100/10 text-foreground transition-transform group-hover:scale-110">
-                              <Lock className="h-8 w-8" />
-                            </div>
-                            <div className="mt-6 text-center">
-                              <span className="block font-bold text-foreground">High-Quality Master</span>
-                              <span className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">WAV / ZIP for buyer only</span>
                             </div>
                           </>
                         )}
@@ -401,7 +370,7 @@ const Upload = () => {
                       <DollarSign className="h-8 w-8" />
                     </div>
                     <h2 className="text-2xl font-bold">Set Your Pricing</h2>
-                    <p className="text-muted-foreground max-w-md">Configure license tiers for your beat. Enable the ones you want to offer and set your prices.</p>
+                    <p className="text-muted-foreground max-w-md">Configure license tiers and upload corresponding files. Enable the ones you want to offer.</p>
                   </div>
 
                   <div className="mx-auto max-w-2xl space-y-4">
@@ -445,6 +414,34 @@ const Upload = () => {
                           </button>
                         </div>
                       </div>
+
+                      {formData.licenseTiers.mp3.enabled && (
+                        <div className="mt-4 pt-4 border-t border-border/50">
+                          <div 
+                            onClick={() => mp3InputRef.current?.click()}
+                            className={cn(
+                              "flex items-center justify-between gap-4 rounded-xl border border-dashed border-border p-3 cursor-pointer transition-all hover:border-orange-500/50 hover:bg-orange-500/5",
+                              formData.licenseTiers.mp3.file && "border-solid border-green-500/30 bg-green-500/5"
+                            )}
+                          >
+                            <input type="file" ref={mp3InputRef} className="hidden" accept="audio/mpeg" onChange={(e) => handleAudioChange("mp3", e)} />
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <div className={cn(
+                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary",
+                                formData.licenseTiers.mp3.file && "bg-green-500 text-white"
+                              )}>
+                                {formData.licenseTiers.mp3.file ? <Check className="h-4 w-4" /> : <UploadIcon className="h-4 w-4" />}
+                              </div>
+                              <span className="text-sm font-medium truncate">
+                                {formData.licenseTiers.mp3.file ? formData.licenseTiers.mp3.file.name : "Upload Tagged MP3"}
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase shrink-0">
+                              {formData.licenseTiers.mp3.file ? "Change" : "Browse"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* WAV Lease */}
@@ -487,6 +484,34 @@ const Upload = () => {
                           </button>
                         </div>
                       </div>
+
+                      {formData.licenseTiers.wav.enabled && (
+                        <div className="mt-4 pt-4 border-t border-border/50">
+                          <div 
+                            onClick={() => wavInputRef.current?.click()}
+                            className={cn(
+                              "flex items-center justify-between gap-4 rounded-xl border border-dashed border-border p-3 cursor-pointer transition-all hover:border-orange-500/50 hover:bg-orange-500/5",
+                              formData.licenseTiers.wav.file && "border-solid border-green-500/30 bg-green-500/5"
+                            )}
+                          >
+                            <input type="file" ref={wavInputRef} className="hidden" accept="audio/wav,audio/x-wav" onChange={(e) => handleAudioChange("wav", e)} />
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <div className={cn(
+                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary",
+                                formData.licenseTiers.wav.file && "bg-green-500 text-white"
+                              )}>
+                                {formData.licenseTiers.wav.file ? <Check className="h-4 w-4" /> : <UploadIcon className="h-4 w-4" />}
+                              </div>
+                              <span className="text-sm font-medium truncate">
+                                {formData.licenseTiers.wav.file ? formData.licenseTiers.wav.file.name : "Upload Untagged WAV"}
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase shrink-0">
+                              {formData.licenseTiers.wav.file ? "Change" : "Browse"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Stems/Trackout */}
@@ -532,6 +557,34 @@ const Upload = () => {
                           </button>
                         </div>
                       </div>
+
+                      {formData.licenseTiers.stems.enabled && (
+                        <div className="mt-4 pt-4 border-t border-border/50">
+                          <div 
+                            onClick={() => stemsInputRef.current?.click()}
+                            className={cn(
+                              "flex items-center justify-between gap-4 rounded-xl border border-dashed border-border p-3 cursor-pointer transition-all hover:border-orange-500/50 hover:bg-orange-500/5",
+                              formData.licenseTiers.stems.file && "border-solid border-green-500/30 bg-green-500/5"
+                            )}
+                          >
+                            <input type="file" ref={stemsInputRef} className="hidden" accept=".zip,.rar" onChange={(e) => handleAudioChange("stems", e)} />
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <div className={cn(
+                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary",
+                                formData.licenseTiers.stems.file && "bg-green-500 text-white"
+                              )}>
+                                {formData.licenseTiers.stems.file ? <Check className="h-4 w-4" /> : <UploadIcon className="h-4 w-4" />}
+                              </div>
+                              <span className="text-sm font-medium truncate">
+                                {formData.licenseTiers.stems.file ? formData.licenseTiers.stems.file.name : "Upload Stems (ZIP/RAR)"}
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase shrink-0">
+                              {formData.licenseTiers.stems.file ? "Change" : "Browse"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Exclusive Rights */}
@@ -580,6 +633,34 @@ const Upload = () => {
                           </button>
                         </div>
                       </div>
+
+                      {formData.licenseTiers.exclusive.enabled && (
+                        <div className="mt-4 pt-4 border-t border-border/50">
+                          <div 
+                            onClick={() => exclusiveInputRef.current?.click()}
+                            className={cn(
+                              "flex items-center justify-between gap-4 rounded-xl border border-dashed border-border p-3 cursor-pointer transition-all hover:border-orange-500/50 hover:bg-orange-500/5",
+                              formData.licenseTiers.exclusive.file && "border-solid border-purple-500/30 bg-purple-500/5"
+                            )}
+                          >
+                            <input type="file" ref={exclusiveInputRef} className="hidden" accept=".zip,.rar" onChange={(e) => handleAudioChange("exclusive", e)} />
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <div className={cn(
+                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary",
+                                formData.licenseTiers.exclusive.file && "bg-green-500 text-white"
+                              )}>
+                                {formData.licenseTiers.exclusive.file ? <Check className="h-4 w-4" /> : <UploadIcon className="h-4 w-4" />}
+                              </div>
+                              <span className="text-sm font-medium truncate">
+                                {formData.licenseTiers.exclusive.file ? formData.licenseTiers.exclusive.file.name : "Upload Exclusive Package (ZIP/RAR)"}
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase shrink-0">
+                              {formData.licenseTiers.exclusive.file ? "Change" : "Browse"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4 flex gap-4">
@@ -587,7 +668,7 @@ const Upload = () => {
                         <Info className="h-3 w-3 text-orange-500" />
                       </span>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Enable at least one license tier. Prices are in USD. Toggle tiers on/off based on the files you want to offer.
+                        Enable at least one license tier and upload the corresponding file. Prices are in USD.
                       </p>
                     </div>
                   </div>
@@ -636,12 +717,12 @@ const Upload = () => {
                       onClick={() => {
                         setFormData({
                           title: "", genre: "", bpm: "", key: "", description: "",
-                          tags: [], price: "29.99", previewFile: null, masterFile: null, coverFile: null, coverPreview: "",
+                          tags: [], price: "29.99", previewFile: null, coverFile: null, coverPreview: "",
                           licenseTiers: {
-                            mp3: { enabled: true, price: "29.99" },
-                            wav: { enabled: true, price: "49.99" },
-                            stems: { enabled: false, price: "99.99" },
-                            exclusive: { enabled: false, price: "499.99" }
+                            mp3: { enabled: true, price: "29.99", file: null },
+                            wav: { enabled: true, price: "49.99", file: null },
+                            stems: { enabled: false, price: "99.99", file: null },
+                            exclusive: { enabled: false, price: "499.99", file: null }
                           }
                         });
                         setCurrentStep(1);
@@ -679,7 +760,15 @@ const Upload = () => {
                 {currentStep === 3 ? (
                   <button
                     onClick={handlePublish}
-                    disabled={isPublishing || !formData.previewFile || !formData.masterFile || !formData.coverFile}
+                    disabled={
+                      isPublishing || 
+                      !formData.previewFile || 
+                      !formData.coverFile || 
+                      // Must have at least one tier enabled
+                      !Object.values(formData.licenseTiers).some(t => t.enabled) ||
+                      // All enabled tiers must have a file
+                      Object.values(formData.licenseTiers).some(t => t.enabled && !t.file)
+                    }
                     className="flex items-center gap-2 rounded-2xl bg-orange-500 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:bg-orange-600 active:scale-95 disabled:opacity-50"
                   >
                     {isPublishing ? (
@@ -722,8 +811,8 @@ const Upload = () => {
             <div className="space-y-1">
               <h4 className="text-sm font-bold text-foreground">Upload Requirements</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                You must provide both a <span className="text-blue-500 font-bold">Preview</span> (publicly streamable) and a <span className="text-orange-500 font-bold">Master</span> (delivered to buyer upon payment). 
-                We recommend tagged MP3s for previews and high-quality WAVs or ZIP stems for masters.
+                You must provide a <span className="text-blue-500 font-bold">Preview</span> (publicly streamable) and at least one <span className="text-orange-500 font-bold">License</span> with its corresponding file. 
+                We recommend tagged MP3s for previews.
               </p>
             </div>
           </motion.div>

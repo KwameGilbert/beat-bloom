@@ -105,7 +105,7 @@ const Profile = () => {
     ? allTabs 
     : allTabs.filter(tab => !tab.producerOnly);
 
-  const renderBeatCard = (beat: Beat) => {
+  const renderBeatCard = (beat: Beat, uniqueKey?: string | number) => {
     const isCurrentBeat = currentBeat?.id.toString() === beat.id.toString();
     const isPlayingCurrent = isCurrentBeat && isPlaying;
     const isLoadingCurrent = isCurrentBeat && isPlayerLoading;
@@ -114,7 +114,7 @@ const Profile = () => {
 
     return (
       <button
-        key={beat.id}
+        key={uniqueKey || beat.id}
         onClick={() => navigate(`/beat/${beat.id}`)}
         className="group block text-left"
       >
@@ -345,7 +345,9 @@ const Profile = () => {
             
             {purchases.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
-                {purchases.map((purchase: any) => renderBeatCard(purchase.beat || purchase))}
+                {purchases.map((purchase: any, index: number) => 
+                  renderBeatCard(purchase.beat || purchase, purchase.id || `purchase-${index}`)
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-16">
@@ -371,7 +373,10 @@ const Profile = () => {
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-xl font-bold text-foreground">Published Beats</h2>
               {user?.role === 'producer' && (
-                <button className="flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600">
+                <button 
+                  onClick={() => navigate("/upload")}
+                  className="flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600"
+                >
                   <Upload className="h-4 w-4" />
                   Upload New Beat
                 </button>
@@ -379,12 +384,26 @@ const Profile = () => {
             </div>
 
             {/* Beats Grid (Empty for now as most users are buyers) */}
-            <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-16">
+            <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-16 px-4 text-center">
               <Upload className="mb-4 h-12 w-12 text-muted-foreground" />
               <p className="mb-2 text-lg font-bold text-foreground">No beats published</p>
-              <p className="text-sm text-muted-foreground">
-                Apply as a producer to start selling your beats
-              </p>
+              {user?.role === 'producer' ? (
+                <>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    You haven't uploaded any beats yet. Start sharing your sound!
+                  </p>
+                  <button 
+                    onClick={() => navigate("/upload")}
+                    className="rounded-full bg-orange-500 px-6 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600"
+                  >
+                    Upload Your First Beat
+                  </button>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Apply as a producer to start selling your beats
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -395,7 +414,9 @@ const Profile = () => {
             
             {liked.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
-                {liked.map(renderBeatCard)}
+                {liked.map((like: any, index: number) => 
+                  renderBeatCard(like.beat || like, like.id || `like-${index}`)
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-16">

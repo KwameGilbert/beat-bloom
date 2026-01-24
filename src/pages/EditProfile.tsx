@@ -9,9 +9,13 @@ import {
   User,
   Briefcase,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
+import { authService } from "@/lib/auth";
 import { showNotification } from "@/components/ui/custom-notification";
 import type { UpdateProfileData } from "@/lib/auth";
 
@@ -23,6 +27,7 @@ const EditProfile = () => {
   
   const [formData, setFormData] = useState<UpdateProfileData>({
     name: "",
+    username: "",
     location: "",
     website: "",
     bio: "",
@@ -41,12 +46,14 @@ const EditProfile = () => {
   });
 
   const [formError, setFormError] = useState<string | null>(null);
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'error'>('idle');
 
   // Initialize form with user data
   useEffect(() => {
     if (user) {
       setFormData({
         name: user.name || "",
+        username: user.producer?.username || user.username || "",
         location: user.location || "",
         website: user.website || "",
         bio: user.bio || "",
@@ -64,6 +71,39 @@ const EditProfile = () => {
   useEffect(() => {
     clearError();
   }, [clearError]);
+
+  // Username availability check
+  useEffect(() => {
+    // If empty or same as current, don't check
+    const currentUsername = user?.producer?.username || user?.username;
+    if (!formData.username || formData.username === currentUsername) {
+      setUsernameStatus('idle');
+      return;
+    }
+
+    // Minimum length for check
+    if (formData.username.length < 3) {
+      setUsernameStatus('idle');
+      return;
+    }
+
+    setUsernameStatus('checking');
+
+    const timer = setTimeout(async () => {
+      try {
+        const response = await authService.checkUsername(formData.username!);
+        if (response.data.available) {
+          setUsernameStatus('available');
+        } else {
+          setUsernameStatus('taken');
+        }
+      } catch (err: any) {
+        setUsernameStatus('error');
+      }
+    }, 600); // 600ms debounce
+
+    return () => clearTimeout(timer);
+  }, [formData.username, user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -112,6 +152,7 @@ const EditProfile = () => {
       // Create FormData to send both text and files
       const data = new FormData();
       data.append('name', formData.name || '');
+      data.append('username', formData.username || '');
       data.append('location', formData.location || '');
       data.append('website', formData.website || '');
       data.append('bio', formData.bio || '');
@@ -293,6 +334,60 @@ const EditProfile = () => {
                 placeholder="Your display name"
                 required
               />
+            </div>
+
+            {/* Username */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-bold text-foreground">
+                <span className="text-muted-foreground font-bold">@</span>
+                Username <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-3 text-sm font-bold text-muted-foreground">@</span>
+                <input
+                  type="text"
+                  name="username"
+                  value={formData.username}
+                  onChange={(e) => {
+                    const val = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                    setFormData(prev => ({ ...prev, username: val }));
+                  }}
+                  className={cn(
+                    "w-full rounded-xl border border-border bg-card py-3 pl-8 pr-10 text-sm text-foreground focus:outline-none focus:ring-1 transition-all font-mono",
+                    usernameStatus === 'available' && "border-green-500/50 focus:border-green-500 focus:ring-green-500/20",
+                    usernameStatus === 'taken' && "border-red-500/50 focus:border-red-500 focus:ring-red-500/20",
+                    usernameStatus === 'checking' && "border-orange-500/50 focus:border-orange-500 focus:ring-orange-500/20",
+                    usernameStatus === 'idle' && "border-border focus:border-orange-500 focus:ring-orange-500"
+                  )}
+                  placeholder="username"
+                  required
+                />
+                <div className="absolute right-3 top-3">
+                  {usernameStatus === 'checking' && <Loader2 className="h-4 w-4 animate-spin text-orange-500" />}
+                  {usernameStatus === 'available' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                  {usernameStatus === 'taken' && <XCircle className="h-4 w-4 text-red-500" />}
+                </div>
+              </div>
+              
+              {usernameStatus === 'available' && (
+                <p className="text-[10px] font-bold text-green-500 px-1 flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3" /> This username is available.
+                </p>
+              )}
+              {usernameStatus === 'taken' && (
+                <p className="text-[10px] font-bold text-red-500 px-1 flex items-center gap-1">
+                  <XCircle className="h-3 w-3" /> Already taken. Try another one.
+                </p>
+              )}
+              {usernameStatus === 'error' && (
+                <p className="text-[10px] font-bold text-orange-500 px-1">
+                  Couldn't verify availability.
+                </p>
+              )}
+              
+              <p className="text-[10px] text-muted-foreground px-1">
+                Your unique ID. Used for your public profile URL.
+              </p>
             </div>
 
             {/* Bio */}
