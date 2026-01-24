@@ -24,6 +24,7 @@ import PayoutMethods from "../pages/PayoutMethods";
 import BillingHistory from "../pages/BillingHistory";
 import ProducerProfile from "../pages/ProducerProfile";
 import OAuthCallback from "../pages/OAuthCallback";
+import VerifyEmail from "../pages/VerifyEmail";
 
 import { Layout } from "../components/layout/Layout";
 import { AuthLayout } from "../components/auth/AuthLayout";
@@ -50,6 +51,9 @@ export const AppRoutes = () => {
         
         {/* OAuth Callback - handles redirect from Google, etc. */}
         <Route path="/oauth/callback" element={<OAuthCallback />} />
+
+        {/* Email Verification */}
+        <Route path="/verify-email" element={<VerifyEmail />} />
       </Route>
       
       {/* Main App Routes */}

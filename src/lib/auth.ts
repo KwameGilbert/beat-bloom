@@ -222,7 +222,14 @@ export const authService = {
   },
 
   async disable2FA(): Promise<{ success: boolean }> {
-    return api.post('/auth/2fa/disable');
+    return api.post('/auth/disable-2fa');
+  },
+
+  /**
+   * Upgrade to producer role
+   */
+  async upgradeToProducer(): Promise<{ data: User }> {
+    return api.post('/auth/upgrade');
   },
 };
 

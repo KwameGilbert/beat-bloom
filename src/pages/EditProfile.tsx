@@ -97,7 +97,7 @@ const EditProfile = () => {
         } else {
           setUsernameStatus('taken');
         }
-      } catch (err: any) {
+      } catch {
         setUsernameStatus('error');
       }
     }, 600); // 600ms debounce
@@ -164,7 +164,7 @@ const EditProfile = () => {
         data.append('coverImage', files.cover);
       }
 
-      await updateProfile(data as any);
+      await updateProfile(data);
 
       // Show success notification
       showNotification(
@@ -178,8 +178,8 @@ const EditProfile = () => {
       setTimeout(() => {
         navigate("/profile");
       }, 1000);
-    } catch (err: any) {
-      const errorMessage = err.message || "Failed to update profile. Please try again.";
+    } catch (err) {
+      const errorMessage = err instanceof ApiError ? err.message : "Failed to update profile. Please try again.";
       setFormError(errorMessage);
       showNotification(
         "Update Failed",

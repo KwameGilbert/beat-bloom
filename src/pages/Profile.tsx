@@ -21,10 +21,13 @@ import {
 } from "lucide-react";
 import { type Beat } from "@/lib/marketplace";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
 import { useLikesStore } from "@/store/likesStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { useCartStore } from "@/store/cartStore";
 import { useProfileStore } from "@/store/profileStore";
+import { authService } from "@/lib/auth";
+import { showNotification } from "@/components/ui/custom-notification";
 import { format } from "date-fns";
 
 type ProfileTab = "beats" | "liked" | "analytics" | "purchases";
@@ -32,15 +35,33 @@ type ProfileTab = "beats" | "liked" | "analytics" | "purchases";
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<ProfileTab>("purchases");
   const navigate = useNavigate();
-  const { likedBeats, toggleLike, isLiked } = useLikesStore();
+  const { toggleLike, isLiked } = useLikesStore();
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading: isPlayerLoading } = usePlayerStore();
   const { addToCart, removeFromCart, isInCart } = useCartStore();
   const { profileData, isLoading, fetchProfile } = useProfileStore();
+  const { setUser } = useAuthStore();
+  const [isUpgrading, setIsUpgrading] = useState(false);
 
   // Fetch profile on mount
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  const handleUpgrade = async () => {
+    if (window.confirm("Are you sure you want to become a producer? This will allow you to upload and sell your beats.")) {
+      setIsUpgrading(true);
+      try {
+        const response = await authService.upgradeToProducer();
+        setUser(response.data);
+        fetchProfile();
+        showNotification("Success", "You are now a producer!", "success");
+      } catch {
+        showNotification("Error", "Failed to upgrade role.", "error");
+      } finally {
+        setIsUpgrading(false);
+      }
+    }
+  };
 
   const user = profileData?.user;
   const purchases = profileData?.purchases || [];
@@ -57,15 +78,6 @@ const Profile = () => {
 
   if (!user) return null;
 
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) {
-      return `${(num / 1000000).toFixed(1)}M`;
-    }
-    if (num >= 1000) {
-      return `${(num / 1000).toFixed(1)}K`;
-    }
-    return num.toString();
-  };
 
   const handlePlayClick = (beat: Beat, e: React.MouseEvent) => {
     e.preventDefault();
@@ -235,10 +247,15 @@ const Profile = () => {
           {/* Name & Role */}
           <div className="mb-4">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
-                {user.name}
-              </h1>
-              <span className="rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-white">
+              <div className="flex flex-col">
+                <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
+                  {user.name}
+                </h1>
+                {user.username && (
+                  <p className="text-sm font-medium text-orange-500">@{user.username}</p>
+                )}
+              </div>
+              <span className="rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">
                 {user.role}
               </span>
             </div>
@@ -279,6 +296,21 @@ const Profile = () => {
             >
               <Settings className="h-4 w-4" />
             </button>
+            
+            {user.role === 'artist' && (
+              <button 
+                onClick={handleUpgrade}
+                disabled={isUpgrading}
+                className="ml-auto flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-2 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+              >
+                {isUpgrading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <TrendingUp className="h-4 w-4" />
+                )}
+                Become a Producer
+              </button>
+            )}
           </div>
 
           {/* Stats Grid */}
@@ -345,8 +377,8 @@ const Profile = () => {
             
             {purchases.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
-                {purchases.map((purchase: any, index: number) => 
-                  renderBeatCard(purchase.beat || purchase, purchase.id || `purchase-${index}`)
+                {purchases.map((purchase, index) => 
+                  renderBeatCard(purchase.beat, purchase.id || `purchase-${index}`)
                 )}
               </div>
             ) : (
@@ -414,9 +446,11 @@ const Profile = () => {
             
             {liked.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
-                {liked.map((like: any, index: number) => 
-                  renderBeatCard(like.beat || like, like.id || `like-${index}`)
-                )}
+                {liked.map((item, index) => {
+                  const beat = 'beat' in item ? item.beat : item;
+                  const id = 'id' in item ? (item as any).id : beat.id;
+                  return renderBeatCard(beat, id || `like-${index}`);
+                })}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-16">

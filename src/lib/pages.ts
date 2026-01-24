@@ -13,10 +13,18 @@ export interface BeatDetailPageData {
   relatedBeats: Beat[];
 }
 
+export interface Purchase {
+  beat: Beat;
+  purchasedAt: string;
+  amount: number;
+  id?: string | number;
+}
+
 export interface ProfilePageData {
   user: {
     id: number | string;
     name: string;
+    username?: string;
     email: string;
     avatar?: string;
     coverImage?: string;
@@ -26,8 +34,8 @@ export interface ProfilePageData {
     website?: string;
     createdAt: string;
   };
-  purchases: any[];
-  likes: Beat[];
+  purchases: Purchase[];
+  likes: (Beat | { beat: Beat; id: number | string })[];
   stats: {
     purchasesCount: number;
     likesCount: number;
