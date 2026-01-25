@@ -1,20 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { marketplaceService, type Beat } from "@/lib/marketplace";
-
-interface Purchase {
-  beat: Beat;
-  purchasedAt: string;
-  transactionRef: string;
-  amount: number;
-  // License information
-  licenseTierId?: number;
-  tierName?: string;
-  tierType?: string;
-  licenseName?: string;
-  isExclusive?: boolean;
-  includedFiles?: string[];
-}
+import type { Beat, Purchase } from "@/types";
+import { marketplaceService } from "@/lib/marketplace";
 
 interface PurchasesState {
   purchases: Purchase[];
@@ -141,5 +128,3 @@ export const usePurchasesStore = create<PurchasesState>()(
     }
   )
 );
-
-export type { Purchase };

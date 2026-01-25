@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Beat } from "@/lib/marketplace";
+import type { Beat } from "@/types";
 import { api } from "@/lib/api";
 
 // Cart item from API includes additional info
@@ -41,7 +41,7 @@ interface CartState {
   feeSettings: FeeSettings | null;
   isLoading: boolean;
   hasFetched: boolean;
-  addToCart: (beat: Beat, licenseTierId?: number) => Promise<void>;
+  addToCart: (beat: Beat, licenseTierId?: string) => Promise<void>;
   removeFromCart: (beatId: string | number) => Promise<void>;
   clearCart: () => Promise<void>;
   isInCart: (beatId: string | number) => boolean;

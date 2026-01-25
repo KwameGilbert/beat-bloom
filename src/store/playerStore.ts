@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Beat } from "@/lib/marketplace";
+import type { Beat } from "@/types";
 import { marketplaceService } from "@/lib/marketplace";
 
 interface PlayerState {

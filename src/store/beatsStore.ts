@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Beat, Producer, Pagination, Genre } from "@/lib/marketplace";
+import type { Beat, Producer, Pagination, Genre } from "@/types";
 import { marketplaceService } from "@/lib/marketplace";
 import { pagesService } from "@/lib/pages";
 
@@ -27,7 +27,7 @@ interface BeatsState {
   fetchProducers: (params?: Record<string, any>) => Promise<void>;
   fetchGenres: () => Promise<Genre[]>;
   fetchHomePage: () => Promise<void>;
-  getBeatPageData: (id: string | number) => Promise<any>;
+  getBeatPageData: (id: string | number) => Promise<{ beat: Beat; relatedBeats: Beat[] } | null>;
   getBeat: (id: string | number) => Promise<Beat | null>;
   getProducer: (username: string) => Promise<Producer | null>;
   searchBeats: (query: string) => Promise<{ beats: Beat[]; producers: Producer[] }>;

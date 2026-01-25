@@ -1,19 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Beat } from "@/lib/marketplace";
+import type { Beat, Playlist } from "@/types";
 import { api } from "@/lib/api";
-
-export interface Playlist {
-  id: string | number;
-  name: string;
-  color: string;
-  beats: Beat[];
-  beatsCount?: number;
-  description?: string;
-  isPublic?: boolean;
-  createdAt: string;
-  updatedAt?: string;
-}
 
 // Available playlist colors
 export const playlistColors = [
@@ -187,7 +175,7 @@ export const usePlaylistsStore = create<PlaylistsState>()(
       addBeatToPlaylist: async (playlistId, beat) => {
         // Check if beat is already in playlist
         const playlist = get().playlists.find(p => p.id.toString() === playlistId.toString());
-        if (playlist?.beats.some((b) => b.id.toString() === beat.id.toString())) {
+        if (playlist?.beats.some((b: Beat) => b.id.toString() === beat.id.toString())) {
           // Already in playlist, no action needed
           return;
         }
@@ -215,7 +203,7 @@ export const usePlaylistsStore = create<PlaylistsState>()(
           set((state) => ({
             playlists: state.playlists.map((p) => {
               if (p.id.toString() === playlistId.toString()) {
-                return { ...p, beats: p.beats.filter((b) => b.id.toString() !== beat.id.toString()) };
+                return { ...p, beats: p.beats.filter((b: Beat) => b.id.toString() !== beat.id.toString()) };
               }
               return p;
             }),
@@ -229,7 +217,7 @@ export const usePlaylistsStore = create<PlaylistsState>()(
         set((state) => ({
           playlists: state.playlists.map((p) => {
             if (p.id.toString() === playlistId.toString()) {
-              return { ...p, beats: p.beats.filter((b) => b.id.toString() !== idStr) };
+              return { ...p, beats: p.beats.filter((b: Beat) => b.id.toString() !== idStr) };
             }
             return p;
           }),
@@ -246,7 +234,7 @@ export const usePlaylistsStore = create<PlaylistsState>()(
       isBeatInPlaylist: (playlistId, beatId) => {
         const idStr = beatId.toString();
         const playlist = get().playlists.find((p) => p.id.toString() === playlistId.toString());
-        return playlist?.beats.some((b) => b.id.toString() === idStr) ?? false;
+        return playlist?.beats.some((b: Beat) => b.id.toString() === idStr) ?? false;
       },
 
       getPlaylist: (playlistId) => {
@@ -255,7 +243,7 @@ export const usePlaylistsStore = create<PlaylistsState>()(
 
       getPlaylistsContainingBeat: (beatId) => {
         const idStr = beatId.toString();
-        return get().playlists.filter((p) => p.beats.some((b) => b.id.toString() === idStr));
+        return get().playlists.filter((p: Playlist) => p.beats.some((b: Beat) => b.id.toString() === idStr));
       },
 
       clearPlaylists: () => {

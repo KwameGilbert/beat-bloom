@@ -1,31 +1,4 @@
-export interface LicenseTier {
-  enabled: boolean;
-  price: string;
-  file: File | null;
-}
-
-export interface LicenseTiers {
-  mp3: LicenseTier;
-  wav: LicenseTier;
-  stems: LicenseTier;
-  exclusive: LicenseTier;
-}
-
-export interface UploadFormData {
-  title: string;
-  genre: string;
-  bpm: string;
-  key: string;
-  description: string;
-  tags: string[];
-  price: string;
-  duration: string;
-  durationSeconds: number;
-  previewFile: File | null;
-  coverFile: File | null;
-  coverPreview: string;
-  licenseTiers: LicenseTiers;
-}
+import type { UploadFormData, UploadLicenseTiers as LicenseTiers } from '@/types';
 
 export const INITIAL_FORM_DATA: UploadFormData = {
   title: "",

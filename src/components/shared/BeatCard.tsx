@@ -9,9 +9,11 @@ import { usePlaylistsStore } from "@/store/playlistsStore";
 import { AddToPlaylistModal } from "@/components/shared/AddToPlaylistModal";
 import { cn } from "@/lib/utils";
 
+import type { Beat } from "@/types";
+
 interface BeatCardProps {
-  beat: any;
-  playlist?: any[]; // Optional list of beats for next/previous navigation
+  beat: Beat;
+  playlist?: Beat[]; // Optional list of beats for next/previous navigation
 }
 
 export const BeatCard = ({ beat, playlist }: BeatCardProps) => {
@@ -28,11 +30,11 @@ export const BeatCard = ({ beat, playlist }: BeatCardProps) => {
   // Normalize fields between API and Mock data
   const id = beat.id.toString();
   const title = beat.title;
-  const producerName = beat.producerName || beat.producer;
+  const producerName = beat.producerName; 
   const producerId = beat.producerId.toString();
-  const cover = beat.coverImage || beat.cover;
+  const cover = beat.coverImage;
   const bpm = beat.bpm;
-  const musicalKey = beat.musicalKey || beat.key;
+  const musicalKey = beat.musicalKey;
   const price = beat.price || (beat.licenseTiers && beat.licenseTiers[0]?.price) || 0;
   
   const isCurrentBeat = currentBeat?.id.toString() === id;
@@ -65,7 +67,7 @@ export const BeatCard = ({ beat, playlist }: BeatCardProps) => {
     if (inCart) {
       removeFromCart(id);
     } else {
-      const defaultTierId = beat.licenseTiers?.[0]?.id;
+      const defaultTierId = beat.licenseTiers?.[0]?.id.toString();
       addToCart(beat, defaultTierId);
     }
   };

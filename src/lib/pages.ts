@@ -1,46 +1,25 @@
 import { api } from './api';
-import type { Beat, Genre, Producer, SingleResponse } from './marketplace';
+import type { 
+  Beat, 
+  BeatDetailPageData, 
+  Genre, 
+  HomePageData, 
+  Producer, 
+  ProfilePageData, 
+  Purchase, 
+  SingleResponse 
+} from '@/types';
 
-export interface HomePageData {
-  trendingBeats: Beat[];
-  genres: Genre[];
-  featuredProducers: Producer[];
-}
-
-export interface BeatDetailPageData {
-  beat: Beat & { licenseTiers: any[] };
-  producer: Producer;
-  relatedBeats: Beat[];
-}
-
-export interface Purchase {
-  beat: Beat;
-  purchasedAt: string;
-  amount: number;
-  id?: string | number;
-}
-
-export interface ProfilePageData {
-  user: {
-    id: number | string;
-    name: string;
-    username?: string;
-    email: string;
-    avatar?: string;
-    coverImage?: string;
-    role: string;
-    bio?: string;
-    location?: string;
-    website?: string;
-    createdAt: string;
-  };
-  purchases: Purchase[];
-  likes: (Beat | { beat: Beat; id: number | string })[];
-  stats: {
-    purchasesCount: number;
-    likesCount: number;
-  };
-}
+export type { 
+  Beat, 
+  BeatDetailPageData, 
+  Genre, 
+  HomePageData, 
+  Producer, 
+  ProfilePageData, 
+  Purchase, 
+  SingleResponse 
+};
 
 export const pagesService = {
   /**

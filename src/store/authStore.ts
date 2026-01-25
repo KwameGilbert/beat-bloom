@@ -7,7 +7,15 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { authService, type User, type RegisterData, type LoginData, type UpdateProfileData, type UpdateSettingsData, type ChangePasswordData, ApiError } from '@/lib/auth';
+import { authService, ApiError } from '@/lib/auth';
+import type { 
+  User, 
+  RegisterData, 
+  LoginData, 
+  UpdateProfileData, 
+  UpdateSettingsData, 
+  ChangePasswordData 
+} from '@/types';
 import { usePlaylistsStore } from './playlistsStore';
 import { useThemeStore } from './themeStore';
 

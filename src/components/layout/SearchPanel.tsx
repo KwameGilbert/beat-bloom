@@ -1,6 +1,6 @@
 import { Music, Users, Clock, X, Search as SearchIcon } from "lucide-react";
 import { motion } from "framer-motion";
-import { type Beat, type Producer } from "@/lib/marketplace";
+import type { Beat, Producer } from "@/types";
 
 interface SearchPanelProps {
   searchQuery: string;

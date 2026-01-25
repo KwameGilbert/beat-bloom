@@ -15,9 +15,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
-import { authService } from "@/lib/auth";
+import { authService, ApiError } from "@/lib/auth";
 import { showNotification } from "@/components/ui/custom-notification";
-import type { UpdateProfileData } from "@/lib/auth";
+import type { UpdateProfileData } from "@/types";
 
 const EditProfile = () => {
   const navigate = useNavigate();

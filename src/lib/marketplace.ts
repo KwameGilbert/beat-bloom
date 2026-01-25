@@ -5,92 +5,25 @@
  */
 
 import { api } from './api';
+import type { 
+  Beat, 
+  Genre, 
+  LicenseTier, 
+  ListResponse, 
+  Pagination, 
+  Producer, 
+  SingleResponse 
+} from '@/types';
 
-// Types
-export interface LicenseTier {
-  id: number;
-  beatId: number;
-  tierType: 'mp3' | 'wav' | 'stems' | 'exclusive';
-  name: string;
-  price: number;
-  description: string;
-  includedFiles: string[];
-  isExclusive: boolean;
-  isEnabled: boolean;
-}
-
-export interface Beat {
-  id: number | string;
-  producerId: number | string;
-  genreId?: number | string;
-  title: string;
-  slug: string;
-  description?: string;
-  bpm: number;
-  musicalKey: string;
-  duration?: string;
-  durationSeconds?: number;
-  coverImage?: string;
-  previewAudioUrl?: string;
-  tags: string[];
-  playsCount: number;
-  likesCount: number;
-  isExclusiveSold: boolean;
-  status: 'draft' | 'active' | 'archived' | 'soldExclusive';
-  isFeatured: boolean;
-  producerName: string;
-  producerUsername: string;
-  producerAvatar?: string;
-  producerBio?: string;
-  producerLocation?: string;
-  producerIsVerified?: boolean;
-  genreName?: string;
-  licenseTiers?: LicenseTier[];
-  price?: number;
-  createdAt: string;
-}
-
-export interface Producer {
-  id: number | string;
-  userId: number | string;
-  username: string;
-  displayName: string;
-  avatar?: string;
-  coverImage?: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  isVerified: boolean;
-  beats?: Beat[];
-  createdAt: string;
-}
-
-export interface Genre {
-  id: number | string;
-  name: string;
-  slug: string;
-  description?: string;
-  imageUrl?: string;
-  beatCount?: number;
-  isActive: boolean;
-}
-
-export interface Pagination {
-  total: number;
-  page: number;
-  limit: number;
-}
-
-export interface ListResponse<T> {
-  success: boolean;
-  data: T[];
-  pagination: Pagination;
-}
-
-export interface SingleResponse<T> {
-  success: boolean;
-  data: T;
-}
+export type { 
+  Beat, 
+  Genre, 
+  LicenseTier, 
+  ListResponse, 
+  Pagination, 
+  Producer, 
+  SingleResponse 
+};
 
 // Service
 export const marketplaceService = {

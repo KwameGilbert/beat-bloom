@@ -5,99 +5,29 @@
  */
 
 import { api, ApiError, getRefreshToken } from './api';
+import type { 
+  AuthResponse, 
+  ChangePasswordData,
+  LoginData, 
+  ProducerProfile, 
+  RegisterData, 
+  UpdateProfileData, 
+  UpdateSettingsData, 
+  User 
+} from '@/types';
+
+export type { 
+  AuthResponse, 
+  ChangePasswordData,
+  LoginData, 
+  ProducerProfile, 
+  RegisterData, 
+  UpdateProfileData, 
+  UpdateSettingsData, 
+  User 
+};
 
 export { ApiError };
-
-
-// Types
-export interface User {
-  id: number;
-  email: string;
-  name: string;
-  role: 'producer' | 'artist' | 'admin';
-  status: 'active' | 'inactive' | 'suspended';
-  avatar?: string;
-  coverImage?: string;
-  phone?: string;
-  location?: string;
-  website?: string;
-  bio?: string;
-  emailVerifiedAt?: string;
-  mfaEnabled: boolean;
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-  publicProfile: boolean;
-  theme: 'dark' | 'light';
-  producer?: ProducerProfile;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ProducerProfile {
-  id: number;
-  userId: number;
-  username: string;
-  displayName: string;
-  avatar?: string;
-  coverImage?: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  instagram?: string;
-  twitter?: string;
-  youtube?: string;
-  soundcloud?: string;
-  spotify?: string;
-  isVerified: boolean;
-  commissionRate: number;
-  createdAt: string;
-}
-
-export interface AuthResponse {
-  success: boolean;
-  data: {
-    user: User;
-    accessToken: string;
-    refreshToken?: string;
-    message?: string;
-  };
-  message: string;
-}
-
-export interface RegisterData {
-  email: string;
-  password: string;
-  name: string;
-  role?: 'producer' | 'artist';
-}
-
-export interface LoginData {
-  email: string;
-  password: string;
-}
-
-export interface UpdateProfileData {
-  name?: string;
-  username?: string;
-  phone?: string;
-  avatar?: string;
-  coverImage?: string;
-  location?: string;
-  website?: string;
-  bio?: string;
-}
-
-export interface UpdateSettingsData {
-  emailNotifications?: boolean;
-  pushNotifications?: boolean;
-  publicProfile?: boolean;
-  theme?: 'dark' | 'light';
-}
-
-export interface ChangePasswordData {
-  currentPassword: string;
-  newPassword: string;
-}
 
 /**
  * Auth API Service

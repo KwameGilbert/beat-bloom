@@ -7,7 +7,7 @@ import { useBeatsStore } from "@/store/beatsStore";
 import { useAuthStore } from "@/store/authStore";
 import { AnimatePresence, motion } from "framer-motion";
 import { SearchPanel } from "./SearchPanel";
-import type { Beat, Producer } from "@/lib/marketplace";
+import type { Beat, Producer } from "@/types";
 
 interface HeaderProps {
   onMenuClick: () => void;

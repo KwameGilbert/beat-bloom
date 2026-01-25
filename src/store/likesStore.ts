@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { type Beat, marketplaceService } from "@/lib/marketplace";
+import type { Beat } from "@/types";
+import { marketplaceService } from "@/lib/marketplace";
 import { useAuthStore } from "@/store/authStore";
 import { api } from "@/lib/api";
 

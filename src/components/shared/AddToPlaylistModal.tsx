@@ -7,8 +7,8 @@ import {
   Pencil, 
   Trash2
 } from "lucide-react";
-import { usePlaylistsStore, playlistColors, type Playlist } from "@/store/playlistsStore";
-import type { Beat } from "@/lib/marketplace";
+import { usePlaylistsStore, playlistColors } from "@/store/playlistsStore";
+import type { Beat, Playlist } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface AddToPlaylistModalProps {
