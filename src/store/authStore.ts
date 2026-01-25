@@ -33,6 +33,7 @@ interface AuthState {
   verifyOTP: (email: string, otp: string) => Promise<void>;
   resendOTP: (email: string) => Promise<void>;
   resetPassword: (email: string, otp: string, password: string) => Promise<void>;
+  upgradeToProducer: () => Promise<void>;
   deleteAccount: () => Promise<void>;
   // TODO: Re-enable when 2FA is fully implemented
   // setup2FA: () => Promise<{ secret: string; qrCode: string }>;
@@ -292,6 +293,33 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: false });
         } catch (error) {
           const message = error instanceof ApiError ? error.message : 'Reset failed';
+          set({ isLoading: false, error: message });
+          throw error;
+        }
+      },
+
+      /**
+       * Upgrade artist to producer
+       */
+      upgradeToProducer: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await authService.upgradeToProducer();
+          const { user, accessToken, refreshToken } = response.data;
+          
+          set({ 
+            user, 
+            accessToken: accessToken || get().accessToken,
+            refreshToken: refreshToken || get().refreshToken,
+            isLoading: false 
+          });
+
+          // Sync theme from database
+          if (user.theme) {
+            useThemeStore.getState().setThemeOnly(user.theme);
+          }
+        } catch (error) {
+          const message = error instanceof ApiError ? error.message : 'Upgrade failed';
           set({ isLoading: false, error: message });
           throw error;
         }

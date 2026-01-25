@@ -38,8 +38,8 @@ const Profile = () => {
   const { toggleLike, isLiked } = useLikesStore();
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading: isPlayerLoading } = usePlayerStore();
   const { addToCart, removeFromCart, isInCart } = useCartStore();
-  const { profileData, isLoading, fetchProfile } = useProfileStore();
-  const { setUser } = useAuthStore();
+  const { fetchProfile, profileData, isLoading } = useProfileStore();
+  const { upgradeToProducer } = useAuthStore();
   const [isUpgrading, setIsUpgrading] = useState(false);
 
   // Fetch profile on mount
@@ -51,8 +51,7 @@ const Profile = () => {
     if (window.confirm("Are you sure you want to become a producer? This will allow you to upload and sell your beats.")) {
       setIsUpgrading(true);
       try {
-        const response = await authService.upgradeToProducer();
-        setUser(response.data);
+        await upgradeToProducer();
         fetchProfile();
         showNotification("Success", "You are now a producer!", "success");
       } catch {

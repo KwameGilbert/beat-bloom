@@ -32,6 +32,7 @@ interface PlaylistsState {
   isLoading: boolean;
   hasFetched: boolean;
   fetchPlaylists: () => Promise<void>;
+  fetchPlaylistById: (playlistId: string | number) => Promise<Playlist | undefined>;
   createPlaylist: (name: string, color?: string) => Promise<Playlist | undefined>;
   deletePlaylist: (playlistId: string | number) => Promise<void>;
   renamePlaylist: (playlistId: string | number, newName: string) => Promise<void>;
@@ -75,6 +76,41 @@ export const usePlaylistsStore = create<PlaylistsState>()(
         } catch (error) {
           console.error("Failed to fetch playlists:", error);
           set({ isLoading: false, hasFetched: true });
+        }
+      },
+
+      fetchPlaylistById: async (playlistId) => {
+        set({ isLoading: true });
+        try {
+          const response = await api.get<{ success: boolean; data: Playlist }>(`/playlists/${playlistId}`);
+          if (response.success && response.data) {
+            const updatedPlaylist = {
+              ...response.data,
+              beats: response.data.beats || [],
+            };
+            
+            set((state) => ({
+              playlists: state.playlists.map(p => 
+                p.id.toString() === playlistId.toString() ? updatedPlaylist : p
+              ),
+              isLoading: false
+            }));
+            
+            // If it wasn't in the list (e.g. direct link navigation), add it
+            if (!get().playlists.find(p => p.id.toString() === playlistId.toString())) {
+              set((state) => ({
+                playlists: [...state.playlists, updatedPlaylist]
+              }));
+            }
+            
+            return updatedPlaylist;
+          }
+          set({ isLoading: false });
+          return undefined;
+        } catch (error) {
+          console.error(`Failed to fetch playlist ${playlistId}:`, error);
+          set({ isLoading: false });
+          return undefined;
         }
       },
 

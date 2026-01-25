@@ -23,6 +23,11 @@ import {
   ToggleRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
+import { uploadService } from "@/lib/upload";
+import { marketplaceService } from "@/lib/marketplace";
+import { useBeatsStore } from "@/store/beatsStore";
+import { toast } from "sonner";
 
 const steps = [
   { id: 1, title: "Files", icon: UploadIcon },
@@ -31,10 +36,10 @@ const steps = [
   { id: 4, title: "Ready", icon: Check },
 ];
 
-const genres = ["Hip Hop", "Trap", "RnB", "Pop", "Lo-Fi", "Electronic", "Drill", "Afrobeats"];
 
 const Upload = () => {
   const navigate = useNavigate();
+  const { genres, fetchGenres } = useBeatsStore();
   const [currentStep, setCurrentStep] = useState(1);
   const [isPublishing, setIsPublishing] = useState(false);
   const previewInputRef = useRef<HTMLInputElement>(null);
@@ -52,6 +57,8 @@ const Upload = () => {
     description: "",
     tags: [] as string[],
     price: "29.99",
+    duration: "0:00",
+    durationSeconds: 0,
     previewFile: null as File | null,
     coverFile: null as File | null,
     coverPreview: "",
@@ -64,13 +71,33 @@ const Upload = () => {
     }
   });
 
+  useEffect(() => {
+    fetchGenres();
+  }, [fetchGenres]);
+
   const [tagInput, setTagInput] = useState("");
 
   const handleAudioChange = (type: "preview" | "mp3" | "wav" | "stems" | "exclusive", e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (type === "preview") {
-        setFormData(prev => ({ ...prev, previewFile: file }));
+        // Calculate duration
+        const audio = new Audio();
+        audio.src = URL.createObjectURL(file);
+        audio.onloadedmetadata = () => {
+          const seconds = Math.floor(audio.duration);
+          const minutes = Math.floor(seconds / 60);
+          const remainingSeconds = seconds % 60;
+          const durationStr = `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+          
+          setFormData(prev => ({ 
+            ...prev, 
+            previewFile: file,
+            durationSeconds: seconds,
+            duration: durationStr
+          }));
+          URL.revokeObjectURL(audio.src);
+        };
       } else {
         setFormData(prev => ({
           ...prev,
@@ -112,13 +139,121 @@ const Upload = () => {
     setFormData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     setIsPublishing(true);
-    // Simulate upload
-    setTimeout(() => {
+    try {
+      // 1. Upload Cover Art
+      if (!formData.coverFile) throw new Error("Cover art is required");
+      const coverRes = await uploadService.uploadSingle(formData.coverFile, "cover");
+      
+      // 2. Upload Preview Audio
+      if (!formData.previewFile) throw new Error("Preview audio is required");
+      const previewRes = await uploadService.uploadSingle(formData.previewFile, "beat");
+
+      // 3. Upload License Files
+      const filePromises = [];
+      const files: any[] = [
+        {
+          fileType: 'preview',
+          fileName: previewRes.data.filename,
+          filePath: previewRes.data.url,
+          mimeType: previewRes.data.mimetype,
+          fileSize: previewRes.data.size,
+          storageProvider: previewRes.data.storage
+        }
+      ];
+
+      if (formData.licenseTiers.mp3.enabled && formData.licenseTiers.mp3.file) {
+        filePromises.push(uploadService.uploadSingle(formData.licenseTiers.mp3.file, "beat").then(res => {
+          files.push({
+            fileType: 'masterMp3',
+            fileName: res.data.filename,
+            filePath: res.data.url,
+            mimeType: res.data.mimetype,
+            fileSize: res.data.size,
+            storageProvider: res.data.storage
+          });
+        }));
+      }
+
+      if (formData.licenseTiers.wav.enabled && formData.licenseTiers.wav.file) {
+        filePromises.push(uploadService.uploadSingle(formData.licenseTiers.wav.file, "beat").then(res => {
+          files.push({
+            fileType: 'masterWav',
+            fileName: res.data.filename,
+            filePath: res.data.url,
+            mimeType: res.data.mimetype,
+            fileSize: res.data.size,
+            storageProvider: res.data.storage
+          });
+        }));
+      }
+
+      if (formData.licenseTiers.stems.enabled && formData.licenseTiers.stems.file) {
+        filePromises.push(uploadService.uploadSingle(formData.licenseTiers.stems.file, "archive").then(res => {
+          files.push({
+            fileType: 'stems',
+            fileName: res.data.filename,
+            filePath: res.data.url,
+            mimeType: res.data.mimetype,
+            fileSize: res.data.size,
+            storageProvider: res.data.storage
+          });
+        }));
+      }
+
+      if (formData.licenseTiers.exclusive.enabled && formData.licenseTiers.exclusive.file) {
+        filePromises.push(uploadService.uploadSingle(formData.licenseTiers.exclusive.file, "archive").then(res => {
+          files.push({
+            fileType: 'projectFiles',
+            fileName: res.data.filename,
+            filePath: res.data.url,
+            mimeType: res.data.mimetype,
+            fileSize: res.data.size,
+            storageProvider: res.data.storage
+          });
+        }));
+      }
+
+      await Promise.all(filePromises);
+
+      // 4. Create Beat
+      const selectedGenre = genres.find(g => g.name === formData.genre);
+      
+      const beatData = {
+        title: formData.title,
+        description: formData.description,
+        genreId: selectedGenre?.id,
+        bpm: parseInt(formData.bpm) || 0,
+        musicalKey: formData.key,
+        duration: formData.duration,
+        durationSeconds: formData.durationSeconds,
+        tags: formData.tags,
+        coverImage: coverRes.data.url,
+        previewAudioUrl: previewRes.data.url,
+        files: files,
+        licenseTiers: Object.entries(formData.licenseTiers)
+          .filter(([_, tier]) => tier.enabled)
+          .map(([type, tier]) => ({
+            tierType: type,
+            name: type === 'mp3' ? 'MP3 Lease' : type === 'wav' ? 'WAV Lease' : type === 'stems' ? 'Trackout' : 'Exclusive Rights',
+            price: parseFloat(tier.price),
+            description: type === 'mp3' ? 'Basic license for non-profit use.' : type === 'wav' ? 'Standard lease with untagged WAV.' : type === 'stems' ? 'Full trackout package.' : 'Full ownership transfer.',
+            isExclusive: type === 'exclusive',
+            includedFiles: type === 'mp3' ? ['MP3'] : type === 'wav' ? ['MP3', 'WAV'] : type === 'stems' ? ['MP3', 'WAV', 'Stems'] : ['MP3', 'WAV', 'Stems', 'Project Files']
+          }))
+      };
+
+      await marketplaceService.createBeat(beatData);
+      
       setIsPublishing(false);
       setCurrentStep(4);
-    }, 2000);
+      toast.success("Beat published successfully!");
+    } catch (error: any) {
+      console.error("Upload failed:", error);
+      toast.error(error.response?.data?.message || "Failed to publish beat. Please try again.");
+      setIsPublishing(false);
+    }
   };
 
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 4));
@@ -301,7 +436,7 @@ const Upload = () => {
                         className="w-full appearance-none rounded-2xl border border-border bg-secondary/30 px-4 py-3.5 text-foreground focus:border-orange-500 focus:outline-none transition-all"
                       >
                         <option value="">Select Genre</option>
-                        {genres.map(g => <option key={g} value={g}>{g}</option>)}
+                        {genres.map(g => <option key={g.id} value={g.name}>{g.name}</option>)}
                       </select>
                     </div>
 

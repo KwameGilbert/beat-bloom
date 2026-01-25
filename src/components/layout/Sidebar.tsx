@@ -255,7 +255,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                     >
                       <div className={cn("h-4 w-4 rounded shadow-sm shrink-0", playlist.color)} />
                       <span className="truncate">{playlist.name}</span>
-                      <span className="ml-auto text-xs text-muted-foreground/60">{playlist.beats.length}</span>
+                      <span className="ml-auto text-xs text-muted-foreground/60">{playlist.beatsCount || 0}</span>
                     </Link>
                   );
                 })}

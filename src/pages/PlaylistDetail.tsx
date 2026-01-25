@@ -14,41 +14,73 @@ import {
 import { usePlaylistsStore, playlistColors } from "@/store/playlistsStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Beat } from "@/lib/marketplace";
 
 const PlaylistDetail = () => {
   const { playlistId } = useParams();
   const navigate = useNavigate();
-  const { getPlaylist, removeBeatFromPlaylist, renamePlaylist, changePlaylistColor, deletePlaylist } = usePlaylistsStore();
-  const { currentBeat, isPlaying, playBeat, togglePlay, isLoading } = usePlayerStore();
+  const { 
+    getPlaylist, 
+    removeBeatFromPlaylist, 
+    renamePlaylist, 
+    changePlaylistColor, 
+    deletePlaylist,
+    fetchPlaylistById
+  } = usePlaylistsStore();
+  const { currentBeat, isPlaying, playBeat, togglePlay, isLoading: isPlayerLoading } = usePlayerStore();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editColor, setEditColor] = useState("");
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isFetchingDetail, setIsFetchingDetail] = useState(true);
 
   const playlist = getPlaylist(playlistId || "");
+
+  useEffect(() => {
+    const fetchDetail = async () => {
+      if (playlistId) {
+        setIsFetchingDetail(true);
+        await fetchPlaylistById(playlistId);
+        setIsFetchingDetail(false);
+      }
+    };
+    fetchDetail();
+  }, [playlistId, fetchPlaylistById]);
+
+  if (isFetchingDetail && !playlist) {
+    return (
+      <div className="flex h-[80vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
 
   if (!playlist) {
     return (
       <div className="min-h-screen bg-background pt-4 pb-32">
         <div className="px-4 md:px-6">
-          <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6">
+          <Link to="/home" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6">
             <ArrowLeft className="h-5 w-5" />
             Back
           </Link>
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Music2 className="h-16 w-16 text-muted-foreground mb-4" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary mb-4">
+              <Music2 className="h-8 w-8 text-muted-foreground" />
+            </div>
             <h2 className="text-xl font-bold text-foreground mb-2">Playlist not found</h2>
-            <p className="text-muted-foreground">This playlist may have been deleted.</p>
+            <p className="text-muted-foreground">This playlist may have been deleted or is private.</p>
           </div>
         </div>
       </div>
     );
   }
+
+  const beats = playlist.beats || [];
+  const displayCount = playlist.beatsCount ?? beats.length;
 
   const handlePlayClick = (beat: Beat, e: React.MouseEvent) => {
     e.preventDefault();
@@ -61,15 +93,15 @@ const PlaylistDetail = () => {
   };
 
   const handlePlayAll = () => {
-    if (playlist.beats.length > 0) {
-      playBeat(playlist.beats[0]);
+    if (beats.length > 0) {
+      playBeat(beats[0]);
     }
   };
 
   const handleShufflePlay = () => {
-    if (playlist.beats.length > 0) {
-      const randomIndex = Math.floor(Math.random() * playlist.beats.length);
-      playBeat(playlist.beats[randomIndex]);
+    if (beats.length > 0) {
+      const randomIndex = Math.floor(Math.random() * beats.length);
+      playBeat(beats[randomIndex]);
     }
   };
 
@@ -108,7 +140,7 @@ const PlaylistDetail = () => {
     <div className="min-h-screen bg-background pt-4 pb-32">
       {/* Header */}
       <div className="px-4 md:px-6 mb-6">
-        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6">
+        <Link to="/home" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="h-5 w-5" />
           Back
         </Link>
@@ -159,8 +191,8 @@ const PlaylistDetail = () => {
             ) : (
               <>
                 <h1 className="font-display text-2xl font-bold text-foreground truncate">{playlist.name}</h1>
-                <p className="text-muted-foreground">
-                  {playlist.beats.length} {playlist.beats.length === 1 ? "beat" : "beats"}
+                <p className="text-sm font-medium text-muted-foreground">
+                  {displayCount} {displayCount === 1 ? "beat" : "beats"}
                 </p>
               </>
             )}
@@ -201,7 +233,7 @@ const PlaylistDetail = () => {
         </div>
 
         {/* Play Controls */}
-        {playlist.beats.length > 0 && !isEditing && (
+        {beats.length > 0 && !isEditing && (
           <div className="flex items-center gap-3 mt-6">
             <button
               onClick={handlePlayAll}
@@ -222,7 +254,12 @@ const PlaylistDetail = () => {
 
       {/* Content */}
       <div className="px-4 md:px-6">
-        {playlist.beats.length === 0 ? (
+        {isFetchingDetail && beats.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+             <Loader2 className="h-8 w-8 animate-spin text-orange-500 mb-4" />
+             <p className="text-sm text-muted-foreground">Loading your beats...</p>
+          </div>
+        ) : beats.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-secondary mb-6">
               <Music2 className="h-10 w-10 text-muted-foreground" />
@@ -240,7 +277,7 @@ const PlaylistDetail = () => {
           </div>
         ) : (
           <div className="space-y-2">
-            {playlist.beats.map((beat, index) => {
+            {beats.map((beat, index) => {
               const isCurrentBeat = currentBeat?.id?.toString() === beat.id.toString();
               const isCurrentPlaying = isCurrentBeat && isPlaying;
 
@@ -269,7 +306,7 @@ const PlaylistDetail = () => {
                         isCurrentBeat ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                       )}
                     >
-                      {isCurrentBeat && isLoading ? (
+                      {isCurrentBeat && isPlayerLoading ? (
                         <Loader2 className="h-5 w-5 text-white animate-spin" />
                       ) : isCurrentPlaying ? (
                         <Pause className="h-5 w-5 text-white fill-current" />

@@ -19,7 +19,7 @@ export const uploadService = {
   /**
    * Upload a single file
    */
-  async uploadSingle(file: File, group: 'avatar' | 'cover' | 'beat' | 'general' = 'general'): Promise<UploadResponse> {
+  async uploadSingle(file: File, group: 'avatar' | 'cover' | 'beat' | 'archive' | 'general' = 'general'): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
     

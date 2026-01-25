@@ -184,7 +184,7 @@ const Charts = () => {
 
                 <div className="flex items-center justify-between p-4 bg-card/80 backdrop-blur-sm">
                   <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">{formatPlays(beat.plays)} plays</span>
+                    <span className="text-xs text-muted-foreground">{formatPlays(beat.playsCount)} plays</span>
                     <span className="text-sm font-bold text-orange-500">
                       ${Number(beat.price || (beat.licenseTiers && beat.licenseTiers[0]?.price) || 0).toFixed(2)}
                     </span>
@@ -294,7 +294,7 @@ const Charts = () => {
 
                     {/* Plays - Hidden on mobile */}
                     <div className="hidden sm:block col-span-2 text-center text-sm text-muted-foreground">
-                      {formatPlays(beat.plays)}
+                      {formatPlays(beat.playsCount)}
                     </div>
 
                     {/* Price */}

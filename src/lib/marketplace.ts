@@ -219,6 +219,12 @@ export const marketplaceService = {
   }[]>> {
     return api.get(`/orders/purchases/beat/${beatId}`);
   },
+  /**
+   * Create a new beat
+   */
+  async createBeat(data: any): Promise<SingleResponse<Beat>> {
+    return api.post<SingleResponse<Beat>>('/beats', data);
+  },
 };
 
 export default marketplaceService;

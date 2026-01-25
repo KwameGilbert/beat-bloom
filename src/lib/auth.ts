@@ -242,7 +242,7 @@ export const authService = {
   /**
    * Upgrade to producer role
    */
-  async upgradeToProducer(): Promise<{ data: User }> {
+  async upgradeToProducer(): Promise<{ data: { user: User; accessToken: string; refreshToken?: string } }> {
     return api.post('/auth/upgrade');
   },
 };

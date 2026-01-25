@@ -20,7 +20,7 @@ export const useProfileStore = create<ProfileState>((set) => ({
       if (response.success) {
         const data = response.data;
         if (data.purchases) {
-          data.purchases = data.purchases.map((p: any) => ({
+          data.purchases = data.purchases.map((p: Record<string, any>) => ({
             beat: {
               id: p.beatId,
               producerId: p.producerId || 0,
@@ -34,8 +34,8 @@ export const useProfileStore = create<ProfileState>((set) => ({
               musicalKey: p.musicalKey || "N/A",
               price: p.price || 0,
               tags: [],
-              playsCount: 0,
-              likesCount: 0,
+              playsCount: p.playsCount || 0,
+              likesCount: p.likesCount || 0,
               isExclusiveSold: false,
               status: "active",
               isFeatured: false,
@@ -49,8 +49,8 @@ export const useProfileStore = create<ProfileState>((set) => ({
       } else {
         set({ error: "Failed to fetch profile", isLoading: false });
       }
-    } catch (error: any) {
-      set({ error: error.message || "An error occurred", isLoading: false });
+    } catch (error: Error | any) {
+      set({ error: (error as Error).message || "An error occurred", isLoading: false });
     }
   },
 }));
