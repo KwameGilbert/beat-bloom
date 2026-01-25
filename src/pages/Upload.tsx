@@ -1,33 +1,29 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { 
   Upload as UploadIcon, 
-  Music, 
-  Image as ImageIcon, 
   X, 
   Check, 
   ChevronRight, 
   ChevronLeft,
   Info,
   DollarSign,
-  Tag,
-  Type,
-  FileAudio,
-  Loader2,
-  Lock,
-  Eye,
-  Crown,
-  Sparkles,
-  ToggleLeft,
-  ToggleRight
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEffect } from "react";
 import { uploadService } from "@/lib/upload";
 import { marketplaceService } from "@/lib/marketplace";
 import { useBeatsStore } from "@/store/beatsStore";
 import { toast } from "sonner";
+
+// Components
+import { UploadStepper } from "@/components/upload/UploadStepper";
+import { Step1Files } from "@/components/upload/Step1Files";
+import { Step2Details } from "@/components/upload/Step2Details";
+import { Step3Pricing } from "@/components/upload/Step3Pricing";
+import { Step4Success } from "@/components/upload/Step4Success";
+import { INITIAL_FORM_DATA, type UploadFormData } from "@/components/upload/types";
 
 const steps = [
   { id: 1, title: "Files", icon: UploadIcon },
@@ -36,52 +32,22 @@ const steps = [
   { id: 4, title: "Ready", icon: Check },
 ];
 
-
 const Upload = () => {
   const navigate = useNavigate();
   const { genres, fetchGenres } = useBeatsStore();
   const [currentStep, setCurrentStep] = useState(1);
   const [isPublishing, setIsPublishing] = useState(false);
-  const previewInputRef = useRef<HTMLInputElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
-  const mp3InputRef = useRef<HTMLInputElement>(null);
-  const wavInputRef = useRef<HTMLInputElement>(null);
-  const stemsInputRef = useRef<HTMLInputElement>(null);
-  const exclusiveInputRef = useRef<HTMLInputElement>(null);
-
-  const [formData, setFormData] = useState({
-    title: "",
-    genre: "",
-    bpm: "",
-    key: "",
-    description: "",
-    tags: [] as string[],
-    price: "29.99",
-    duration: "0:00",
-    durationSeconds: 0,
-    previewFile: null as File | null,
-    coverFile: null as File | null,
-    coverPreview: "",
-    // License tier pricing & files
-    licenseTiers: {
-      mp3: { enabled: true, price: "29.99", file: null as File | null },
-      wav: { enabled: true, price: "49.99", file: null as File | null },
-      stems: { enabled: false, price: "99.99", file: null as File | null },
-      exclusive: { enabled: false, price: "499.99", file: null as File | null }
-    }
-  });
+  const [tagInput, setTagInput] = useState("");
+  const [formData, setFormData] = useState<UploadFormData>(INITIAL_FORM_DATA);
 
   useEffect(() => {
     fetchGenres();
   }, [fetchGenres]);
 
-  const [tagInput, setTagInput] = useState("");
-
   const handleAudioChange = (type: "preview" | "mp3" | "wav" | "stems" | "exclusive", e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (type === "preview") {
-        // Calculate duration
         const audio = new Audio();
         audio.src = URL.createObjectURL(file);
         audio.onloadedmetadata = () => {
@@ -103,7 +69,7 @@ const Upload = () => {
           ...prev,
           licenseTiers: {
             ...prev.licenseTiers,
-            [type]: { ...prev.licenseTiers[type as keyof typeof prev.licenseTiers], file: file }
+            [type]: { ...prev.licenseTiers[type], file: file }
           }
         }));
       }
@@ -142,15 +108,12 @@ const Upload = () => {
   const handlePublish = async () => {
     setIsPublishing(true);
     try {
-      // 1. Upload Cover Art
       if (!formData.coverFile) throw new Error("Cover art is required");
       const coverRes = await uploadService.uploadSingle(formData.coverFile, "cover");
       
-      // 2. Upload Preview Audio
       if (!formData.previewFile) throw new Error("Preview audio is required");
       const previewRes = await uploadService.uploadSingle(formData.previewFile, "beat");
 
-      // 3. Upload License Files
       const filePromises = [];
       const files: any[] = [
         {
@@ -163,63 +126,28 @@ const Upload = () => {
         }
       ];
 
-      if (formData.licenseTiers.mp3.enabled && formData.licenseTiers.mp3.file) {
-        filePromises.push(uploadService.uploadSingle(formData.licenseTiers.mp3.file, "beat").then(res => {
-          files.push({
-            fileType: 'masterMp3',
-            fileName: res.data.filename,
-            filePath: res.data.url,
-            mimeType: res.data.mimetype,
-            fileSize: res.data.size,
-            storageProvider: res.data.storage
-          });
-        }));
-      }
-
-      if (formData.licenseTiers.wav.enabled && formData.licenseTiers.wav.file) {
-        filePromises.push(uploadService.uploadSingle(formData.licenseTiers.wav.file, "beat").then(res => {
-          files.push({
-            fileType: 'masterWav',
-            fileName: res.data.filename,
-            filePath: res.data.url,
-            mimeType: res.data.mimetype,
-            fileSize: res.data.size,
-            storageProvider: res.data.storage
-          });
-        }));
-      }
-
-      if (formData.licenseTiers.stems.enabled && formData.licenseTiers.stems.file) {
-        filePromises.push(uploadService.uploadSingle(formData.licenseTiers.stems.file, "archive").then(res => {
-          files.push({
-            fileType: 'stems',
-            fileName: res.data.filename,
-            filePath: res.data.url,
-            mimeType: res.data.mimetype,
-            fileSize: res.data.size,
-            storageProvider: res.data.storage
-          });
-        }));
-      }
-
-      if (formData.licenseTiers.exclusive.enabled && formData.licenseTiers.exclusive.file) {
-        filePromises.push(uploadService.uploadSingle(formData.licenseTiers.exclusive.file, "archive").then(res => {
-          files.push({
-            fileType: 'projectFiles',
-            fileName: res.data.filename,
-            filePath: res.data.url,
-            mimeType: res.data.mimetype,
-            fileSize: res.data.size,
-            storageProvider: res.data.storage
-          });
-        }));
+      const tiers = Object.entries(formData.licenseTiers);
+      for (const [type, tier] of tiers) {
+        if (tier.enabled && tier.file) {
+          const category = (type === 'mp3' || type === 'wav') ? 'beat' : 'archive';
+          const fileType = type === 'mp3' ? 'masterMp3' : type === 'wav' ? 'masterWav' : type === 'stems' ? 'stems' : 'projectFiles';
+          
+          filePromises.push(uploadService.uploadSingle(tier.file, category).then(res => {
+            files.push({
+              fileType,
+              fileName: res.data.filename,
+              filePath: res.data.url,
+              mimeType: res.data.mimetype,
+              fileSize: res.data.size,
+              storageProvider: res.data.storage
+            });
+          }));
+        }
       }
 
       await Promise.all(filePromises);
 
-      // 4. Create Beat
       const selectedGenre = genres.find(g => g.name === formData.genre);
-      
       const beatData = {
         title: formData.title,
         description: formData.description,
@@ -278,596 +206,49 @@ const Upload = () => {
           </button>
         </div>
 
-        {/* Stepper */}
-        <div className="mb-12 relative">
-          <div className="absolute top-1/2 left-0 h-0.5 w-full -translate-y-1/2 bg-secondary" />
-          <div 
-            className="absolute top-1/2 left-0 h-0.5 bg-orange-500 transition-all duration-500 -translate-y-1/2" 
-            style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
-          />
-          <div className="relative flex justify-between">
-            {steps.map((step) => {
-              const Icon = step.icon;
-              const active = currentStep >= step.id;
-              const current = currentStep === step.id;
-
-              return (
-                <div key={step.id} className="flex flex-col items-center">
-                  <div className={cn(
-                    "relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300",
-                    active ? "border-orange-500 bg-orange-500 text-white" : "border-secondary bg-background text-muted-foreground",
-                    current && "ring-4 ring-orange-500/20"
-                  )}>
-                    {active && step.id < currentStep ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
-                  </div>
-                  <span className={cn(
-                    "mt-2 text-xs font-bold uppercase tracking-widest transition-colors",
-                    active ? "text-orange-500" : "text-muted-foreground"
-                  )}>
-                    {step.title}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <UploadStepper steps={steps} currentStep={currentStep} />
 
         {/* Main Card */}
         <div className="relative overflow-hidden rounded-[40px] border border-border bg-card shadow-2xl">
           <div className="p-8 md:p-12">
             <AnimatePresence mode="wait">
               {currentStep === 1 && (
-                <motion.div
-                  key="step1"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-10"
-                >
-                  <div className="grid gap-10 lg:grid-cols-2">
-                    {/* Preview Audio Upload */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Public Preview</label>
-                        <span className="flex items-center gap-1 rounded bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-bold text-blue-500">
-                          <Eye className="h-3 w-3" /> Public
-                        </span>
-                      </div>
-                      <div 
-                        onClick={() => previewInputRef.current?.click()}
-                        className={cn(
-                          "group relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-border bg-secondary/30 transition-all hover:border-orange-500 hover:bg-secondary/50",
-                          formData.previewFile && "border-solid border-green-500 bg-green-500/5 hover:border-green-600"
-                        )}
-                      >
-                        <input type="file" ref={previewInputRef} className="hidden" accept="audio/*" onChange={(e) => handleAudioChange("preview", e)} />
-                        {formData.previewFile ? (
-                          <div className="flex flex-col items-center gap-3 text-center px-4">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-green-500 text-white shadow-lg shadow-green-500/20">
-                              <FileAudio className="h-8 w-8" />
-                            </div>
-                            <div className="space-y-1">
-                              <span className="block text-sm font-black text-foreground truncate max-w-[140px]">{formData.previewFile.name}</span>
-                              <span className="text-[10px] font-bold text-muted-foreground uppercase">Click to change</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-orange-500/10 text-orange-500 transition-transform group-hover:scale-110">
-                              <Music className="h-8 w-8" />
-                            </div>
-                            <div className="mt-6 text-center">
-                              <span className="block font-bold text-foreground">Preview Audio</span>
-                              <span className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">MP3 tagged recommended</span>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Cover Upload */}
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Artwork</label>
-                      <div 
-                        onClick={() => coverInputRef.current?.click()}
-                        className={cn(
-                          "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-[32px] border-2 border-dashed border-border bg-secondary/30 transition-all hover:border-orange-500 hover:bg-secondary/50",
-                          formData.coverPreview && "border-solid border-border bg-background"
-                        )}
-                      >
-                        <input type="file" ref={coverInputRef} className="hidden" accept="image/*" onChange={handleCoverChange} />
-                        {formData.coverPreview ? (
-                          <>
-                            <img src={formData.coverPreview} alt="Preview" className="h-full w-full object-cover transition-transform group-hover:scale-105" />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                              <span className="font-bold text-white uppercase text-xs">Change Art</span>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex flex-col items-center">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-orange-500/10 text-orange-500 transition-transform group-hover:scale-110">
-                              <ImageIcon className="h-8 w-8" />
-                            </div>
-                            <div className="mt-6 text-center">
-                              <span className="block font-bold text-foreground">Cover Art</span>
-                              <span className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">1:1 Ratio (Min 1000px)</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
+                <Step1Files 
+                  formData={formData} 
+                  onAudioChange={handleAudioChange} 
+                  onCoverChange={handleCoverChange} 
+                />
               )}
 
               {currentStep === 2 && (
-                <motion.div
-                  key="step2"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="grid gap-6 md:grid-cols-2">
-                    {/* Title */}
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-bold text-foreground">
-                        <Type className="h-4 w-4 text-orange-500" />
-                        Beat Title
-                      </label>
-                      <input 
-                        type="text" 
-                        value={formData.title}
-                        onChange={(e) => setFormData({...formData, title: e.target.value})}
-                        placeholder="e.g. Midnight Melodies"
-                        className="w-full rounded-2xl border border-border bg-secondary/30 px-4 py-3.5 text-foreground focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all"
-                      />
-                    </div>
-
-                    {/* Genre */}
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-bold text-foreground">
-                        <Music className="h-4 w-4 text-orange-500" />
-                        Genre
-                      </label>
-                      <select 
-                        value={formData.genre}
-                        onChange={(e) => setFormData({...formData, genre: e.target.value})}
-                        className="w-full appearance-none rounded-2xl border border-border bg-secondary/30 px-4 py-3.5 text-foreground focus:border-orange-500 focus:outline-none transition-all"
-                      >
-                        <option value="">Select Genre</option>
-                        {genres.map(g => <option key={g.id} value={g.name}>{g.name}</option>)}
-                      </select>
-                    </div>
-
-                    {/* BPM */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-foreground">BPM</label>
-                      <input 
-                        type="number" 
-                        value={formData.bpm}
-                        onChange={(e) => setFormData({...formData, bpm: e.target.value})}
-                        placeholder="e.g. 140"
-                        className="w-full rounded-2xl border border-border bg-secondary/30 px-4 py-3.5 text-foreground focus:border-orange-500 focus:outline-none transition-all"
-                      />
-                    </div>
-
-                    {/* Key */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-foreground">Musical Key</label>
-                      <input 
-                        type="text" 
-                        value={formData.key}
-                        onChange={(e) => setFormData({...formData, key: e.target.value})}
-                        placeholder="e.g. Am"
-                        className="w-full rounded-2xl border border-border bg-secondary/30 px-4 py-3.5 text-foreground focus:border-orange-500 focus:outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Tags */}
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-bold text-foreground">
-                      <Tag className="h-4 w-4 text-orange-500" />
-                      Tags
-                    </label>
-                    <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-secondary/30 p-2 min-h-[56px] focus-within:border-orange-500 transition-all">
-                      {formData.tags.map(tag => (
-                        <span key={tag} className="flex items-center gap-1 rounded-lg bg-orange-500/20 px-3 py-1.5 text-sm font-bold text-orange-500">
-                          {tag}
-                          <button onClick={() => removeTag(tag)}><X className="h-3 w-3" /></button>
-                        </span>
-                      ))}
-                      <input 
-                        type="text" 
-                        value={tagInput}
-                        onChange={(e) => setTagInput(e.target.value)}
-                        onKeyDown={addTag}
-                        placeholder={formData.tags.length === 0 ? "Add tags (e.g. Dark, Melodic)" : ""}
-                        className="flex-1 min-w-[120px] bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground"
-                      />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground px-1">Press enter to add tags.</p>
-                  </div>
-                </motion.div>
+                <Step2Details 
+                  formData={formData}
+                  genres={genres}
+                  tagInput={tagInput}
+                  setFormData={setFormData}
+                  setTagInput={setTagInput}
+                  onAddTag={addTag}
+                  onRemoveTag={removeTag}
+                />
               )}
 
               {currentStep === 3 && (
-                <motion.div
-                  key="step3"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="flex flex-col items-center justify-center text-center space-y-4 py-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-orange-500/10 text-orange-500">
-                      <DollarSign className="h-8 w-8" />
-                    </div>
-                    <h2 className="text-2xl font-bold">Set Your Pricing</h2>
-                    <p className="text-muted-foreground max-w-md">Configure license tiers and upload corresponding files. Enable the ones you want to offer.</p>
-                  </div>
-
-                  <div className="mx-auto max-w-2xl space-y-4">
-                    {/* MP3 Lease */}
-                    <div className={cn(
-                      "rounded-2xl border-2 p-4 transition-all",
-                      formData.licenseTiers.mp3.enabled ? "border-orange-500/50 bg-orange-500/5" : "border-border bg-secondary/20"
-                    )}>
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/20 text-orange-500">
-                            <FileAudio className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-foreground">MP3 Lease</h3>
-                            <p className="text-xs text-muted-foreground">Tagged MP3 file • Non-profit use</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="relative flex items-center gap-2">
-                            <span className="text-lg font-bold text-muted-foreground">$</span>
-                            <input
-                              type="number"
-                              value={formData.licenseTiers.mp3.price}
-                              onChange={(e) => setFormData({
-                                ...formData,
-                                licenseTiers: { ...formData.licenseTiers, mp3: { ...formData.licenseTiers.mp3, price: e.target.value } }
-                              })}
-                              disabled={!formData.licenseTiers.mp3.enabled}
-                              className="w-24 rounded-xl border border-border bg-secondary/50 px-3 py-2 text-lg font-bold text-center disabled:opacity-50"
-                            />
-                          </div>
-                          <button
-                            onClick={() => setFormData({
-                              ...formData,
-                              licenseTiers: { ...formData.licenseTiers, mp3: { ...formData.licenseTiers.mp3, enabled: !formData.licenseTiers.mp3.enabled } }
-                            })}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            {formData.licenseTiers.mp3.enabled ? <ToggleRight className="h-8 w-8 text-orange-500" /> : <ToggleLeft className="h-8 w-8" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      {formData.licenseTiers.mp3.enabled && (
-                        <div className="mt-4 pt-4 border-t border-border/50">
-                          <div 
-                            onClick={() => mp3InputRef.current?.click()}
-                            className={cn(
-                              "flex items-center justify-between gap-4 rounded-xl border border-dashed border-border p-3 cursor-pointer transition-all hover:border-orange-500/50 hover:bg-orange-500/5",
-                              formData.licenseTiers.mp3.file && "border-solid border-green-500/30 bg-green-500/5"
-                            )}
-                          >
-                            <input type="file" ref={mp3InputRef} className="hidden" accept="audio/mpeg" onChange={(e) => handleAudioChange("mp3", e)} />
-                            <div className="flex items-center gap-3 overflow-hidden">
-                              <div className={cn(
-                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary",
-                                formData.licenseTiers.mp3.file && "bg-green-500 text-white"
-                              )}>
-                                {formData.licenseTiers.mp3.file ? <Check className="h-4 w-4" /> : <UploadIcon className="h-4 w-4" />}
-                              </div>
-                              <span className="text-sm font-medium truncate">
-                                {formData.licenseTiers.mp3.file ? formData.licenseTiers.mp3.file.name : "Upload Tagged MP3"}
-                              </span>
-                            </div>
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase shrink-0">
-                              {formData.licenseTiers.mp3.file ? "Change" : "Browse"}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* WAV Lease */}
-                    <div className={cn(
-                      "rounded-2xl border-2 p-4 transition-all",
-                      formData.licenseTiers.wav.enabled ? "border-orange-500/50 bg-orange-500/5" : "border-border bg-secondary/20"
-                    )}>
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/20 text-orange-500">
-                            <FileAudio className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-foreground">WAV Lease</h3>
-                            <p className="text-xs text-muted-foreground">Untagged MP3 + High-quality WAV</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="relative flex items-center gap-2">
-                            <span className="text-lg font-bold text-muted-foreground">$</span>
-                            <input
-                              type="number"
-                              value={formData.licenseTiers.wav.price}
-                              onChange={(e) => setFormData({
-                                ...formData,
-                                licenseTiers: { ...formData.licenseTiers, wav: { ...formData.licenseTiers.wav, price: e.target.value } }
-                              })}
-                              disabled={!formData.licenseTiers.wav.enabled}
-                              className="w-24 rounded-xl border border-border bg-secondary/50 px-3 py-2 text-lg font-bold text-center disabled:opacity-50"
-                            />
-                          </div>
-                          <button
-                            onClick={() => setFormData({
-                              ...formData,
-                              licenseTiers: { ...formData.licenseTiers, wav: { ...formData.licenseTiers.wav, enabled: !formData.licenseTiers.wav.enabled } }
-                            })}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            {formData.licenseTiers.wav.enabled ? <ToggleRight className="h-8 w-8 text-orange-500" /> : <ToggleLeft className="h-8 w-8" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      {formData.licenseTiers.wav.enabled && (
-                        <div className="mt-4 pt-4 border-t border-border/50">
-                          <div 
-                            onClick={() => wavInputRef.current?.click()}
-                            className={cn(
-                              "flex items-center justify-between gap-4 rounded-xl border border-dashed border-border p-3 cursor-pointer transition-all hover:border-orange-500/50 hover:bg-orange-500/5",
-                              formData.licenseTiers.wav.file && "border-solid border-green-500/30 bg-green-500/5"
-                            )}
-                          >
-                            <input type="file" ref={wavInputRef} className="hidden" accept="audio/wav,audio/x-wav" onChange={(e) => handleAudioChange("wav", e)} />
-                            <div className="flex items-center gap-3 overflow-hidden">
-                              <div className={cn(
-                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary",
-                                formData.licenseTiers.wav.file && "bg-green-500 text-white"
-                              )}>
-                                {formData.licenseTiers.wav.file ? <Check className="h-4 w-4" /> : <UploadIcon className="h-4 w-4" />}
-                              </div>
-                              <span className="text-sm font-medium truncate">
-                                {formData.licenseTiers.wav.file ? formData.licenseTiers.wav.file.name : "Upload Untagged WAV"}
-                              </span>
-                            </div>
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase shrink-0">
-                              {formData.licenseTiers.wav.file ? "Change" : "Browse"}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Stems/Trackout */}
-                    <div className={cn(
-                      "rounded-2xl border-2 p-4 transition-all",
-                      formData.licenseTiers.stems.enabled ? "border-orange-500/50 bg-orange-500/5" : "border-border bg-secondary/20"
-                    )}>
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "flex h-10 w-10 items-center justify-center rounded-lg",
-                            formData.licenseTiers.stems.enabled ? "bg-orange-500/20 text-orange-500" : "bg-muted text-muted-foreground"
-                          )}>
-                            <Sparkles className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-foreground">Trackout (Stems)</h3>
-                            <p className="text-xs text-muted-foreground">MP3 + WAV + Individual stem files</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="relative flex items-center gap-2">
-                            <span className="text-lg font-bold text-muted-foreground">$</span>
-                            <input
-                              type="number"
-                              value={formData.licenseTiers.stems.price}
-                              onChange={(e) => setFormData({
-                                ...formData,
-                                licenseTiers: { ...formData.licenseTiers, stems: { ...formData.licenseTiers.stems, price: e.target.value } }
-                              })}
-                              disabled={!formData.licenseTiers.stems.enabled}
-                              className="w-24 rounded-xl border border-border bg-secondary/50 px-3 py-2 text-lg font-bold text-center disabled:opacity-50"
-                            />
-                          </div>
-                          <button
-                            onClick={() => setFormData({
-                              ...formData,
-                              licenseTiers: { ...formData.licenseTiers, stems: { ...formData.licenseTiers.stems, enabled: !formData.licenseTiers.stems.enabled } }
-                            })}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            {formData.licenseTiers.stems.enabled ? <ToggleRight className="h-8 w-8 text-orange-500" /> : <ToggleLeft className="h-8 w-8" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      {formData.licenseTiers.stems.enabled && (
-                        <div className="mt-4 pt-4 border-t border-border/50">
-                          <div 
-                            onClick={() => stemsInputRef.current?.click()}
-                            className={cn(
-                              "flex items-center justify-between gap-4 rounded-xl border border-dashed border-border p-3 cursor-pointer transition-all hover:border-orange-500/50 hover:bg-orange-500/5",
-                              formData.licenseTiers.stems.file && "border-solid border-green-500/30 bg-green-500/5"
-                            )}
-                          >
-                            <input type="file" ref={stemsInputRef} className="hidden" accept=".zip,.rar" onChange={(e) => handleAudioChange("stems", e)} />
-                            <div className="flex items-center gap-3 overflow-hidden">
-                              <div className={cn(
-                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary",
-                                formData.licenseTiers.stems.file && "bg-green-500 text-white"
-                              )}>
-                                {formData.licenseTiers.stems.file ? <Check className="h-4 w-4" /> : <UploadIcon className="h-4 w-4" />}
-                              </div>
-                              <span className="text-sm font-medium truncate">
-                                {formData.licenseTiers.stems.file ? formData.licenseTiers.stems.file.name : "Upload Stems (ZIP/RAR)"}
-                              </span>
-                            </div>
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase shrink-0">
-                              {formData.licenseTiers.stems.file ? "Change" : "Browse"}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Exclusive Rights */}
-                    <div className={cn(
-                      "rounded-2xl border-2 p-4 transition-all",
-                      formData.licenseTiers.exclusive.enabled ? "border-purple-500/50 bg-purple-500/5" : "border-border bg-secondary/20"
-                    )}>
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "flex h-10 w-10 items-center justify-center rounded-lg",
-                            formData.licenseTiers.exclusive.enabled ? "bg-purple-500/20 text-purple-500" : "bg-muted text-muted-foreground"
-                          )}>
-                            <Crown className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-bold text-foreground">Exclusive Rights</h3>
-                              <span className="rounded bg-purple-500/20 px-2 py-0.5 text-[10px] font-bold uppercase text-purple-500">Premium</span>
-                            </div>
-                            <p className="text-xs text-muted-foreground">Full ownership • Beat removed after sale</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="relative flex items-center gap-2">
-                            <span className="text-lg font-bold text-muted-foreground">$</span>
-                            <input
-                              type="number"
-                              value={formData.licenseTiers.exclusive.price}
-                              onChange={(e) => setFormData({
-                                ...formData,
-                                licenseTiers: { ...formData.licenseTiers, exclusive: { ...formData.licenseTiers.exclusive, price: e.target.value } }
-                              })}
-                              disabled={!formData.licenseTiers.exclusive.enabled}
-                              className="w-24 rounded-xl border border-border bg-secondary/50 px-3 py-2 text-lg font-bold text-center disabled:opacity-50"
-                            />
-                          </div>
-                          <button
-                            onClick={() => setFormData({
-                              ...formData,
-                              licenseTiers: { ...formData.licenseTiers, exclusive: { ...formData.licenseTiers.exclusive, enabled: !formData.licenseTiers.exclusive.enabled } }
-                            })}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            {formData.licenseTiers.exclusive.enabled ? <ToggleRight className="h-8 w-8 text-purple-500" /> : <ToggleLeft className="h-8 w-8" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      {formData.licenseTiers.exclusive.enabled && (
-                        <div className="mt-4 pt-4 border-t border-border/50">
-                          <div 
-                            onClick={() => exclusiveInputRef.current?.click()}
-                            className={cn(
-                              "flex items-center justify-between gap-4 rounded-xl border border-dashed border-border p-3 cursor-pointer transition-all hover:border-orange-500/50 hover:bg-orange-500/5",
-                              formData.licenseTiers.exclusive.file && "border-solid border-purple-500/30 bg-purple-500/5"
-                            )}
-                          >
-                            <input type="file" ref={exclusiveInputRef} className="hidden" accept=".zip,.rar" onChange={(e) => handleAudioChange("exclusive", e)} />
-                            <div className="flex items-center gap-3 overflow-hidden">
-                              <div className={cn(
-                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary",
-                                formData.licenseTiers.exclusive.file && "bg-green-500 text-white"
-                              )}>
-                                {formData.licenseTiers.exclusive.file ? <Check className="h-4 w-4" /> : <UploadIcon className="h-4 w-4" />}
-                              </div>
-                              <span className="text-sm font-medium truncate">
-                                {formData.licenseTiers.exclusive.file ? formData.licenseTiers.exclusive.file.name : "Upload Exclusive Package (ZIP/RAR)"}
-                              </span>
-                            </div>
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase shrink-0">
-                              {formData.licenseTiers.exclusive.file ? "Change" : "Browse"}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4 flex gap-4">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-500/20">
-                        <Info className="h-3 w-3 text-orange-500" />
-                      </span>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        Enable at least one license tier and upload the corresponding file. Prices are in USD.
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
+                <Step3Pricing 
+                  formData={formData}
+                  setFormData={setFormData}
+                  onAudioChange={handleAudioChange}
+                />
               )}
 
               {currentStep === 4 && (
-                <motion.div
-                  key="step4"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="flex flex-col items-center justify-center text-center space-y-8 py-12"
-                >
-                  <div className="relative">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", damping: 12, stiffness: 200 }}
-                      className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full bg-green-500 text-white shadow-xl shadow-green-500/40"
-                    >
-                      <Check className="h-12 w-12" />
-                    </motion.div>
-                    <motion.div
-                      animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.1, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute inset-0 rounded-full bg-green-500"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <h2 className="text-3xl font-bold">Beat Uploaded!</h2>
-                    <p className="text-muted-foreground text-balance px-6">
-                      Your beat <span className="text-foreground font-bold">"{formData.title || "Untitled"}"</span> is now live and ready for discovery.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 w-full max-w-md pt-4">
-                    <button
-                      onClick={() => navigate("/home")}
-                      className="rounded-2xl border border-border bg-secondary px-6 py-4 font-bold text-foreground hover:bg-secondary/80 transition-all"
-                    >
-                      Go to Home
-                    </button>
-                    <button
-                      onClick={() => {
-                        setFormData({
-                          title: "", genre: "", bpm: "", key: "", description: "",
-                          tags: [], price: "29.99", previewFile: null, coverFile: null, coverPreview: "",
-                          licenseTiers: {
-                            mp3: { enabled: true, price: "29.99", file: null },
-                            wav: { enabled: true, price: "49.99", file: null },
-                            stems: { enabled: false, price: "99.99", file: null },
-                            exclusive: { enabled: false, price: "499.99", file: null }
-                          }
-                        });
-                        setCurrentStep(1);
-                      }}
-                      className="rounded-2xl bg-orange-500 px-6 py-4 font-bold text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all"
-                    >
-                      Upload Another
-                    </button>
-                  </div>
-                </motion.div>
+                <Step4Success 
+                  formData={formData}
+                  onNavigateHome={() => navigate("/home")}
+                  onReset={() => {
+                    setFormData(INITIAL_FORM_DATA);
+                    setCurrentStep(1);
+                  }}
+                />
               )}
             </AnimatePresence>
           </div>
@@ -899,9 +280,7 @@ const Upload = () => {
                       isPublishing || 
                       !formData.previewFile || 
                       !formData.coverFile || 
-                      // Must have at least one tier enabled
                       !Object.values(formData.licenseTiers).some(t => t.enabled) ||
-                      // All enabled tiers must have a file
                       Object.values(formData.licenseTiers).some(t => t.enabled && !t.file)
                     }
                     className="flex items-center gap-2 rounded-2xl bg-orange-500 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:bg-orange-600 active:scale-95 disabled:opacity-50"
