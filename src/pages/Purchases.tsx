@@ -57,8 +57,21 @@ const Purchases = () => {
       const files = response.data;
       
       if (files && files.length > 0) {
-        // If it's a direct URL, open it. If multiple, maybe we should show a choice.
-        // For now, we'll download the first one (usually the highest quality available).
+        if (files.length > 1) {
+          toast("Multiple formats available", {
+            description: "This purchase includes multiple file versions.",
+            action: {
+              label: "Download All",
+              onClick: () => {
+                files.forEach((file, index) => {
+                  setTimeout(() => window.open(file.url, "_blank"), index * 300);
+                });
+              },
+            },
+          });
+        }
+        
+        // Always open the primary file (first in list)
         window.open(files[0].url, "_blank");
         toast.success("Download started!");
       } else {
