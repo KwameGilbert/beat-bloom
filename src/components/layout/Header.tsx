@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bell, Search, ShoppingCart, User, Menu, Sun, Moon, X, Settings, LogOut } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCartStore } from "@/store/cartStore";
@@ -8,6 +8,47 @@ import { useAuthStore } from "@/store/authStore";
 import { AnimatePresence, motion } from "framer-motion";
 import { SearchPanel } from "./SearchPanel";
 import type { Beat, Producer } from "@/types";
+
+// Helper function to calculate relevance score
+const calculateRelevanceScore = (
+  text: string = "", 
+  query: string, 
+  priority: number = 1
+): number => {
+  const t = text.toLowerCase();
+  const q = query.toLowerCase();
+  
+  if (t === q) return 100 * priority; // Exact match
+  if (t.startsWith(q)) return 80 * priority; // Starts with
+  if (t.includes(q)) return 60 * priority; // Contains
+  return 0;
+};
+
+const getBeatScore = (beat: Beat, query: string): number => {
+  let score = 0;
+  
+  // Title matches (Highest priority)
+  score += calculateRelevanceScore(beat.title, query, 3);
+  
+  // Producer matches (Medium priority)
+  score += calculateRelevanceScore(beat.producerName, query, 2);
+  
+  // Tag matches (Lower priority)
+  if (Array.isArray(beat.tags)) {
+    const maxTagScore = beat.tags.reduce((acc, tag) => {
+      const tagScore = calculateRelevanceScore(tag, query, 1);
+      return Math.max(acc, tagScore);
+    }, 0);
+    score += maxTagScore;
+  }
+  
+  return score;
+};
+
+const getProducerScore = (producer: Producer, query: string): number => {
+  return calculateRelevanceScore(producer.displayName, query, 2) + 
+         calculateRelevanceScore(producer.username, query, 1);
+};
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -27,7 +68,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [filteredBeats, setFilteredBeats] = useState<Beat[]>([]);
   const [filteredProducers, setFilteredProducers] = useState<Producer[]>([]);
-  // const [isSearching, setIsSearching] = useState(false); // Removed unused state
+  const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -57,42 +98,86 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
     localStorage.setItem("recentSearches", JSON.stringify(newRecent));
   };
 
-  // Debounced search function that calls backend
-  const performSearch = useCallback(async (query: string) => {
-    if (!query.trim()) {
+
+  // Handle search query changes
+  useEffect(() => {
+    const query = searchQuery.trim().toLowerCase();
+    
+    if (!query) {
       setFilteredBeats([]);
       setFilteredProducers([]);
+      setIsSearching(false);
       return;
     }
-    
-    // setIsSearching(true);
-    try {
-      const results = await searchBeats(query);
-      setFilteredBeats(results.beats);
-      setFilteredProducers(results.producers);
-    } catch (error) {
-      console.error('Search error:', error);
-    } finally {
-      // setIsSearching(false);
-    }
-  }, [searchBeats]);
 
-  // Handle search query changes with debounce
-  useEffect(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
+    // 1. INSTANT LOCAL SEARCH
+    const { beats, trendingBeats, featuredBeats, recentBeats, producers } = useBeatsStore.getState();
     
-    debounceRef.current = setTimeout(() => {
-      performSearch(searchQuery);
-    }, 300); // 300ms debounce
+    // Aggregate unique local beats
+    // Aggregate unique local beats
+    const allLocalBeats = [...beats, ...trendingBeats, ...featuredBeats, ...recentBeats];
+    const uniqueLocalBeats = Array.from(new Map(allLocalBeats.map(b => [b.id.toString(), b])).values());
+
+    const localBeatMatches = uniqueLocalBeats
+      .map(b => ({ item: b, score: getBeatScore(b, query) }))
+      .filter(entry => entry.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(entry => entry.item)
+      .slice(0, 5);
+
+    const localProducerMatches = producers
+      .map(p => ({ item: p, score: getProducerScore(p, query) }))
+      .filter(entry => entry.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(entry => entry.item)
+      .slice(0, 3);
+
+    // Update with local results immediately
+    setFilteredBeats(localBeatMatches);
+    setFilteredProducers(localProducerMatches);
+
+    // 2. DEBOUNCED BACKEND SEARCH (SYNC)
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    
+    setIsSearching(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const results = await searchBeats(searchQuery);
+        
+        // Merge and deduplicate (backend results merged with local)
+        setFilteredBeats(prev => {
+          const merged = [...results.beats, ...prev];
+          const unique = Array.from(new Map(merged.map(b => [b.id.toString(), b])).values());
+          
+          // Re-sort based on relevance score to ensure best matches float to top
+          return unique
+            .map(b => ({ item: b, score: getBeatScore(b, query) }))
+            .sort((a, b) => b.score - a.score)
+            .map(entry => entry.item)
+            .slice(0, 8);
+        });
+        
+        setFilteredProducers(prev => {
+          const merged = [...results.producers, ...prev];
+          const unique = Array.from(new Map(merged.map(p => [p.id.toString(), p])).values());
+          
+          return unique
+            .map(p => ({ item: p, score: getProducerScore(p, query) }))
+            .sort((a, b) => b.score - a.score)
+            .map(entry => entry.item)
+            .slice(0, 5);
+        });
+      } catch (error) {
+        console.error('Sync search failed', error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
 
     return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
+      if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [searchQuery, performSearch]);
+  }, [searchQuery, searchBeats]);
 
   // Handle click outside for search and profile dropdown
   useEffect(() => {
@@ -179,6 +264,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
                     filteredBeats={filteredBeats}
                     filteredProducers={filteredProducers}
                     recentSearches={recentSearches}
+                    isSearching={isSearching}
                     onResultClick={(path) => handleResultClick(path, searchQuery)}
                     onRecentClick={(query) => {
                       setSearchQuery(query);

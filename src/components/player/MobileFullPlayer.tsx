@@ -18,6 +18,7 @@ import {
   ListPlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Visualizer } from "./Visualizer";
 import type { Beat, Producer } from "@/lib/marketplace";
 
 interface MobileFullPlayerProps {
@@ -112,7 +113,17 @@ export const MobileFullPlayer = ({
         </div>
 
         {/* Info & Controls */}
-        <div className="flex flex-col px-8 pb-32 pt-8">
+        <div className="flex flex-col px-8 pb-32 pt-8 relative overflow-hidden">
+          {/* Background Visualizer for Mobile Full Screen */}
+          <div className="absolute inset-x-0 bottom-0 h-48 z-[-1] opacity-20 pointer-events-none">
+            <Visualizer 
+              isPlaying={isPlaying} 
+              count={50} 
+              className="h-full w-full" 
+              color="bg-gradient-to-t from-orange-500 to-transparent"
+            />
+          </div>
+          
           {/* Title Row */}
           <div className="flex items-center justify-between mb-8">
             <div className="overflow-hidden pr-4">

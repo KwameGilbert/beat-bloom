@@ -1,6 +1,6 @@
-import { motion } from "framer-motion";
 import { Play, Pause, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Visualizer } from "../player/Visualizer";
 
 interface BeatVisualsProps {
   cover: string;
@@ -48,23 +48,14 @@ export const BeatVisuals = ({
       </div>
 
       {/* Waveform Visualization */}
-      <div className="flex h-12 items-center justify-center rounded-xl bg-secondary/50 px-2">
-        <div className="flex h-[80%] w-full items-center justify-center gap-1">
-          {Array.from({ length: 60 }).map((_, i) => {
-            const height = Math.random() * 80 + 20;
-            const isActive = isPlayingCurrent && i < 20;
-            return (
-              <div
-                key={i}
-                className={cn(
-                  "w-1 rounded-full transition-all",
-                  isActive ? "bg-orange-500" : "bg-muted"
-                )}
-                style={{ height: `${height}%` }}
-              />
-            );
-          })}
-        </div>
+      <div className="flex h-12 items-center justify-center rounded-xl bg-secondary/50 px-4">
+        <Visualizer 
+          isPlaying={isPlayingCurrent} 
+          count={60} 
+          className="h-[80%] w-full" 
+          color={isPlayingCurrent ? "bg-orange-500" : "bg-muted"}
+          isStatic={!isPlayingCurrent}
+        />
       </div>
     </div>
   );

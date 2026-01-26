@@ -7,6 +7,7 @@ import { useLikesStore } from "@/store/likesStore";
 import { useAuthStore } from "@/store/authStore";
 import { usePlaylistsStore } from "@/store/playlistsStore";
 import { AddToPlaylistModal } from "@/components/shared/AddToPlaylistModal";
+import { Visualizer } from "@/components/player/Visualizer";
 import { cn } from "@/lib/utils";
 
 import type { Beat } from "@/types";
@@ -125,6 +126,18 @@ export const BeatCard = ({ beat, playlist }: BeatCardProps) => {
               )}
             </button>
           </div>
+          
+          {/* Visualizer overlay when playing */}
+          {isPlayingCurrent && (
+            <div className="absolute inset-x-0 bottom-0 h-1/4 pointer-events-none p-1">
+              <Visualizer 
+                isPlaying={isPlayingCurrent} 
+                count={20} 
+                className="h-full w-full opacity-60" 
+                color="bg-orange-500"
+              />
+            </div>
+          )}
           
           {/* In Cart Badge */}
           {inCart && (

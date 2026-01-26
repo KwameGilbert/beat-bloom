@@ -15,6 +15,7 @@ import {
   ListPlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Visualizer } from "./Visualizer";
 import type { Beat } from "@/lib/marketplace";
 
 interface DesktopPlayerProps {
@@ -65,8 +66,7 @@ export const DesktopPlayer = ({
   const RepeatIcon = repeat === "one" ? Repeat1 : Repeat;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[70] hidden h-24 items-center justify-between border-t border-border bg-card px-6 md:flex">
-      
+    <div className="fixed bottom-0 left-0 right-0 z-[70] hidden h-24 items-center justify-between border-t border-border bg-card px-6 md:flex pointer-events-auto">
       {/* Left: Info */}
       <div className="flex flex-1 items-center gap-4 min-w-0">
         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md group relative border border-border">
@@ -75,6 +75,17 @@ export const DesktopPlayer = ({
             alt={currentBeat.title}
             className="h-full w-full object-cover" 
           />
+          {/* Cover Visualizer Overlay */}
+          {isPlaying && (
+            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-black/40 flex items-end justify-center pb-1 px-1">
+              <Visualizer 
+                isPlaying={isPlaying} 
+                count={15} 
+                className="h-full w-full" 
+                color="bg-orange-500" 
+              />
+            </div>
+          )}
           <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center cursor-pointer">
             <Maximize2 className="h-5 w-5 text-white" />
           </div>
@@ -149,17 +160,28 @@ export const DesktopPlayer = ({
         
         <div className="flex w-full items-center gap-2 text-xs text-muted-foreground font-medium">
           <span className="w-8 text-right tabular-nums">{formatTime(currentTime)}</span>
-          <input
-            type="range"
-            min={0}
-            max={duration || 100}
-            value={currentTime}
-            onChange={onSeek}
-            className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-800/50 accent-orange-500 hover:accent-orange-400"
-            style={{
-              background: `linear-gradient(to right, #f97316 ${(currentTime / (duration || 1)) * 100}%, #27272a ${(currentTime / (duration || 1)) * 100}%)`
-            }}
-          />
+          <div className="relative flex-1 h-8 flex items-center group/seek">
+            {/* Waveform Visualizer Background for Progress Bar */}
+            <div className="absolute inset-x-0 inset-y-0 opacity-40 transition-opacity group-hover/seek:opacity-60">
+              <Visualizer 
+                isPlaying={isPlaying} 
+                count={60} 
+                className="h-full w-full" 
+                color="bg-orange-500/50" 
+              />
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={duration || 100}
+              value={currentTime}
+              onChange={onSeek}
+              className="h-1 w-full relative z-10 cursor-pointer appearance-none rounded-full bg-zinc-800/30 accent-orange-500 hover:accent-orange-400"
+              style={{
+                background: `linear-gradient(to right, #f97316 ${(currentTime / (duration || 1)) * 100}%, transparent ${(currentTime / (duration || 1)) * 100}%)`
+              }}
+            />
+          </div>
           <span className="w-8 tabular-nums">{formatTime(duration)}</span>
         </div>
       </div>

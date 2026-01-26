@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Play, Pause, SkipForward, X, Loader2 } from "lucide-react";
+import { Visualizer } from "./Visualizer";
 import type { Beat } from "@/lib/marketplace";
 
 interface MobileCompactPlayerProps {
@@ -28,8 +29,17 @@ export const MobileCompactPlayer = ({
   return (
     <div 
       onClick={onExpand}
-      className="fixed bottom-16 left-2 right-2 z-[100] flex h-16 items-center justify-between rounded-lg bg-card/95 px-3 shadow-xl backdrop-blur-lg border border-border md:hidden transition-transform active:scale-[0.98]"
+      className="fixed bottom-16 left-2 right-2 z-[100] flex h-16 items-center justify-between rounded-lg bg-card/95 px-3 shadow-xl backdrop-blur-lg border border-border md:hidden transition-transform active:scale-[0.98] overflow-hidden"
     >
+      {/* Background Visualizer */}
+      <div className="absolute inset-0 z-[-1] opacity-10 pointer-events-none">
+        <Visualizer 
+          isPlaying={isPlaying} 
+          count={30} 
+          className="h-full w-full" 
+          color="bg-orange-500"
+        />
+      </div>
       {/* Simple Progress Bar on Top */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-muted overflow-hidden rounded-t-lg">
         <div 

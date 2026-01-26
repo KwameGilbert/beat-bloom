@@ -10,6 +10,7 @@ interface SearchPanelProps {
   onResultClick: (path: string) => void;
   onRecentClick: (query: string) => void;
   onClearRecent: (query: string) => void;
+  isSearching?: boolean;
 }
 
 export const SearchPanel = ({ 
@@ -19,7 +20,8 @@ export const SearchPanel = ({
   recentSearches,
   onResultClick,
   onRecentClick,
-  onClearRecent
+  onClearRecent,
+  isSearching = false
 }: SearchPanelProps) => {
   const isQueryEmpty = searchQuery.trim() === "";
   const hasResults = !isQueryEmpty && (filteredBeats.length > 0 || filteredProducers.length > 0);
@@ -159,13 +161,14 @@ export const SearchPanel = ({
       </div>
       
       {/* Panel Footer */}
-      {hasResults && (
-        <div className="border-t border-border/50 bg-secondary/30 p-2 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
-            Live Global Results
-          </p>
-        </div>
-      )}
+      <div className="border-t border-border/50 bg-secondary/30 p-2 flex items-center justify-center gap-2">
+        {isSearching && (
+          <div className="h-3 w-3 rounded-full border-2 border-orange-500/30 border-t-orange-500 animate-spin" />
+        )}
+        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+          {isSearching ? "Syncing Global Results..." : "Live Global Results"}
+        </p>
+      </div>
     </motion.div>
   );
 };
