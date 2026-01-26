@@ -12,7 +12,9 @@ import {
 } from "lucide-react";
 import { usePurchasesStore } from "@/store/purchasesStore";
 import { usePlayerStore } from "@/store/playerStore";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const Purchases = () => {
   const { purchases, fetchPurchases, isLoading: isLoadingPurchases } = usePurchasesStore();
@@ -46,6 +48,25 @@ const Purchases = () => {
       togglePlay();
     } else {
       playBeat(beat);
+    }
+  };
+
+  const handleDownload = async (purchaseId: string | number) => {
+    try {
+      const response = await api.get<{ data: any[] }>(`/orders/purchases/${purchaseId}/download`);
+      const files = response.data;
+      
+      if (files && files.length > 0) {
+        // If it's a direct URL, open it. If multiple, maybe we should show a choice.
+        // For now, we'll download the first one (usually the highest quality available).
+        window.open(files[0].url, "_blank");
+        toast.success("Download started!");
+      } else {
+        toast.error("No files found for this purchase. Please contact support.");
+      }
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to retrieve download links.");
     }
   };
 
@@ -175,8 +196,7 @@ const Purchases = () => {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        // In a real app, this would trigger file download
-                        window.open(beat.previewAudioUrl, "_blank");
+                        handleDownload(purchase.id);
                       }}
                       className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors"
                     >
