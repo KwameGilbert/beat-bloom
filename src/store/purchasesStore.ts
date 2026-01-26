@@ -80,6 +80,7 @@ export const usePurchasesStore = create<PurchasesState>()(
           const response = await marketplaceService.getPurchases();
           if (response.success) {
             const mappedPurchases: Purchase[] = (response.data || []).map((p: any) => ({
+              id: p.id,
               beat: {
                 id: p.beatId,
                 producerId: p.producerId || 0,
