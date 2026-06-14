@@ -137,7 +137,7 @@ export const marketplaceService = {
    * Verify a payment
    */
   async verifyPayment(reference: string): Promise<SingleResponse<unknown>> {
-    return api.get<SingleResponse<unknown>>(`/payments/verify/paystack/${reference}`);
+    return api.get<SingleResponse<unknown>>(`/payments/verify/${reference}`);
   },
 
   /**

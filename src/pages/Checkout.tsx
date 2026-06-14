@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { 
   ArrowLeft,
   Lock, 
@@ -19,7 +19,7 @@ import marketplaceService from "@/lib/marketplace";
 const PAYSTACK_PUBLIC_KEY = "pk_test_ec6249c3ede8ab8493f94674dc2308bf6cc4fb49";
 
 // Currency conversion rate (1 USD to GHS)
-const USD_TO_GHS_RATE = 15.5; 
+const USD_TO_GHS_RATE = 15.5;
 
 // Declare Paystack inline handler type
 declare global {
@@ -43,6 +43,10 @@ interface PaystackOptions {
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const referenceParam = searchParams.get("reference");
+  const statusParam = searchParams.get("status");
+
   const { items, subtotal, processingFee, total, removeFromCart, clearCart, fetchCart, isLoading: isLoadingCart } = useCartStore();
   
   const [email, setEmail] = useState("");
@@ -56,7 +60,7 @@ const Checkout = () => {
     fetchCart();
   }, [fetchCart]);
 
-  // Load Paystack script
+  // Load Paystack script dynamically
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://js.paystack.co/v1/inline.js";
@@ -69,18 +73,42 @@ const Checkout = () => {
     };
   }, []);
 
-  const generateReference = () => {
-    return `BEATBLOOM_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  };
+  // Auto-verify payment on mount if reference query parameter exists
+  useEffect(() => {
+    if (referenceParam) {
+      setIsProcessing(true);
+      setOrderError(null);
+      (async () => {
+        try {
+          const verifyResponse = await marketplaceService.verifyPayment(referenceParam);
+          if (verifyResponse.success) {
+            setIsComplete(true);
+            clearCart();
+          } else {
+            setOrderError("Verification failed. Please contact support.");
+          }
+        } catch (error: any) {
+          console.error("Verification error:", error);
+          setOrderError(
+            error.message || "Payment verification failed. Please contact support with reference: " + referenceParam
+          );
+        } finally {
+          setIsProcessing(false);
+        }
+      })();
+    }
+  }, [referenceParam, clearCart]);
 
-  const handlePaystackPayment = async () => {
+  // Handle cancellation query parameter
+  useEffect(() => {
+    if (statusParam === "cancelled") {
+      setOrderError("Payment was cancelled. Please try again.");
+    }
+  }, [statusParam]);
+
+  const handlePayment = async () => {
     if (!email.includes("@")) {
       alert("Please enter a valid email address");
-      return;
-    }
-
-    if (!paystackLoaded || !window.PaystackPop) {
-      alert("Payment system is loading, please try again");
       return;
     }
 
@@ -88,17 +116,14 @@ const Checkout = () => {
     setOrderError(null);
 
     try {
-      // 1. Generate unique reference for this transaction
-      const reference = generateReference();
-      
-      // 2. Create the pending order on our backend FIRST
+      // 1. Create the pending order on our backend FIRST
       const orderResponse = await marketplaceService.createOrder({
         items: items.map(item => ({
           beatId: item.id,
           licenseTierId: item.licenseTierId
         })),
-        paymentMethod: "paystack",
-        paymentReference: reference,
+        paymentMethod: "dynamic",
+        paymentReference: `BB_${Date.now()}`,
         email: email
       });
 
@@ -106,50 +131,46 @@ const Checkout = () => {
         throw new Error("Failed to initialize order on server");
       }
 
-      const amountInGHS = total * USD_TO_GHS_RATE;
+      const orderData = orderResponse.data as any;
 
-      // 3. Open Paystack popup using the same reference
-      const handler = window.PaystackPop.setup({
-        key: PAYSTACK_PUBLIC_KEY,
-        email: email,
-        amount: Math.round(amountInGHS * 100),
-        currency: "GHS",
-        ref: reference,
-        metadata: {
-          items: items.map(item => ({
-            id: item.id,
-            title: item.title,
-            price: item.price || 0,
-          })),
-        },
-        callback: (response: { reference: string }) => {
-          // Payment successful on Paystack side
-          console.log("Payment successful on Paystack!", response.reference);
-          
-          // Handle async verification inside a regular function
-          (async () => {
-            try {
-              // 4. Verify the payment on the backend (Server-to-Server check)
-              // This will mark the order as 'completed' and trigger fulfillment
-              await marketplaceService.verifyPayment(response.reference);
+      if (orderData && orderData.checkoutUrl) {
+        // Redirection flow (Hubtel)
+        window.location.href = orderData.checkoutUrl;
+      } else {
+        // Inline popup flow (Paystack)
+        if (!paystackLoaded || !window.PaystackPop) {
+          throw new Error("Payment gateway is loading. Please try again in a moment.");
+        }
 
-              // 5. Success UI update
-              setIsComplete(true);
-              clearCart();
-            } catch (error) {
-              console.error("Payment verification failed:", error);
-              setOrderError("Payment was successful but verification failed. Please contact support with reference: " + response.reference);
-            } finally {
-              setIsProcessing(false);
-            }
-          })();
-        },
-        onClose: () => {
-          setIsProcessing(false);
-        },
-      });
+        const amountInGHS = total * USD_TO_GHS_RATE;
 
-      handler.openIframe();
+        const handler = window.PaystackPop.setup({
+          key: PAYSTACK_PUBLIC_KEY,
+          email: email,
+          amount: Math.round(amountInGHS * 100),
+          currency: "GHS",
+          ref: orderData.orderNumber || orderData.paymentReference,
+          callback: (response: { reference: string }) => {
+            (async () => {
+              try {
+                await marketplaceService.verifyPayment(response.reference);
+                setIsComplete(true);
+                clearCart();
+              } catch (error: any) {
+                console.error("Payment verification failed:", error);
+                setOrderError("Payment succeeded but verification failed. Please contact support with reference: " + response.reference);
+              } finally {
+                setIsProcessing(false);
+              }
+            })();
+          },
+          onClose: () => {
+            setIsProcessing(false);
+          },
+        });
+
+        handler.openIframe();
+      }
     } catch (error: any) {
       console.error("Order initialization failed:", error);
       setOrderError(error.message || "Could not initialize order. Please try again.");
@@ -255,7 +276,7 @@ const Checkout = () => {
             Checkout
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Complete your purchase securely with Paystack
+            Complete your purchase securely
           </p>
         </div>
 
@@ -296,19 +317,19 @@ const Checkout = () => {
                   <h2 className="font-bold text-foreground">Payment</h2>
                   <div className="flex items-center gap-2">
                     <Lock className="h-4 w-4 text-green-500" />
-                    <span className="text-xs text-muted-foreground">Secured by Paystack</span>
+                    <span className="text-xs text-muted-foreground">Secure Payment Gateway</span>
                   </div>
                 </div>
 
                 <div className="rounded-lg bg-secondary/50 p-4 mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#00C3F7]">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500">
                       <CreditCard className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">Pay with Paystack</p>
+                      <p className="font-medium text-foreground">Pay Securely</p>
                       <p className="text-xs text-muted-foreground">
-                        Card, Bank Transfer, USSD, Mobile Money
+                        Mobile Money, Cards, Bank Transfers
                       </p>
                     </div>
                   </div>
@@ -321,18 +342,18 @@ const Checkout = () => {
                 </p>
 
                 <p className="text-xs text-muted-foreground mt-4">
-                  You'll be redirected to Paystack's secure payment page to complete your purchase.
-                  We accept Visa, Mastercard, Verve, and bank transfers.
+                  You will be routed to a secure payment terminal to complete your transaction.
+                  We accept Mobile Money (MTN, Telecel, AT), Cards (Visa, Mastercard), and bank transfers.
                 </p>
               </div>
 
               {/* Submit Button */}
               <button
-                onClick={handlePaystackPayment}
-                disabled={!isEmailValid || isProcessing || !paystackLoaded}
+                onClick={handlePayment}
+                disabled={!isEmailValid || isProcessing}
                 className={cn(
                   "w-full rounded-full py-4 text-lg font-bold transition-all",
-                  isEmailValid && !isProcessing && paystackLoaded
+                  isEmailValid && !isProcessing
                     ? "bg-orange-500 text-white hover:bg-orange-600"
                     : "bg-secondary text-muted-foreground cursor-not-allowed"
                 )}
@@ -345,8 +366,6 @@ const Checkout = () => {
                     </svg>
                     Processing...
                   </span>
-                ) : !paystackLoaded ? (
-                  "Loading..."
                 ) : (
                   `Pay GH₵ ${(total * USD_TO_GHS_RATE).toFixed(2)}`
                 )}
@@ -355,7 +374,7 @@ const Checkout = () => {
               {/* Security Note */}
               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <Lock className="h-3 w-3" />
-                <span>Your payment is protected by Paystack's bank-grade security</span>
+                <span>Your payment details are protected with bank-grade encryption security</span>
               </div>
             </div>
           </div>
