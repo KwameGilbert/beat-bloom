@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { 
   ArrowLeft,
@@ -8,7 +8,8 @@ import {
   Trash2,
   Music,
   CreditCard,
-  Loader2
+  Loader2,
+  X
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { usePurchasesStore } from "@/store/purchasesStore";
@@ -55,6 +56,14 @@ const Checkout = () => {
   const [paystackLoaded, setPaystackLoaded] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
 
+  // Hubtel modal state
+  const [hubtelModalOpen, setHubtelModalOpen] = useState(false);
+  const [hubtelCheckoutUrl, setHubtelCheckoutUrl] = useState<string | null>(null);
+  const [hubtelReference, setHubtelReference] = useState<string | null>(null);
+  const [iframeLoading, setIframeLoading] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Fetch cart on mount to ensure fresh totals
   useEffect(() => {
     fetchCart();
@@ -73,6 +82,27 @@ const Checkout = () => {
     };
   }, []);
 
+  // Clean up polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Cancel verification and go back to checkout form
+  const cancelVerification = useCallback(() => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+    setIsProcessing(false);
+    setHubtelReference(null);
+    setOrderError(null);
+    navigate("/checkout", { replace: true });
+  }, [navigate]);
+
   // Auto-verify payment on mount if reference query parameter exists
   useEffect(() => {
     if (referenceParam) {
@@ -81,23 +111,25 @@ const Checkout = () => {
       (async () => {
         try {
           const verifyResponse = await marketplaceService.verifyPayment(referenceParam);
-          if (verifyResponse.success) {
+          if (verifyResponse.success && (verifyResponse.data as any)?.verified) {
             setIsComplete(true);
             clearCart();
+            setIsProcessing(false);
           } else {
-            setOrderError("Verification failed. Please contact support.");
+            // Not yet verified (likely pending) - start polling
+            setHubtelReference(referenceParam);
+            startPollingForPayment(referenceParam);
           }
         } catch (error: any) {
           console.error("Verification error:", error);
           setOrderError(
             error.message || "Payment verification failed. Please contact support with reference: " + referenceParam
           );
-        } finally {
           setIsProcessing(false);
         }
       })();
     }
-  }, [referenceParam, clearCart]);
+  }, [referenceParam, clearCart, startPollingForPayment]);
 
   // Handle cancellation query parameter
   useEffect(() => {
@@ -105,6 +137,61 @@ const Checkout = () => {
       setOrderError("Payment was cancelled. Please try again.");
     }
   }, [statusParam]);
+
+  // Handle Hubtel payment completion — poll for status when modal is open
+  const startPollingForPayment = useCallback((reference: string) => {
+    // Poll every 5 seconds to check if payment has completed
+    pollIntervalRef.current = setInterval(async () => {
+      try {
+        const verifyResponse = await marketplaceService.verifyPayment(reference);
+        if (verifyResponse.success && (verifyResponse.data as any)?.verified) {
+          // Payment confirmed!
+          if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+          setHubtelModalOpen(false);
+          setHubtelCheckoutUrl(null);
+          setHubtelReference(null);
+          setIsComplete(true);
+          setIsProcessing(false);
+          clearCart();
+        }
+      } catch {
+        // Payment not yet complete — keep polling
+      }
+    }, 5000);
+  }, [clearCart]);
+
+  // Close Hubtel modal
+  const closeHubtelModal = useCallback(() => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+    setHubtelModalOpen(false);
+    setHubtelCheckoutUrl(null);
+    setIframeLoading(true);
+    setIsProcessing(false);
+
+    // If we have a reference, try verifying one last time
+    if (hubtelReference) {
+      setIsProcessing(true);
+      (async () => {
+        try {
+          const verifyResponse = await marketplaceService.verifyPayment(hubtelReference);
+          if (verifyResponse.success && verifyResponse.data?.verified) {
+            setIsComplete(true);
+            clearCart();
+          } else {
+            setOrderError("Payment was not completed. Please try again.");
+          }
+        } catch {
+          setOrderError("Payment was not completed. Please try again.");
+        } finally {
+          setIsProcessing(false);
+          setHubtelReference(null);
+        }
+      })();
+    }
+  }, [hubtelReference, clearCart]);
 
   const handlePayment = async () => {
     if (!email.includes("@")) {
@@ -124,7 +211,9 @@ const Checkout = () => {
         })),
         paymentMethod: "dynamic",
         paymentReference: `BB_${Date.now()}`,
-        email: email
+        email: email,
+        returnUrl: `${window.location.origin}/checkout`,
+        cancellationUrl: `${window.location.origin}/checkout?status=cancelled`
       });
 
       if (!orderResponse.success) {
@@ -134,8 +223,13 @@ const Checkout = () => {
       const orderData = orderResponse.data as any;
 
       if (orderData && orderData.checkoutUrl) {
-        // Redirection flow (Hubtel)
-        window.location.href = orderData.checkoutUrl;
+        // Hubtel flow — open checkout URL in modal iframe
+        const reference = orderData.orderNumber || orderData.paymentReference;
+        setHubtelCheckoutUrl(orderData.checkoutUrl);
+        setHubtelReference(reference);
+        setHubtelModalOpen(true);
+        setIframeLoading(true);
+        startPollingForPayment(reference);
       } else {
         // Inline popup flow (Paystack)
         if (!paystackLoaded || !window.PaystackPop) {
@@ -185,6 +279,25 @@ const Checkout = () => {
     return (
       <div className="flex h-[80vh] w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  // Auto-verifying payment on mount state
+  if (referenceParam && isProcessing && !isComplete) {
+    return (
+      <div className="flex h-[80vh] w-full flex-col items-center justify-center gap-4 px-4 text-center">
+        <Loader2 className="h-10 w-10 animate-spin text-orange-500" />
+        <h2 className="text-xl font-bold text-foreground">Verifying your payment...</h2>
+        <p className="max-w-md text-sm text-muted-foreground">
+          Checking transaction status with the payment provider. Please do not close or refresh this page.
+        </p>
+        <button
+          onClick={cancelVerification}
+          className="mt-4 rounded-full border border-border bg-card px-6 py-2 text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
+        >
+          Cancel & Return to Checkout
+        </button>
       </div>
     );
   }
@@ -469,6 +582,76 @@ const Checkout = () => {
           </div>
         </div>
       </div>
+
+      {/* ============ Hubtel Checkout Modal ============ */}
+      {hubtelModalOpen && hubtelCheckoutUrl && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={closeHubtelModal}
+          />
+
+          {/* Modal */}
+          <div
+            className="relative z-10 flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl mx-4"
+            style={{ height: 'min(85vh, 680px)' }}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-border bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-3.5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
+                  <Lock className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Secure Checkout</p>
+                  <p className="text-xs text-white/70">Complete your payment below</p>
+                </div>
+              </div>
+              <button
+                onClick={closeHubtelModal}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
+                aria-label="Close payment modal"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Iframe Loading Indicator */}
+            {iframeLoading && (
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16">
+                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                <p className="text-sm text-muted-foreground">Loading payment gateway...</p>
+              </div>
+            )}
+
+            {/* Hubtel Checkout Iframe */}
+            <iframe
+              ref={iframeRef}
+              src={hubtelCheckoutUrl}
+              className={cn(
+                "flex-1 w-full border-0",
+                iframeLoading ? "hidden" : "block"
+              )}
+              title="Hubtel Secure Checkout"
+              onLoad={() => setIframeLoading(false)}
+              allow="payment"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
+            />
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between border-t border-border bg-secondary/30 px-5 py-3">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Lock className="h-3 w-3 text-green-500" />
+                <span>Secured by Hubtel</span>
+              </div>
+              <div className="text-xs font-bold text-orange-500">
+                GH₵ {(total * USD_TO_GHS_RATE).toFixed(2)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

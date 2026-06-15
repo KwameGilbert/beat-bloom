@@ -130,6 +130,8 @@ export const marketplaceService = {
     paymentMethod: string;
     paymentReference: string;
     email: string;
+    returnUrl?: string;
+    cancellationUrl?: string;
   }): Promise<SingleResponse<unknown>> {
     return api.post<SingleResponse<unknown>>('/orders', data);
   },
