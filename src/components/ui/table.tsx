@@ -12,7 +12,8 @@ import {
   Eye,
   RefreshCw,
   Settings2,
-  Check
+  Check,
+  MoreHorizontal
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -107,7 +108,7 @@ export interface TableColumn<T> {
   header: string;
   sortable?: boolean;
   filterable?: boolean;
-  filterType?: "text" | "select"; // Handled automatically by the Excel checklist popover
+  filterType?: "text" | "select";
   filterOptions?: string[];
   render?: (row: T) => React.ReactNode;
   searchable?: boolean;
@@ -139,8 +140,6 @@ function FlexibleTableInternal<T>({
   const [sortKey, setSortKey] = useState<string | null>(defaultSort?.key || null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(defaultSort?.direction || null);
   
-  // Excel/Sheets checklist: key is column key, value is list of allowed values.
-  // If undefined, it means no filter is applied (all checked).
   const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>({});
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => new Set(columns.map((c) => c.key)));
   const [density, setDensity] = useState<"compact" | "moderate" | "relaxed">("moderate");
@@ -148,7 +147,6 @@ function FlexibleTableInternal<T>({
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
 
-  // Popovers coordinate and state
   const [activePopover, setActivePopover] = useState<string | null>(null);
   const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number; width: number } | null>(null);
 
@@ -157,7 +155,6 @@ function FlexibleTableInternal<T>({
 
   const tableWrapperRef = useRef<HTMLDivElement>(null);
 
-  // Close popovers on scroll
   useEffect(() => {
     const handleScroll = () => {
       setActivePopover(null);
@@ -184,7 +181,6 @@ function FlexibleTableInternal<T>({
     setVisibleColumns(new Set(columns.map((c) => c.key)));
   }, [columns]);
 
-  // Positions settings dropdown cleanly below the button
   const openSettingsPopover = (triggerEl: HTMLButtonElement) => {
     const rect = triggerEl.getBoundingClientRect();
     const width = 220;
@@ -197,7 +193,6 @@ function FlexibleTableInternal<T>({
     setActivePopover(null);
   };
 
-  // Positions column popover cleanly below the column header setting button
   const openPopover = (columnKey: string, triggerEl: HTMLButtonElement) => {
     const rect = triggerEl.getBoundingClientRect();
     const width = 240;
@@ -216,11 +211,9 @@ function FlexibleTableInternal<T>({
     setShowSettingsPopover(false);
   };
 
-  // --- Filter and Sort Data ---
   const processedData = useMemo(() => {
     let result = [...data];
 
-    // 1. Global search
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       const searchableKeys = columns
@@ -236,7 +229,6 @@ function FlexibleTableInternal<T>({
       });
     }
 
-    // 2. Excel-style Checkbox filtering
     Object.entries(columnFilters).forEach(([key, allowedValues]) => {
       if (!allowedValues || !Array.isArray(allowedValues)) return;
       result = result.filter((row: any) => {
@@ -246,7 +238,6 @@ function FlexibleTableInternal<T>({
       });
     });
 
-    // 3. Sorting
     if (sortKey && sortDirection) {
       result.sort((a: any, b: any) => {
         const valA = a[sortKey];
@@ -322,68 +313,72 @@ function FlexibleTableInternal<T>({
   return (
     <div className="space-y-4 w-full text-left relative">
       
-      {/* 1. Control Header Panel - Google Sheets Minimalist Style */}
-      {(title || description || actions || columns.length > 0) && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-card/30 backdrop-blur-md rounded-2xl border border-border/80 p-4 shadow-lg">
-          <div className="space-y-1">
-            {title && <h2 className="text-base font-bold text-foreground tracking-tight">{title}</h2>}
-            {description && <p className="text-xs text-muted-foreground">{description}</p>}
+      {/* Page Title Header (Rendered cleanly above the table card container) */}
+      {(title || description || actions) && (
+        <div className="flex items-center justify-between px-1">
+          <div>
+            {title && <h2 className="text-lg font-bold text-foreground tracking-tight">{title}</h2>}
+            {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
           </div>
-          
-          <div className="flex flex-col sm:flex-row items-center gap-3 min-w-0 w-full sm:w-auto">
-            {/* Global Search Input */}
-            <div className="relative w-full sm:w-60">
-              <Input
-                placeholder="Search table..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                icon={<Search className="h-4 w-4" />}
-                className="py-1.5 h-9 bg-background/50 border-border focus:ring-1 focus:ring-orange-500/30"
-              />
-            </div>
-            
-            {/* Page actions & settings gear */}
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-              {actions && <div className="flex items-center shrink-0">{actions}</div>}
-              
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (showSettingsPopover) {
-                    setShowSettingsPopover(false);
-                  } else {
-                    openSettingsPopover(e.currentTarget);
-                  }
-                }}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card/50 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all shadow-sm shrink-0"
-              >
-                <Settings2 className="h-4.5 w-4.5" />
-              </button>
-            </div>
-          </div>
+          {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
         </div>
       )}
 
-      {/* 2. Active Filters Tags / Chips (Excel style summary) */}
-      <AnimatePresence>
-        {activeFiltersCount > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="flex flex-wrap items-center gap-2 overflow-hidden px-1"
+      {/* Main Table Card (Contains Search row + headers + rows + borders) */}
+      <div className="rounded-2xl border border-border/80 bg-card/30 backdrop-blur-md overflow-hidden shadow-lg w-full flex flex-col">
+        
+        {/* Integrated Search Bar directly at the top of the headers */}
+        <div className="relative flex items-center justify-between border-b border-border/80 bg-secondary/10 px-4 py-2">
+          {/* Search Input Box with Outline */}
+          <div className="relative flex flex-1 items-center gap-2 max-w-sm rounded-lg border border-border bg-background/50 px-3 py-1.5 transition-all focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500/20">
+            <Search className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+            <input
+              placeholder="Search table..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-transparent border-0 p-0 text-xs text-foreground placeholder:text-muted-foreground/45 focus:outline-none focus:ring-0 min-w-0"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="text-muted-foreground/60 hover:text-foreground shrink-0 rounded-full p-0.5 hover:bg-secondary"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+          
+          {/* Settings Trigger (Three dots menu) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (showSettingsPopover) {
+                setShowSettingsPopover(false);
+              } else {
+                openSettingsPopover(e.currentTarget);
+              }
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-all shrink-0 ml-2"
           >
-            <span className="text-xs text-muted-foreground font-semibold">Filtered Columns:</span>
+            <MoreHorizontal className="h-4.5 w-4.5" />
+          </button>
+        </div>
+
+        {/* Active Filters Bar (Displays immediately below search bar row when active) */}
+        {activeFiltersCount > 0 && (
+          <div className="flex flex-wrap items-center gap-2 border-b border-border/50 bg-secondary/5 px-4 py-2 text-xs">
+            <span className="text-muted-foreground font-semibold">Filtered Columns:</span>
             
             {searchQuery && (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-secondary/80 border border-border/60 py-1 pl-3 pr-2 text-xs font-medium text-foreground">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-secondary/80 border border-border/60 py-0.5 pl-2.5 pr-1.5 text-[11px] font-medium text-foreground">
                 <span>Search: &quot;{searchQuery}&quot;</span>
                 <button
                   onClick={() => setSearchQuery("")}
                   className="rounded-full p-0.5 hover:bg-border/60 text-muted-foreground hover:text-foreground"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-2.5 w-2.5" />
                 </button>
               </div>
             )}
@@ -394,7 +389,7 @@ function FlexibleTableInternal<T>({
               return (
                 <div
                   key={key}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-secondary/80 border border-border/60 py-1 pl-3 pr-2 text-xs font-medium text-foreground"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-secondary/80 border border-border/60 py-0.5 pl-2.5 pr-1.5 text-[11px] font-medium text-foreground"
                 >
                   <span className="text-muted-foreground">{col.header}:</span>
                   <span className="font-semibold">{filterVal.length} selected</span>
@@ -408,7 +403,7 @@ function FlexibleTableInternal<T>({
                     }}
                     className="rounded-full p-0.5 hover:bg-border/60 text-muted-foreground hover:text-foreground"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-2.5 w-2.5" />
                   </button>
                 </div>
               );
@@ -416,19 +411,17 @@ function FlexibleTableInternal<T>({
 
             <button
               onClick={clearAllFilters}
-              className="text-xs font-bold text-orange-500 hover:text-orange-600 transition-colors px-2 py-1"
+              className="text-[11px] font-bold text-orange-500 hover:text-orange-600 transition-colors px-1"
             >
-              Clear all filters
+              Clear all
             </button>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
 
-      {/* 3. Main Data Table Container */}
-      <div className="rounded-2xl border border-border/80 bg-card/30 backdrop-blur-md overflow-hidden shadow-lg w-full">
+        {/* Scrollable Table View */}
         <div className="overflow-x-auto w-full scrollbar-thin" ref={tableWrapperRef}>
           <table className={cn("w-full text-left border-collapse min-w-[600px] table-auto", className)} {...props}>
-            <thead className="border-b border-border bg-secondary/30">
+            <thead className="border-b border-border bg-secondary/35">
               <tr className="border-b border-border/50 hover:bg-transparent">
                 {columns
                   .filter((col) => visibleColumns.has(col.key))
@@ -451,7 +444,7 @@ function FlexibleTableInternal<T>({
                         <div className="flex items-center justify-between gap-1.5 w-full">
                           <span className="truncate">{col.header}</span>
                           
-                          {/* Column Settings trigger (Google Sheets style dropdown chevron) */}
+                          {/* Column Settings trigger */}
                           {(isSortable || col.filterable !== false) && (
                             <button
                               type="button"
@@ -579,7 +572,7 @@ function FlexibleTableInternal<T>({
               size="sm"
               onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
               disabled={pageIndex === 0}
-              className="h-8.5 w-8.5 p-0 rounded-lg"
+              className="h-8.5 w-8.5 p-0 rounded-lg animate-scale-click"
               aria-label="Previous Page"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -594,7 +587,7 @@ function FlexibleTableInternal<T>({
               size="sm"
               onClick={() => setPageIndex((p) => Math.min(totalPages - 1, p + 1))}
               disabled={pageIndex >= totalPages - 1}
-              className="h-8.5 w-8.5 p-0 rounded-lg"
+              className="h-8.5 w-8.5 p-0 rounded-lg animate-scale-click"
               aria-label="Next Page"
             >
               <ChevronRight className="h-4 w-4" />
@@ -603,9 +596,8 @@ function FlexibleTableInternal<T>({
         </div>
       </div>
 
-      {/* --- Floating Settings Popovers (Outside table scroll structure to prevent clipping) --- */}
+      {/* --- Floating Dropdowns Overlay --- */}
       
-      {/* 1. Backdrop Overlay for active dropdown */}
       <AnimatePresence>
         {(activePopover || showSettingsPopover) && (
           <div 
@@ -618,7 +610,7 @@ function FlexibleTableInternal<T>({
         )}
       </AnimatePresence>
 
-      {/* 2. Column Settings & Filter Popover */}
+      {/* Column Settings Menu */}
       <AnimatePresence>
         {activePopover && popoverPosition && (
           <ColumnPopover
@@ -635,7 +627,7 @@ function FlexibleTableInternal<T>({
         )}
       </AnimatePresence>
 
-      {/* 3. General Table Settings Popover */}
+      {/* General Settings Menu */}
       <AnimatePresence>
         {showSettingsPopover && settingsPopoverPosition && (
           <motion.div
@@ -649,9 +641,9 @@ function FlexibleTableInternal<T>({
               left: settingsPopoverPosition.left,
               width: settingsPopoverPosition.width,
             }}
-            className="z-50 rounded-xl border border-border bg-card/95 backdrop-blur-lg p-3.5 shadow-xl text-left space-y-4 font-sans"
+            className="z-50 rounded-xl border border-border bg-card/95 backdrop-blur-lg p-3.5 shadow-xl text-left space-y-4 font-sans animate-scale-up"
           >
-            {/* Density spacing selection */}
+            {/* Density selection */}
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block px-1">Row Spacing</span>
               <div className="grid grid-cols-3 gap-1 bg-secondary/35 rounded-lg p-1">
@@ -663,7 +655,7 @@ function FlexibleTableInternal<T>({
                     className={cn(
                       "rounded px-2 py-1 text-[10px] font-bold capitalize transition-all",
                       density === opt 
-                        ? "bg-background text-foreground shadow-sm" 
+                        ? "bg-background text-foreground shadow-sm animate-scale-click" 
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
@@ -673,7 +665,7 @@ function FlexibleTableInternal<T>({
               </div>
             </div>
 
-            {/* Visibility toggle list */}
+            {/* Visibility checkbox checklist */}
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block px-1">Visible Columns</span>
               <div className="max-h-40 overflow-y-auto space-y-1.5 px-1 py-0.5 scrollbar-thin">
@@ -682,7 +674,7 @@ function FlexibleTableInternal<T>({
                     key={col.key}
                     type="button"
                     onClick={() => toggleColumnVisibility(col.key)}
-                    className="flex items-center gap-2 w-full text-left text-xs font-semibold text-foreground/80 hover:text-foreground"
+                    className="flex items-center gap-2 w-full text-left text-xs font-semibold text-foreground/80 hover:text-foreground animate-scale-click"
                   >
                     <div className={cn(
                       "flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0",
@@ -698,12 +690,12 @@ function FlexibleTableInternal<T>({
               </div>
             </div>
 
-            {/* Actions list */}
+            {/* Layout options resets */}
             <div className="pt-2 border-t border-border/50 flex items-center justify-between text-[10px] font-bold">
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="text-orange-500 hover:text-orange-600"
+                className="text-orange-500 hover:text-orange-600 animate-scale-click"
               >
                 Reset Filters
               </button>
@@ -714,7 +706,7 @@ function FlexibleTableInternal<T>({
                   setDensity("moderate");
                   setShowSettingsPopover(false);
                 }}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground animate-scale-click"
               >
                 Reset Layout
               </button>
@@ -753,7 +745,6 @@ function ColumnPopover({
   setActivePopover
 }: ColumnPopoverProps) {
   
-  // Extract all unique values from the column dataset
   const uniqueValues = useMemo(() => {
     const values = new Set<string>();
     data.forEach((row: any) => {
@@ -774,7 +765,6 @@ function ColumnPopover({
   const activeFilter = columnFilters[column.key];
 
   const handleCheckboxChange = (value: string) => {
-    // If no filter currently, treat it as all unique values checked
     const currentList = activeFilter ? [...activeFilter] : [...uniqueValues];
     const index = currentList.indexOf(value);
     
@@ -787,7 +777,7 @@ function ColumnPopover({
     setColumnFilters((prev) => {
       const next = { ...prev };
       if (currentList.length === uniqueValues.length) {
-        delete next[column.key]; // No filter needed if everything is checked
+        delete next[column.key];
       } else {
         next[column.key] = currentList;
       }
@@ -830,9 +820,9 @@ function ColumnPopover({
         left: popoverPosition.left,
         width: popoverPosition.width,
       }}
-      className="z-50 rounded-xl border border-border bg-card/95 backdrop-blur-lg p-3 shadow-xl text-left space-y-3 font-sans"
+      className="z-50 rounded-xl border border-border bg-card/95 backdrop-blur-lg p-3 shadow-xl text-left space-y-3 font-sans animate-scale-up"
     >
-      {/* 1. Sorting controls */}
+      {/* 1. Sorting */}
       {column.sortable !== false && (
         <div className="space-y-1">
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block px-2">Sort</span>
@@ -843,7 +833,7 @@ function ColumnPopover({
               setActivePopover(null);
             }}
             className={cn(
-              "flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold hover:bg-secondary/50 transition-colors",
+              "flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold hover:bg-secondary/50 transition-colors animate-scale-click",
               isSortedAsc ? "text-orange-500 bg-orange-500/5" : "text-foreground/80 hover:text-foreground"
             )}
           >
@@ -857,7 +847,7 @@ function ColumnPopover({
               setActivePopover(null);
             }}
             className={cn(
-              "flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold hover:bg-secondary/50 transition-colors",
+              "flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold hover:bg-secondary/50 transition-colors animate-scale-click",
               isSortedDesc ? "text-orange-500 bg-orange-500/5" : "text-foreground/80 hover:text-foreground"
             )}
           >
@@ -867,23 +857,21 @@ function ColumnPopover({
         </div>
       )}
 
-      {/* 2. Checklist Filter controls */}
+      {/* 2. Checklist values filter */}
       {column.filterable !== false && (
         <div className="space-y-2 pt-2 border-t border-border/50">
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block px-2">Filter Values</span>
           
-          {/* Quick value Search input */}
           <div className="relative px-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
             <input
               placeholder="Search values..."
               value={searchVal}
               onChange={e => setSearchVal(e.target.value)}
-              className="w-full rounded-md border border-border bg-background/50 pl-8 pr-2 py-1 text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-orange-500 focus:outline-none"
+              className="w-full rounded-md border border-border bg-background/50 pl-8 pr-2 py-1 text-xs text-foreground placeholder:text-muted-foreground/45 focus:border-orange-500 focus:outline-none"
             />
           </div>
 
-          {/* List of unique value checkboxes */}
           <div className="max-h-40 overflow-y-auto space-y-1.5 px-1 py-1 scrollbar-thin">
             {filteredValues.length > 0 ? (
               filteredValues.map((val: string) => (
@@ -891,7 +879,7 @@ function ColumnPopover({
                   key={val}
                   type="button"
                   onClick={() => handleCheckboxChange(val)}
-                  className="flex items-center gap-2.5 w-full text-left text-xs text-foreground/80 hover:text-foreground font-semibold"
+                  className="flex items-center gap-2.5 w-full text-left text-xs text-foreground/80 hover:text-foreground font-semibold animate-scale-click"
                 >
                   <div className={cn(
                     "flex h-4 w-4 items-center justify-center rounded border transition-all shrink-0",
@@ -909,19 +897,18 @@ function ColumnPopover({
             )}
           </div>
 
-          {/* Filter options buttons */}
           <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40 text-[10px] px-1 font-bold">
             <button
               type="button"
               onClick={handleSelectAll}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground animate-scale-click"
             >
               Select All
             </button>
             <button
               type="button"
               onClick={handleClearAll}
-              className="text-orange-500 hover:text-orange-600"
+              className="text-orange-500 hover:text-orange-600 animate-scale-click"
             >
               Clear
             </button>
