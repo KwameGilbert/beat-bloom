@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { StatsCard } from "@/components/ui/stats-card";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface BeatData {
@@ -294,12 +295,12 @@ export default function ProducerBeats() {
             Manage your beat catalog, configure lease structures, copy links, and audit stats.
           </p>
         </div>
-        <Link
+        <Button
           to="/upload"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-orange-600 shadow-md shadow-orange-500/10 active:scale-95 shrink-0 self-start sm:self-auto"
+          className="rounded-xl px-5 py-2.5 flex items-center gap-2 h-auto text-sm shrink-0 self-start sm:self-auto"
         >
           <Plus className="h-4.5 w-4.5 stroke-[2.5]" /> Upload New Beat
-        </Link>
+        </Button>
       </div>
 
       {/* Quick Metrics Audit Row */}

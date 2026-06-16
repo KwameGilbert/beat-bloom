@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Wallet, CreditCard, ArrowUpRight, CheckCircle2, Clock, X } from "lucide-react";
 import { Table, type TableColumn } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface PayoutData {
@@ -130,12 +131,12 @@ export default function ProducerPayouts() {
               Minimum payout threshold: $50.00
             </p>
           </div>
-          <button
+          <Button
             onClick={() => setIsRequesting(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-6 py-3 font-bold text-white transition-colors hover:bg-orange-600 shadow-lg shadow-orange-500/15"
+            className="px-6 py-3 flex items-center gap-2 h-auto text-sm animate-scale-click"
           >
             Request Payout <ArrowUpRight className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         {/* Payout Method Card */}

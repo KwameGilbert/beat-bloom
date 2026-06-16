@@ -1,5 +1,6 @@
-import { FileText } from "lucide-react";
+import { FileText, DollarSign, Wallet, FileCheck2 } from "lucide-react";
 import { Table, type TableColumn } from "@/components/ui/table";
+import { StatsCard } from "@/components/ui/stats-card";
 
 interface SaleData {
   id: string;
@@ -117,10 +118,10 @@ export default function ProducerSales() {
   ];
 
   return (
-    <div className="space-y-8 p-6 md:p-8 pb-20">
+    <div className="space-y-8 p-6 md:p-8 pb-20 text-left">
       {/* Title */}
       <div>
-        <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
+        <h1 className="font-display text-2xl font-black text-foreground sm:text-3xl tracking-tight">
           Sales & Earnings
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -130,35 +131,28 @@ export default function ProducerSales() {
 
       {/* Metrics Row */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-border bg-card p-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Gross Earnings
-          </p>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-foreground">$1,452.88</span>
-            <span className="text-xs font-medium text-green-500">+10.2%</span>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Lifetime revenue before fees</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Net Earnings
-          </p>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-foreground">$1,234.95</span>
-            <span className="text-xs font-medium text-green-500">+8.7%</span>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Available balance after platform cut</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Active Orders
-          </p>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-foreground">53</span>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Total individual licenses sold</p>
-        </div>
+        <StatsCard
+          title="Gross Earnings"
+          value="$1,452.88"
+          change={10.2}
+          changeLabel="vs last month"
+          icon={<DollarSign className="h-4 w-4" />}
+          variant="compact"
+        />
+        <StatsCard
+          title="Net Earnings"
+          value="$1,234.95"
+          change={8.7}
+          changeLabel="vs last month"
+          icon={<Wallet className="h-4 w-4" />}
+          variant="compact"
+        />
+        <StatsCard
+          title="Active Orders"
+          value="53"
+          icon={<FileCheck2 className="h-4 w-4" />}
+          variant="compact"
+        />
       </div>
 
       {/* Flexible Table */}
