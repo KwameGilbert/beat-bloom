@@ -342,6 +342,16 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
                       </div>
 
                       {/* Menu Items */}
+                      {(user?.role === 'producer' || user?.role === 'vendor') && (
+                        <Link
+                          to="/producer/dashboard"
+                          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+                          Dashboard
+                        </Link>
+                      )}
                       <Link
                         to="/profile"
                         className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary transition-colors"

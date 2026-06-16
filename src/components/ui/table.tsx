@@ -356,8 +356,13 @@ function FlexibleTableInternal<T>({
 
   const handleSort = (key: string, direction?: "asc" | "desc") => {
     if (direction) {
-      setSortKey(key);
-      setSortDirection(direction);
+      if (sortKey === key && sortDirection === direction) {
+        setSortKey(null);
+        setSortDirection(null);
+      } else {
+        setSortKey(key);
+        setSortDirection(direction);
+      }
     } else {
       if (sortKey === key) {
         if (sortDirection === "asc") {
