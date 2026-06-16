@@ -91,6 +91,28 @@ const Checkout = () => {
     };
   }, []);
 
+  // Handle Hubtel payment completion — poll for status when modal is open
+  const startPollingForPayment = useCallback((reference: string) => {
+    // Poll every 5 seconds to check if payment has completed
+    pollIntervalRef.current = setInterval(async () => {
+      try {
+        const verifyResponse = await marketplaceService.verifyPayment(reference);
+        if (verifyResponse.success && (verifyResponse.data as any)?.verified) {
+          // Payment confirmed!
+          if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+          setHubtelModalOpen(false);
+          setHubtelCheckoutUrl(null);
+          setHubtelReference(null);
+          setIsComplete(true);
+          setIsProcessing(false);
+          clearCart();
+        }
+      } catch {
+        // Payment not yet complete — keep polling
+      }
+    }, 5000);
+  }, [clearCart]);
+
   // Cancel verification and go back to checkout form
   const cancelVerification = useCallback(() => {
     if (pollIntervalRef.current) {
@@ -138,28 +160,6 @@ const Checkout = () => {
     }
   }, [statusParam]);
 
-  // Handle Hubtel payment completion — poll for status when modal is open
-  const startPollingForPayment = useCallback((reference: string) => {
-    // Poll every 5 seconds to check if payment has completed
-    pollIntervalRef.current = setInterval(async () => {
-      try {
-        const verifyResponse = await marketplaceService.verifyPayment(reference);
-        if (verifyResponse.success && (verifyResponse.data as any)?.verified) {
-          // Payment confirmed!
-          if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-          setHubtelModalOpen(false);
-          setHubtelCheckoutUrl(null);
-          setHubtelReference(null);
-          setIsComplete(true);
-          setIsProcessing(false);
-          clearCart();
-        }
-      } catch {
-        // Payment not yet complete — keep polling
-      }
-    }, 5000);
-  }, [clearCart]);
-
   // Close Hubtel modal
   const closeHubtelModal = useCallback(() => {
     if (pollIntervalRef.current) {
@@ -177,7 +177,7 @@ const Checkout = () => {
       (async () => {
         try {
           const verifyResponse = await marketplaceService.verifyPayment(hubtelReference);
-          if (verifyResponse.success && verifyResponse.data?.verified) {
+          if (verifyResponse.success && (verifyResponse.data as any)?.verified) {
             setIsComplete(true);
             clearCart();
           } else {
