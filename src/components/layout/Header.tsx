@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Bell, Search, ShoppingCart, User, Menu, Sun, Moon, X, Settings, LogOut } from "lucide-react";
+import { Bell, Search, ShoppingCart, User, Menu, Sun, Moon, X, Settings, LogOut, LayoutDashboard } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCartStore } from "@/store/cartStore";
 import { useThemeStore } from "@/store/themeStore";

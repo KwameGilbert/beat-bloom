@@ -149,33 +149,98 @@ function FlexibleTableInternal<T>({
 
   const [activePopover, setActivePopover] = useState<string | null>(null);
   const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [activeTrigger, setActiveTrigger] = useState<HTMLButtonElement | null>(null);
 
   const [showSettingsPopover, setShowSettingsPopover] = useState(false);
   const [settingsPopoverPosition, setSettingsPopoverPosition] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [settingsTrigger, setSettingsTrigger] = useState<HTMLButtonElement | null>(null);
 
   const tableWrapperRef = useRef<HTMLDivElement>(null);
   const settingsPopoverRef = useRef<HTMLDivElement>(null);
 
-  // Close popovers on page or table container scroll
+  // Dynamically update and reposition popovers on scroll or window resize
   useEffect(() => {
-    const handleScroll = () => {
-      setActivePopover(null);
-      setShowSettingsPopover(false);
+    const updatePosition = () => {
+      if (activePopover && activeTrigger) {
+        const rect = activeTrigger.getBoundingClientRect();
+        const width = 240;
+        
+        // Hide popover if the column header scrolls completely out of view of the table scroll window
+        const tableWrapper = tableWrapperRef.current;
+        if (tableWrapper) {
+          const wrapperRect = tableWrapper.getBoundingClientRect();
+          if (rect.right < wrapperRect.left || rect.left > wrapperRect.right) {
+            setActivePopover(null);
+            setActiveTrigger(null);
+            return;
+          }
+        }
+
+        // Hide popover if it scrolls out of the viewport vertically
+        if (rect.bottom < 0 || rect.top > window.innerHeight) {
+          setActivePopover(null);
+          setActiveTrigger(null);
+          return;
+        }
+
+        let left = rect.left;
+        if (left + width > window.innerWidth) {
+          left = window.innerWidth - width - 16;
+        }
+        left = Math.max(16, left);
+
+        setPopoverPosition({
+          top: rect.bottom + 4,
+          left: left,
+          width: width
+        });
+      }
+
+      if (showSettingsPopover && settingsTrigger) {
+        const rect = settingsTrigger.getBoundingClientRect();
+        const width = 220;
+
+        // Hide settings popover if it scrolls out of the viewport vertically
+        if (rect.bottom < 0 || rect.top > window.innerHeight) {
+          setShowSettingsPopover(false);
+          setSettingsTrigger(null);
+          return;
+        }
+
+        let left = rect.right - width;
+        if (left + width > window.innerWidth) {
+          left = window.innerWidth - width - 16;
+        }
+        left = Math.max(16, left);
+
+        setSettingsPopoverPosition({
+          top: rect.bottom + 4,
+          left: left,
+          width: width
+        });
+      }
     };
+
+    updatePosition(); // Initial calculation on open
+
+    window.addEventListener("scroll", updatePosition, { passive: true });
+    window.addEventListener("resize", updatePosition);
+    
     const tableWrapper = tableWrapperRef.current;
     if (tableWrapper) {
-      tableWrapper.addEventListener("scroll", handleScroll);
+      tableWrapper.addEventListener("scroll", updatePosition, { passive: true });
     }
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      if (tableWrapper) {
-        tableWrapper.removeEventListener("scroll", handleScroll);
-      }
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [activePopover, showSettingsPopover]);
 
-  // Centralized click-away handler (no screen-blocking backdrop overlay)
+    return () => {
+      window.removeEventListener("scroll", updatePosition);
+      window.removeEventListener("resize", updatePosition);
+      if (tableWrapper) {
+        tableWrapper.removeEventListener("scroll", updatePosition);
+      }
+    };
+  }, [activePopover, activeTrigger, showSettingsPopover, settingsTrigger]);
+
+  // Centralized click-away handler
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
       const target = event.target as Node;
@@ -192,6 +257,7 @@ function FlexibleTableInternal<T>({
         });
         if (popoverEl && !popoverEl.contains(target) && !isTriggerClick) {
           setActivePopover(null);
+          setActiveTrigger(null);
         }
       }
 
@@ -201,6 +267,7 @@ function FlexibleTableInternal<T>({
         const isTriggerClick = trigger && trigger.contains(target);
         if (!settingsPopoverRef.current.contains(target) && !isTriggerClick) {
           setShowSettingsPopover(false);
+          setSettingsTrigger(null);
         }
       }
     }
@@ -218,33 +285,17 @@ function FlexibleTableInternal<T>({
   }, [columns]);
 
   const openSettingsPopover = (triggerEl: HTMLButtonElement) => {
-    const rect = triggerEl.getBoundingClientRect();
-    const width = 220;
-    setSettingsPopoverPosition({
-      top: rect.bottom + window.scrollY + 4,
-      left: Math.max(16, rect.right + window.scrollX - width),
-      width: width
-    });
+    setSettingsTrigger(triggerEl);
     setShowSettingsPopover(true);
     setActivePopover(null);
+    setActiveTrigger(null);
   };
 
   const openPopover = (columnKey: string, triggerEl: HTMLButtonElement) => {
-    const rect = triggerEl.getBoundingClientRect();
-    const width = 240;
-    let left = rect.left + window.scrollX;
-    if (left + width > window.innerWidth) {
-      left = window.innerWidth - width - 16;
-    }
-    left = Math.max(16, left);
-
-    setPopoverPosition({
-      top: rect.bottom + window.scrollY + 4,
-      left: left,
-      width: width
-    });
+    setActiveTrigger(triggerEl);
     setActivePopover(columnKey);
     setShowSettingsPopover(false);
+    setSettingsTrigger(null);
   };
 
   const processedData = useMemo(() => {
