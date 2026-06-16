@@ -41,48 +41,62 @@ export const AppRoutes = () => {
       {/* Auth Routes - Only accessible when NOT logged in */}
       <Route element={<AuthLayout />}>
         <Route path="/welcome" element={<Welcome />} />
-        <Route path="/login" element={
-          <GuestRoute>
-            <Login />
-          </GuestRoute>
-        } />
-        <Route path="/signup" element={
-          <GuestRoute>
-            <Signup />
-          </GuestRoute>
-        } />
-        <Route path="/forgot-password" element={
-          <GuestRoute>
-            <ForgotPassword />
-          </GuestRoute>
-        } />
-        <Route path="/reset-password" element={
-          <GuestRoute>
-            <ResetPassword />
-          </GuestRoute>
-        } />
-        
+        <Route
+          path="/login"
+          element={
+            <GuestRoute>
+              <Login />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <GuestRoute>
+              <Signup />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <GuestRoute>
+              <ForgotPassword />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <GuestRoute>
+              <ResetPassword />
+            </GuestRoute>
+          }
+        />
+
         {/* OAuth Callback - handles redirect from Google, etc. */}
         <Route path="/oauth/callback" element={<OAuthCallback />} />
 
         {/* Email Verification */}
         <Route path="/verify-email" element={<VerifyEmail />} />
       </Route>
-      
+
       {/* Main App Routes */}
-      <Route element={
-        <AnimatePresence mode="wait">
-          <motion.div 
-            key={location.pathname}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="h-full w-full"
-          >
-            <Layout />
-          </motion.div>
-        </AnimatePresence>
-      }>
+      <Route
+        element={
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="h-full w-full"
+            >
+              <Layout />
+            </motion.div>
+          </AnimatePresence>
+        }
+      >
         {/* Public Routes - Accessible to everyone */}
         <Route path="/" element={<Index />} />
         <Route path="/home" element={<Index />} />
@@ -90,80 +104,122 @@ export const AppRoutes = () => {
         <Route path="/browse" element={<Browse />} />
         <Route path="/charts" element={<Charts />} />
         <Route path="/producer/:id" element={<ProducerProfile />} />
-        
+
         {/* Protected Routes - Require authentication */}
-        <Route path="/cart" element={
-          <ProtectedRoute>
-            <Cart />
-          </ProtectedRoute>
-        } />
-        <Route path="/checkout" element={
-          <ProtectedRoute>
-            <Checkout />
-          </ProtectedRoute>
-        } />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        } />
-        <Route path="/profile/edit" element={
-          <ProtectedRoute>
-            <EditProfile />
-          </ProtectedRoute>
-        } />
-        <Route path="/settings" element={
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        } />
-        <Route path="/settings/password" element={
-          <ProtectedRoute>
-            <PasswordSettings />
-          </ProtectedRoute>
-        } />
-        <Route path="/settings/2fa" element={
-          <ProtectedRoute>
-            <TwoFactorAuth />
-          </ProtectedRoute>
-        } />
-        <Route path="/settings/payouts" element={
-          <ProtectedRoute requiredRole="producer">
-            <PayoutMethods />
-          </ProtectedRoute>
-        } />
-        <Route path="/settings/billing" element={
-          <ProtectedRoute>
-            <BillingHistory />
-          </ProtectedRoute>
-        } />
-        <Route path="/liked" element={
-          <ProtectedRoute>
-            <Liked />
-          </ProtectedRoute>
-        } />
-        <Route path="/recent" element={
-          <ProtectedRoute>
-            <Recent />
-          </ProtectedRoute>
-        } />
-        <Route path="/purchases" element={
-          <ProtectedRoute>
-            <Purchases />
-          </ProtectedRoute>
-        } />
-        <Route path="/playlist/:playlistId" element={
-          <ProtectedRoute>
-            <PlaylistDetail />
-          </ProtectedRoute>
-        } />
-        
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <Cart />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile/edit"
+          element={
+            <ProtectedRoute>
+              <EditProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings/password"
+          element={
+            <ProtectedRoute>
+              <PasswordSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings/2fa"
+          element={
+            <ProtectedRoute>
+              <TwoFactorAuth />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings/payouts"
+          element={
+            <ProtectedRoute requiredRole="producer">
+              <PayoutMethods />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings/billing"
+          element={
+            <ProtectedRoute>
+              <BillingHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/liked"
+          element={
+            <ProtectedRoute>
+              <Liked />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recent"
+          element={
+            <ProtectedRoute>
+              <Recent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/purchases"
+          element={
+            <ProtectedRoute>
+              <Purchases />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/playlist/:playlistId"
+          element={
+            <ProtectedRoute>
+              <PlaylistDetail />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Producer-only Routes */}
-        <Route path="/upload" element={
-          <ProtectedRoute requiredRole="producer">
-            <Upload />
-          </ProtectedRoute>
-        } />
+        <Route
+          path="/upload"
+          element={
+            <ProtectedRoute requiredRole="producer">
+              <Upload />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
       <Route path="*" element={<NotFound />} />
