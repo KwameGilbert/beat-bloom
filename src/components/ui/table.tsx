@@ -154,7 +154,9 @@ function FlexibleTableInternal<T>({
   const [settingsPopoverPosition, setSettingsPopoverPosition] = useState<{ top: number; left: number; width: number } | null>(null);
 
   const tableWrapperRef = useRef<HTMLDivElement>(null);
+  const settingsPopoverRef = useRef<HTMLDivElement>(null);
 
+  // Close popovers on page or table container scroll
   useEffect(() => {
     const handleScroll = () => {
       setActivePopover(null);
@@ -164,13 +166,47 @@ function FlexibleTableInternal<T>({
     if (tableWrapper) {
       tableWrapper.addEventListener("scroll", handleScroll);
     }
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       if (tableWrapper) {
         tableWrapper.removeEventListener("scroll", handleScroll);
       }
       window.removeEventListener("scroll", handleScroll);
     };
+  }, [activePopover, showSettingsPopover]);
+
+  // Centralized click-away handler (no screen-blocking backdrop overlay)
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      const target = event.target as Node;
+
+      // Handle column filters popover click-away
+      if (activePopover) {
+        const popoverEl = document.getElementById("column-settings-popover");
+        const triggers = document.querySelectorAll(".column-settings-trigger");
+        let isTriggerClick = false;
+        triggers.forEach((trigger) => {
+          if (trigger.contains(target)) {
+            isTriggerClick = true;
+          }
+        });
+        if (popoverEl && !popoverEl.contains(target) && !isTriggerClick) {
+          setActivePopover(null);
+        }
+      }
+
+      // Handle settings gear popover click-away
+      if (showSettingsPopover && settingsPopoverRef.current) {
+        const trigger = document.getElementById("table-settings-trigger");
+        const isTriggerClick = trigger && trigger.contains(target);
+        if (!settingsPopoverRef.current.contains(target) && !isTriggerClick) {
+          setShowSettingsPopover(false);
+        }
+      }
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [activePopover, showSettingsPopover]);
 
   useEffect(() => {
@@ -313,7 +349,7 @@ function FlexibleTableInternal<T>({
   return (
     <div className="space-y-4 w-full text-left relative">
       
-      {/* Page Title Header (Rendered cleanly above the table card container) */}
+      {/* Page Title Header */}
       {(title || description || actions) && (
         <div className="flex items-center justify-between px-1">
           <div>
@@ -329,8 +365,8 @@ function FlexibleTableInternal<T>({
         
         {/* Integrated Search Bar directly at the top of the headers */}
         <div className="relative flex items-center justify-between border-b border-border/80 bg-secondary/10 px-4 py-2">
-          {/* Search Input Box with Outline */}
-          <div className="relative flex flex-1 items-center gap-2 max-w-sm rounded-lg border border-border bg-background/50 px-3 py-1.5 transition-all focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500/20">
+          {/* Search Input Box with Outline (less round corner md style) */}
+          <div className="relative flex flex-1 items-center gap-2 max-w-sm rounded-md border border-border bg-background/50 px-3 py-1.5 transition-all focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500/20">
             <Search className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
             <input
               placeholder="Search table..."
@@ -351,6 +387,7 @@ function FlexibleTableInternal<T>({
           
           {/* Settings Trigger (Three dots menu) */}
           <button
+            id="table-settings-trigger"
             type="button"
             onClick={(e) => {
               e.stopPropagation();
@@ -366,7 +403,7 @@ function FlexibleTableInternal<T>({
           </button>
         </div>
 
-        {/* Active Filters Bar (Displays immediately below search bar row when active) */}
+        {/* Active Filters Bar */}
         {activeFiltersCount > 0 && (
           <div className="flex flex-wrap items-center gap-2 border-b border-border/50 bg-secondary/5 px-4 py-2 text-xs">
             <span className="text-muted-foreground font-semibold">Filtered Columns:</span>
@@ -444,7 +481,7 @@ function FlexibleTableInternal<T>({
                         <div className="flex items-center justify-between gap-1.5 w-full">
                           <span className="truncate">{col.header}</span>
                           
-                          {/* Column Settings trigger */}
+                          {/* Column Settings trigger button */}
                           {(isSortable || col.filterable !== false) && (
                             <button
                               type="button"
@@ -457,7 +494,7 @@ function FlexibleTableInternal<T>({
                                 }
                               }}
                               className={cn(
-                                "flex h-6 w-6 items-center justify-center rounded-md transition-all hover:bg-secondary/60 hover:text-foreground shrink-0",
+                                "column-settings-trigger flex h-6 w-6 items-center justify-center rounded-md transition-all hover:bg-secondary/60 hover:text-foreground shrink-0",
                                 isFiltered || isSorted 
                                   ? "text-orange-500 bg-orange-500/10 opacity-100" 
                                   : "text-muted-foreground/45 opacity-0 group-hover:opacity-100 focus:opacity-100"
@@ -596,21 +633,7 @@ function FlexibleTableInternal<T>({
         </div>
       </div>
 
-      {/* --- Floating Dropdowns Overlay --- */}
-      
-      <AnimatePresence>
-        {(activePopover || showSettingsPopover) && (
-          <div 
-            className="fixed inset-0 z-40 bg-transparent"
-            onClick={() => {
-              setActivePopover(null);
-              setShowSettingsPopover(false);
-            }}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Column Settings Menu */}
+      {/* --- Column Settings Menu --- */}
       <AnimatePresence>
         {activePopover && popoverPosition && (
           <ColumnPopover
@@ -627,10 +650,11 @@ function FlexibleTableInternal<T>({
         )}
       </AnimatePresence>
 
-      {/* General Settings Menu */}
+      {/* --- General Settings Menu --- */}
       <AnimatePresence>
         {showSettingsPopover && settingsPopoverPosition && (
           <motion.div
+            ref={settingsPopoverRef}
             initial={{ opacity: 0, y: 5, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.95 }}
@@ -665,7 +689,7 @@ function FlexibleTableInternal<T>({
               </div>
             </div>
 
-            {/* Visibility checkbox checklist */}
+            {/* Visibility checkboxes */}
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block px-1">Visible Columns</span>
               <div className="max-h-40 overflow-y-auto space-y-1.5 px-1 py-0.5 scrollbar-thin">
@@ -690,7 +714,7 @@ function FlexibleTableInternal<T>({
               </div>
             </div>
 
-            {/* Layout options resets */}
+            {/* Resets */}
             <div className="pt-2 border-t border-border/50 flex items-center justify-between text-[10px] font-bold">
               <button
                 type="button"
@@ -809,11 +833,8 @@ function ColumnPopover({
   const isSortedDesc = sortKey === column.key && sortDirection === "desc";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 5, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 5, scale: 0.95 }}
-      transition={{ duration: 0.1 }}
+    <div
+      id="column-settings-popover"
       style={{
         position: "fixed",
         top: popoverPosition.top,
@@ -915,7 +936,7 @@ function ColumnPopover({
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
 
