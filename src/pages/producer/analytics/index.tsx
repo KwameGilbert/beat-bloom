@@ -1,6 +1,22 @@
 import { useState } from "react";
 import { AreaChart, BarChart } from "@/components/ui/analytics-charts";
 import { BarChart3, TrendingUp, Music, Play, Heart } from "lucide-react";
+import { Table, type TableColumn } from "@/components/ui/table";
+
+interface TopBeatData {
+  id: string;
+  title: string;
+  plays: number;
+  likes: number;
+  revenue: number;
+}
+
+const mockTopBeats: TopBeatData[] = [
+  { id: "1", title: "Midnight Dreams", plays: 1240, likes: 84, revenue: 749.70 },
+  { id: "2", title: "Urban Legend", plays: 850, likes: 58, revenue: 499.80 },
+  { id: "3", title: "Chill Vibes", plays: 620, likes: 45, revenue: 299.90 },
+  { id: "4", title: "Sunset Boulevard", plays: 480, likes: 32, revenue: 199.50 },
+];
 
 export default function ProducerAnalytics() {
   const [timeRange, setTimeRange] = useState("7days");
@@ -24,6 +40,43 @@ export default function ProducerAnalytics() {
     { label: "Jun 14", value: 25 },
     { label: "Jun 15", value: 120 },
     { label: "Jun 16", value: 50 },
+  ];
+
+  const columns: TableColumn<TopBeatData>[] = [
+    {
+      key: "title",
+      header: "Beat",
+      sortable: true,
+      searchable: true,
+      render: (row) => (
+        <div className="flex items-center gap-3 text-left">
+          <Music className="h-4 w-4 text-orange-500 shrink-0" />
+          <span className="font-semibold text-foreground">{row.title}</span>
+        </div>
+      ),
+    },
+    {
+      key: "plays",
+      header: "Plays",
+      sortable: true,
+      className: "text-left",
+    },
+    {
+      key: "likes",
+      header: "Likes",
+      sortable: true,
+      className: "text-left",
+    },
+    {
+      key: "revenue",
+      header: "Revenue",
+      sortable: true,
+      render: (row) => (
+        <span className="font-bold text-orange-500 text-left">
+          ${row.revenue.toFixed(2)}
+        </span>
+      ),
+    },
   ];
 
   return (
@@ -105,40 +158,11 @@ export default function ProducerAnalytics() {
       {/* Top Beats Table */}
       <div className="space-y-4">
         <h3 className="font-bold text-foreground text-lg">Your Top Performing Beats</h3>
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border bg-secondary/30 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  <th className="px-6 py-4">Beat</th>
-                  <th className="px-6 py-4">Plays</th>
-                  <th className="px-6 py-4">Likes</th>
-                  <th className="px-6 py-4">Revenue</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border text-sm">
-                <tr className="hover:bg-secondary/15 transition-colors">
-                  <td className="px-6 py-4 flex items-center gap-3">
-                    <Music className="h-4 w-4 text-orange-500" />
-                    <span className="font-semibold text-foreground">Midnight Dreams</span>
-                  </td>
-                  <td className="px-6 py-4 text-foreground">1,240</td>
-                  <td className="px-6 py-4 text-foreground">84</td>
-                  <td className="px-6 py-4 font-bold text-orange-500">$749.70</td>
-                </tr>
-                <tr className="hover:bg-secondary/15 transition-colors">
-                  <td className="px-6 py-4 flex items-center gap-3">
-                    <Music className="h-4 w-4 text-orange-500" />
-                    <span className="font-semibold text-foreground">Urban Legend</span>
-                  </td>
-                  <td className="px-6 py-4 text-foreground">850</td>
-                  <td className="px-6 py-4 text-foreground">58</td>
-                  <td className="px-6 py-4 font-bold text-orange-500">$499.80</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <Table
+          columns={columns}
+          data={mockTopBeats}
+          defaultSort={{ key: "plays", direction: "desc" }}
+        />
       </div>
     </div>
   );

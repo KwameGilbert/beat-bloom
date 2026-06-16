@@ -29,7 +29,15 @@ import VerifyEmail from "../pages/VerifyEmail";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
 
+import ProducerOverview from "../pages/producer/overview";
+import ProducerBeats from "../pages/producer/beats";
+import ProducerSales from "../pages/producer/sales";
+import ProducerPayouts from "../pages/producer/payouts";
+import ProducerAnalytics from "../pages/producer/analytics";
+import ProducerSettings from "../pages/producer/settings";
+
 import { Layout } from "../components/layout/Layout";
+import { ProducerLayout } from "../components/layout/ProducerLayout";
 import { AuthLayout } from "../components/auth/AuthLayout";
 import { ProtectedRoute, GuestRoute } from "../components/auth/ProtectedRoute";
 
@@ -211,12 +219,77 @@ export const AppRoutes = () => {
           }
         />
 
-        {/* Producer-only Routes */}
+      </Route>
+
+      {/* Producer Routes - Uses dedicated ProducerLayout */}
+      <Route
+        element={
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="h-full w-full"
+            >
+              <ProducerLayout />
+            </motion.div>
+          </AnimatePresence>
+        }
+      >
         <Route
           path="/upload"
           element={
             <ProtectedRoute requiredRole="producer">
               <Upload />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/producer/dashboard"
+          element={
+            <ProtectedRoute requiredRole="producer">
+              <ProducerOverview />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/producer/beats"
+          element={
+            <ProtectedRoute requiredRole="producer">
+              <ProducerBeats />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/producer/sales"
+          element={
+            <ProtectedRoute requiredRole="producer">
+              <ProducerSales />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/producer/payouts"
+          element={
+            <ProtectedRoute requiredRole="producer">
+              <ProducerPayouts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/producer/analytics"
+          element={
+            <ProtectedRoute requiredRole="producer">
+              <ProducerAnalytics />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/producer/settings"
+          element={
+            <ProtectedRoute requiredRole="producer">
+              <ProducerSettings />
             </ProtectedRoute>
           }
         />

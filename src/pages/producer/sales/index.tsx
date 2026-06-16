@@ -1,8 +1,120 @@
-import { useState } from "react";
-import { DollarSign, Calendar, Filter, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
+import { Table, type TableColumn } from "@/components/ui/table";
+
+interface SaleData {
+  id: string;
+  orderNumber: string;
+  date: string;
+  beatTitle: string;
+  buyerEmail: string;
+  licenseType: "MP3 Lease" | "WAV Lease" | "Unlimited Stems" | "Exclusive";
+  gross: number;
+  net: number;
+}
+
+const mockSales: SaleData[] = [
+  {
+    id: "1",
+    orderNumber: "BB-178146-218",
+    date: "Jun 14, 2026",
+    beatTitle: "Midnight Dreams",
+    buyerEmail: "buyer@example.com",
+    licenseType: "MP3 Lease",
+    gross: 24.99,
+    net: 21.24,
+  },
+  {
+    id: "2",
+    orderNumber: "BB-178119-943",
+    date: "Jun 12, 2026",
+    beatTitle: "Chill Vibes",
+    buyerEmail: "artist@beatbloom.com",
+    licenseType: "WAV Lease",
+    gross: 49.99,
+    net: 42.49,
+  },
+  {
+    id: "3",
+    orderNumber: "BB-178101-512",
+    date: "Jun 10, 2026",
+    beatTitle: "Sunset Boulevard",
+    buyerEmail: "producerx@gmail.com",
+    licenseType: "Unlimited Stems",
+    gross: 99.99,
+    net: 84.99,
+  },
+  {
+    id: "4",
+    orderNumber: "BB-178055-110",
+    date: "Jun 05, 2026",
+    beatTitle: "Urban Legend",
+    buyerEmail: "hacker@beatbloom.com",
+    licenseType: "Exclusive",
+    gross: 499.00,
+    net: 424.15,
+  }
+];
 
 export default function ProducerSales() {
-  const [filterType, setFilterType] = useState("all");
+  const columns: TableColumn<SaleData>[] = [
+    {
+      key: "beatTitle",
+      header: "Order Info",
+      sortable: true,
+      searchable: true,
+      render: (row) => (
+        <div className="text-left">
+          <p className="font-semibold text-foreground">{row.beatTitle}</p>
+          <p className="text-xs text-muted-foreground">Order #{row.orderNumber} • {row.date}</p>
+        </div>
+      ),
+    },
+    {
+      key: "buyerEmail",
+      header: "Buyer",
+      sortable: true,
+      searchable: true,
+      render: (row) => (
+        <p className="text-foreground text-left">{row.buyerEmail}</p>
+      ),
+    },
+    {
+      key: "licenseType",
+      header: "License Type",
+      sortable: true,
+      filterable: true,
+      filterType: "select",
+      render: (row) => (
+        <span className="inline-flex items-center rounded bg-orange-500/10 px-2.5 py-0.5 text-xs font-medium text-orange-500">
+          {row.licenseType}
+        </span>
+      ),
+    },
+    {
+      key: "net",
+      header: "Net Revenue",
+      sortable: true,
+      render: (row) => (
+        <p className="font-bold text-foreground text-left">
+          ${row.net.toFixed(2)}{" "}
+          <span className="text-xs font-normal text-muted-foreground">(${row.gross.toFixed(2)} Gross)</span>
+        </p>
+      ),
+    },
+    {
+      key: "invoice",
+      header: "Invoice",
+      sortable: false,
+      className: "text-right",
+      render: () => (
+        <div className="flex justify-end">
+          <button className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all" aria-label="View invoice">
+            <FileText className="h-4 w-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-8 p-6 md:p-8 pb-20">
@@ -49,101 +161,12 @@ export default function ProducerSales() {
         </div>
       </div>
 
-      {/* Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-card/40 backdrop-blur-md rounded-xl border border-border p-4">
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <select className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:border-orange-500 focus:outline-none">
-            <option value="30days">Last 30 Days</option>
-            <option value="3months">Last 3 Months</option>
-            <option value="year">This Year</option>
-            <option value="all">All Time</option>
-          </select>
-        </div>
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:border-orange-500 focus:outline-none"
-          >
-            <option value="all">All Licenses</option>
-            <option value="mp3">MP3 Lease</option>
-            <option value="wav">WAV Lease</option>
-            <option value="stems">Unlimited Stems</option>
-            <option value="exclusive">Exclusive</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Orders Table */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-border bg-secondary/30 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                <th className="px-6 py-4">Order Info</th>
-                <th className="px-6 py-4">Buyer</th>
-                <th className="px-6 py-4">License Type</th>
-                <th className="px-6 py-4">Net Revenue</th>
-                <th className="px-6 py-4 text-right">Invoice</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border text-sm">
-              {/* Sale Row 1 */}
-              <tr className="hover:bg-secondary/15 transition-colors">
-                <td className="px-6 py-4">
-                  <div>
-                    <p className="font-semibold text-foreground">Midnight Dreams</p>
-                    <p className="text-xs text-muted-foreground">Order #BB-178146-218 • Jun 14, 2026</p>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <p className="text-foreground">buyer@example.com</p>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center rounded bg-orange-500/10 px-2 py-0.5 text-xs font-medium text-orange-500">
-                    MP3 Lease
-                  </span>
-                </td>
-                <td className="px-6 py-4 font-bold text-foreground">
-                  $21.24 <span className="text-xs font-normal text-muted-foreground">($24.99 Gross)</span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all" aria-label="View invoice">
-                    <FileText className="h-4 w-4" />
-                  </button>
-                </td>
-              </tr>
-              {/* Sale Row 2 */}
-              <tr className="hover:bg-secondary/15 transition-colors">
-                <td className="px-6 py-4">
-                  <div>
-                    <p className="font-semibold text-foreground">Chill Vibes</p>
-                    <p className="text-xs text-muted-foreground">Order #BB-178119-943 • Jun 12, 2026</p>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <p className="text-foreground">artist@beatbloom.com</p>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center rounded bg-orange-500/10 px-2 py-0.5 text-xs font-medium text-orange-500">
-                    WAV Lease
-                  </span>
-                </td>
-                <td className="px-6 py-4 font-bold text-foreground">
-                  $42.49 <span className="text-xs font-normal text-muted-foreground">($49.99 Gross)</span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all" aria-label="View invoice">
-                    <FileText className="h-4 w-4" />
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Flexible Table */}
+      <Table
+        columns={columns}
+        data={mockSales}
+        defaultSort={{ key: "beatTitle", direction: "asc" }}
+      />
     </div>
   );
 }

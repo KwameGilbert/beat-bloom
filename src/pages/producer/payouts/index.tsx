@@ -1,8 +1,108 @@
 import { useState } from "react";
-import { Wallet, CreditCard, ArrowUpRight, CheckCircle2, Clock } from "lucide-react";
+import { Wallet, CreditCard, ArrowUpRight, CheckCircle2, Clock, X } from "lucide-react";
+import { Table, type TableColumn } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+
+interface PayoutData {
+  id: string;
+  transactionId: string;
+  method: string;
+  date: string;
+  amount: number;
+  status: "Completed" | "Pending" | "Failed";
+}
+
+const mockPayouts: PayoutData[] = [
+  {
+    id: "1",
+    transactionId: "TXN-90281-2981",
+    method: "MTN Mobile Money",
+    date: "Jun 05, 2026",
+    amount: 450.00,
+    status: "Completed",
+  },
+  {
+    id: "2",
+    transactionId: "TXN-82193-4122",
+    method: "MTN Mobile Money",
+    date: "May 20, 2026",
+    amount: 350.00,
+    status: "Completed",
+  },
+  {
+    id: "3",
+    transactionId: "TXN-71120-1193",
+    method: "Bank Transfer",
+    date: "May 02, 2026",
+    amount: 210.00,
+    status: "Completed",
+  },
+  {
+    id: "4",
+    transactionId: "TXN-61198-4451",
+    method: "PayPal",
+    date: "Apr 15, 2026",
+    amount: 125.00,
+    status: "Failed",
+  }
+];
 
 export default function ProducerPayouts() {
   const [isRequesting, setIsRequesting] = useState(false);
+
+  const columns: TableColumn<PayoutData>[] = [
+    {
+      key: "transactionId",
+      header: "Transaction ID",
+      sortable: true,
+      searchable: true,
+      className: "font-mono text-xs text-left",
+    },
+    {
+      key: "method",
+      header: "Method",
+      sortable: true,
+      filterable: true,
+      filterType: "select",
+      className: "text-left",
+    },
+    {
+      key: "date",
+      header: "Date",
+      sortable: true,
+      className: "text-muted-foreground text-left",
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      sortable: true,
+      render: (row) => (
+        <span className="font-bold text-foreground text-left">
+          ${row.amount.toFixed(2)}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      sortable: true,
+      filterable: true,
+      filterType: "select",
+      render: (row) => (
+        <span className={cn(
+          "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
+          row.status === "Completed" && "bg-green-500/10 text-green-500",
+          row.status === "Pending" && "bg-yellow-500/10 text-yellow-500",
+          row.status === "Failed" && "bg-red-500/10 text-red-500"
+        )}>
+          {row.status === "Completed" && <CheckCircle2 className="h-3 w-3" />}
+          {row.status === "Pending" && <Clock className="h-3 w-3" />}
+          {row.status === "Failed" && <X className="h-3 w-3" />}
+          {row.status}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-8 p-6 md:p-8 pb-20">
@@ -63,63 +163,11 @@ export default function ProducerPayouts() {
       {/* Payout History */}
       <div className="space-y-4">
         <h2 className="font-bold text-foreground text-lg">Payout History</h2>
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border bg-secondary/30 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  <th className="px-6 py-4">Transaction ID</th>
-                  <th className="px-6 py-4">Method</th>
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4">Amount</th>
-                  <th className="px-6 py-4">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border text-sm">
-                {/* Row 1 */}
-                <tr className="hover:bg-secondary/15 transition-colors">
-                  <td className="px-6 py-4 font-mono text-xs text-foreground">
-                    TXN-90281-2981
-                  </td>
-                  <td className="px-6 py-4 text-foreground">
-                    MTN Mobile Money
-                  </td>
-                  <td className="px-6 py-4 text-muted-foreground">
-                    Jun 05, 2026
-                  </td>
-                  <td className="px-6 py-4 font-bold text-foreground">
-                    $450.00
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-500">
-                      <CheckCircle2 className="h-3 w-3" /> Completed
-                    </span>
-                  </td>
-                </tr>
-                {/* Row 2 */}
-                <tr className="hover:bg-secondary/15 transition-colors">
-                  <td className="px-6 py-4 font-mono text-xs text-foreground">
-                    TXN-82193-4122
-                  </td>
-                  <td className="px-6 py-4 text-foreground">
-                    MTN Mobile Money
-                  </td>
-                  <td className="px-6 py-4 text-muted-foreground">
-                    May 20, 2026
-                  </td>
-                  <td className="px-6 py-4 font-bold text-foreground">
-                    $350.00
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-500">
-                      <CheckCircle2 className="h-3 w-3" /> Completed
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <Table
+          columns={columns}
+          data={mockPayouts}
+          defaultSort={{ key: "date", direction: "desc" }}
+        />
       </div>
     </div>
   );
