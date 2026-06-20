@@ -25,6 +25,7 @@ import {
 import { StatsCard } from "@/components/ui/stats-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useBalanceStore } from "@/store/balanceStore";
 
 // Mock data structures representing producer database objects
 const mockBeats = [
@@ -160,6 +161,7 @@ const chartPointsPlays = [
 export default function ProducerOverview() {
   const [chartMetric, setChartMetric] = useState<"revenue" | "plays">("revenue");
   const [hoveredPoint, setHoveredPoint] = useState<any | null>(null);
+  const { showBalance } = useBalanceStore();
 
   const activeChartData = useMemo(() => {
     return chartMetric === "revenue" ? chartPointsRevenue : chartPointsPlays;
@@ -213,7 +215,7 @@ export default function ProducerOverview() {
             Welcome back, CloudNine!
           </h1>
           <p className="max-w-xl text-xs sm:text-sm text-muted-foreground leading-relaxed">
-            Your beat catalog is performing exceptionally well. You've earned <span className="font-bold text-foreground text-orange-500">$624.90</span> this week across all licenses.
+            Your beat catalog is performing exceptionally well. You've earned <span className="font-bold text-foreground text-orange-500">{showBalance ? "$624.90" : "$ *,***.**"}</span> this week across all licenses.
           </p>
         </div>
       </div>
@@ -222,7 +224,7 @@ export default function ProducerOverview() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total Revenue"
-          value="$1,248.50"
+          value={showBalance ? "$1,248.50" : "$ *,***.**"}
           change={12.5}
           changeLabel="vs last month"
           icon={<DollarSign className="h-5 w-5" />}
@@ -503,12 +505,14 @@ export default function ProducerOverview() {
             <div className="space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">Available Balance</span>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-black tracking-tight text-foreground">$1,420.50</span>
+                <span className="text-3xl font-black tracking-tight text-foreground">
+                  {showBalance ? "$1,420.50" : "$ *,***.**"}
+                </span>
                 <span className="text-xs text-muted-foreground">USD</span>
               </div>
               <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
                 <Clock className="h-3 w-3" />
-                Pending escrow clearances: $280.00
+                Pending escrow clearances: {showBalance ? "$280.00" : "$ *,***.**"}
               </p>
             </div>
 

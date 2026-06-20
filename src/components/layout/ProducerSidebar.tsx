@@ -9,8 +9,11 @@ import {
   ArrowLeft,
   X,
   UploadCloud,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useBalanceStore } from "@/store/balanceStore";
 
 const producerNav = [
   { name: "Overview", icon: Home, path: "/producer/dashboard" },
@@ -28,6 +31,7 @@ interface ProducerSidebarProps {
 
 export const ProducerSidebar = ({ isOpen, onClose }: ProducerSidebarProps) => {
   const location = useLocation();
+  const { showBalance, toggleBalance } = useBalanceStore();
 
   return (
     <>
@@ -71,7 +75,41 @@ export const ProducerSidebar = ({ isOpen, onClose }: ProducerSidebarProps) => {
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-8 overflow-y-auto">
+        <div className="flex flex-1 flex-col gap-6 overflow-y-auto pr-1">
+          {/* Earnings & Wallet Balance Card */}
+          <div className="rounded-xl border border-border/80 bg-secondary/10 p-3 shadow-sm">
+            <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
+              <span>Earnings Balance</span>
+              <button
+                onClick={toggleBalance}
+                className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
+                title={showBalance ? "Hide Balance" : "Show Balance"}
+              >
+                {showBalance ? (
+                  <EyeOff className="h-3.5 w-3.5" />
+                ) : (
+                  <Eye className="h-3.5 w-3.5" />
+                )}
+              </button>
+            </div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="font-display text-lg font-extrabold text-foreground tracking-tight">
+                {showBalance ? "$1,420.50" : "$ *,***.**"}
+              </span>
+              <span className="text-[9px] font-bold text-muted-foreground/85">USD</span>
+            </div>
+            <div className="mt-2.5 flex items-center justify-between border-t border-border/30 pt-1.5 text-[10px]">
+              <span className="text-muted-foreground/75 font-semibold">Weekly Payouts</span>
+              <Link
+                to="/producer/payouts"
+                onClick={onClose}
+                className="font-bold text-orange-500 hover:text-orange-600 transition-colors"
+              >
+                Manage
+              </Link>
+            </div>
+          </div>
+
           {/* Action Button: Upload */}
           <div>
             <Link

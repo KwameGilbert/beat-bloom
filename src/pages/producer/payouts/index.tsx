@@ -3,6 +3,7 @@ import { Wallet, CreditCard, ArrowUpRight, CheckCircle2, Clock, X } from "lucide
 import { Table, type TableColumn } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useBalanceStore } from "@/store/balanceStore";
 
 interface PayoutData {
   id: string;
@@ -50,6 +51,7 @@ const mockPayouts: PayoutData[] = [
 
 export default function ProducerPayouts() {
   const [isRequesting, setIsRequesting] = useState(false);
+  const { showBalance } = useBalanceStore();
 
   const columns: TableColumn<PayoutData>[] = [
     {
@@ -126,7 +128,9 @@ export default function ProducerPayouts() {
               <Wallet className="h-4 w-4 text-orange-500" />
               Available Balance
             </div>
-            <h2 className="text-4xl font-black text-foreground">$824.50</h2>
+            <h2 className="text-4xl font-black text-foreground">
+              {showBalance ? "$824.50" : "$ *,***.**"}
+            </h2>
             <p className="text-xs text-muted-foreground">
               Minimum payout threshold: $50.00
             </p>
