@@ -20,6 +20,8 @@ import { Table, type TableColumn } from "@/components/ui/table";
 import { StatsCard } from "@/components/ui/stats-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { EditBeatModal } from "./EditBeatModal";
+import { DeleteBeatModal } from "./DeleteBeatModal";
 
 interface BeatData {
   id: string;
@@ -106,6 +108,9 @@ const mockBeats: BeatData[] = [
 ];
 
 export default function ProducerBeats() {
+  const [beatsList, setBeatsList] = useState<BeatData[]>(mockBeats);
+  const [editingBeat, setEditingBeat] = useState<BeatData | null>(null);
+  const [deletingBeat, setDeletingBeat] = useState<BeatData | null>(null);
   const [playingBeatId, setPlayingBeatId] = useState<string | null>(null);
   const [audio] = useState(() => new Audio());
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -145,6 +150,26 @@ export default function ProducerBeats() {
     }).catch(() => {
       triggerToast("Failed to copy share link.");
     });
+  };
+
+  const handleSaveEdit = (updatedBeat: BeatData) => {
+    setBeatsList(prev => prev.map(b => b.id === updatedBeat.id ? updatedBeat : b));
+    setEditingBeat(null);
+    triggerToast(`"${updatedBeat.title}" updated successfully!`);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deletingBeat) return;
+    
+    // If the deleted beat was playing, stop playback
+    if (playingBeatId === deletingBeat.id) {
+      audio.pause();
+      setPlayingBeatId(null);
+    }
+
+    setBeatsList(prev => prev.filter(b => b.id !== deletingBeat.id));
+    triggerToast(`"${deletingBeat.title}" deleted from catalog.`);
+    setDeletingBeat(null);
   };
 
   const columns: TableColumn<BeatData>[] = [
@@ -261,10 +286,18 @@ export default function ProducerBeats() {
           >
             <Share2 className="h-4 w-4" />
           </button>
-          <button className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all active:scale-95" title="Edit track settings">
+          <button 
+            onClick={() => setEditingBeat(row)}
+            className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all active:scale-95" 
+            title="Edit track settings"
+          >
             <Edit2 className="h-4 w-4" />
           </button>
-          <button className="rounded-lg p-2 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-500 transition-all active:scale-95" title="Delete track">
+          <button 
+            onClick={() => setDeletingBeat(row)}
+            className="rounded-lg p-2 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-500 transition-all active:scale-95" 
+            title="Delete track"
+          >
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
@@ -307,22 +340,22 @@ export default function ProducerBeats() {
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Catalog Size"
-          value="4 Beats"
+          value={`${beatsList.length} Beat${beatsList.length === 1 ? "" : "s"}`}
           variant="compact"
         />
         <StatsCard
           title="Combined Plays"
-          value="26,110"
+          value={beatsList.reduce((sum, b) => sum + b.plays, 0).toLocaleString()}
           variant="compact"
         />
         <StatsCard
           title="Combined Downloads"
-          value="545"
+          value={beatsList.reduce((sum, b) => sum + b.downloads, 0).toLocaleString()}
           variant="compact"
         />
         <StatsCard
           title="Catalog Revenue"
-          value="$1,144.57"
+          value={`$${beatsList.reduce((sum, b) => sum + b.revenue, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           variant="compact"
         />
       </div>
@@ -330,8 +363,24 @@ export default function ProducerBeats() {
       {/* Interactive Table Container */}
       <Table
         columns={columns}
-        data={mockBeats}
+        data={beatsList}
         defaultSort={{ key: "title", direction: "asc" }}
+      />
+
+      {/* Edit Beat Details Modal */}
+      <EditBeatModal
+        isOpen={editingBeat !== null}
+        onClose={() => setEditingBeat(null)}
+        beat={editingBeat}
+        onSave={handleSaveEdit}
+      />
+
+      {/* Delete Beat Confirmation Modal */}
+      <DeleteBeatModal
+        isOpen={deletingBeat !== null}
+        onClose={() => setDeletingBeat(null)}
+        beatTitle={deletingBeat?.title || ""}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );

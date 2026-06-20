@@ -4,15 +4,8 @@ import { Table, type TableColumn } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useBalanceStore } from "@/store/balanceStore";
-
-interface PayoutData {
-  id: string;
-  transactionId: string;
-  method: string;
-  date: string;
-  amount: number;
-  status: "Completed" | "Pending" | "Failed";
-}
+import { PayoutModal, type PayoutData } from "./PayoutModal";
+import { showNotification } from "@/components/ui/custom-notification";
 
 const mockPayouts: PayoutData[] = [
   {
@@ -52,6 +45,32 @@ const mockPayouts: PayoutData[] = [
 export default function ProducerPayouts() {
   const [isRequesting, setIsRequesting] = useState(false);
   const { showBalance } = useBalanceStore();
+  
+  // Real-time state management
+  const [balance, setBalance] = useState(824.50);
+  const [payoutList, setPayoutList] = useState<PayoutData[]>(mockPayouts);
+
+  const handleRequestPayout = (amountNum: number, method: string): Promise<PayoutData> => {
+    return new Promise((resolve) => {
+      // Mock network request
+      setTimeout(() => {
+        const transactionId = `TXN-${Math.floor(10000 + Math.random() * 90000)}-${Math.floor(1000 + Math.random() * 9000)}`;
+        const newPayout: PayoutData = {
+          id: (payoutList.length + 1).toString(),
+          transactionId,
+          method,
+          date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+          amount: amountNum,
+          status: "Pending",
+        };
+
+        setPayoutList([newPayout, ...payoutList]);
+        setBalance(prev => prev - amountNum);
+        showNotification("Success", `Withdrawal request for $${amountNum.toFixed(2)} is pending.`, "success");
+        resolve(newPayout);
+      }, 1500);
+    });
+  };
 
   const columns: TableColumn<PayoutData>[] = [
     {
@@ -129,7 +148,7 @@ export default function ProducerPayouts() {
               Available Balance
             </div>
             <h2 className="text-4xl font-black text-foreground">
-              {showBalance ? "$824.50" : "$ *,***.**"}
+              {showBalance ? `$${balance.toFixed(2)}` : "$ *,***.**"}
             </h2>
             <p className="text-xs text-muted-foreground">
               Minimum payout threshold: $50.00
@@ -137,7 +156,7 @@ export default function ProducerPayouts() {
           </div>
           <Button
             onClick={() => setIsRequesting(true)}
-            className="px-6 py-3 flex items-center gap-2 h-auto text-sm animate-scale-click"
+            className="px-6 py-3 flex items-center gap-2 h-auto text-sm animate-scale-click bg-orange-500 hover:bg-orange-600 text-white"
           >
             Request Payout <ArrowUpRight className="h-4 w-4" />
           </Button>
@@ -170,10 +189,18 @@ export default function ProducerPayouts() {
         <h2 className="font-bold text-foreground text-lg">Payout History</h2>
         <Table
           columns={columns}
-          data={mockPayouts}
+          data={payoutList}
           defaultSort={{ key: "date", direction: "desc" }}
         />
       </div>
+
+      {/* Payout Dialog Modal component */}
+      <PayoutModal
+        isOpen={isRequesting}
+        onClose={() => setIsRequesting(false)}
+        balance={balance}
+        onSubmit={handleRequestPayout}
+      />
     </div>
   );
 }
