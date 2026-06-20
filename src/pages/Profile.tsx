@@ -405,7 +405,7 @@ const Profile = () => {
               <h2 className="text-xl font-bold text-foreground">Published Beats</h2>
               {user?.role === 'producer' && (
                 <button 
-                  onClick={() => navigate("/upload")}
+                  onClick={() => navigate("/producer/upload")}
                   className="flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600"
                 >
                   <Upload className="h-4 w-4" />
@@ -424,7 +424,7 @@ const Profile = () => {
                     You haven't uploaded any beats yet. Start sharing your sound!
                   </p>
                   <button 
-                    onClick={() => navigate("/upload")}
+                    onClick={() => navigate("/producer/upload")}
                     className="rounded-full bg-orange-500 px-6 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600"
                   >
                     Upload Your First Beat

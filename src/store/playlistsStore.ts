@@ -251,7 +251,7 @@ export const usePlaylistsStore = create<PlaylistsState>()(
       },
     }),
     {
-      name: "beatbloom-playlists",
+      name: "EasyBeats-playlists",
     }
   )
 );

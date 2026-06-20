@@ -425,7 +425,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'beatbloom-auth',
+      name: 'EasyBeats-auth',
       partialize: (state) => ({
         user: state.user,
         accessToken: state.accessToken,

@@ -22,7 +22,7 @@ export const useSettingsStore = create<SettingsState>()(
       setPublicProfile: (publicProfile) => set({ publicProfile }),
     }),
     {
-      name: "beatbloom-user-settings",
+      name: "EasyBeats-user-settings",
     }
   )
 );

@@ -38,7 +38,7 @@ export const useThemeStore = create<ThemeState>()(
       syncThemeWithBackend: async (theme: Theme) => {
         // We check for token to see if user is logged in
         // A direct import of authStore here might cause circular dependency
-        const token = localStorage.getItem('beatbloom-auth-token'); 
+        const token = localStorage.getItem('EasyBeats-auth-token'); 
         if (token) {
           try {
             await authService.updateSettings({ theme });
@@ -49,7 +49,7 @@ export const useThemeStore = create<ThemeState>()(
       },
     }),
     {
-      name: "beatbloom-theme",
+      name: "EasyBeats-theme",
       onRehydrateStorage: () => (state) => {
         // Apply theme on initial load
         if (state) {
@@ -74,7 +74,7 @@ function applyTheme(theme: Theme) {
 
 // Initialize theme on load
 if (typeof window !== "undefined") {
-  const stored = localStorage.getItem("beatbloom-theme");
+  const stored = localStorage.getItem("EasyBeats-theme");
   if (stored) {
     try {
       const { state } = JSON.parse(stored);

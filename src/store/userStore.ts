@@ -23,13 +23,13 @@ export interface UserProfile {
 // Default user profile
 const defaultUser: UserProfile = {
   id: "user-1",
-  name: "BeatBloom User",
-  email: "user@beatbloom.com",
+  name: "EasyBeats User",
+  email: "user@EasyBeats.com",
   avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80",
   cover: "https://images.unsplash.com/photo-1614149162883-504ce4d13909?w=1200&q=80",
   role: "producer",
   location: "Los Angeles, CA",
-  website: "beatbloom.com",
+  website: "EasyBeats.com",
   joinedDate: "January 2026",
   stats: {
     beats: 0,
@@ -62,7 +62,7 @@ export const useUserStore = create<UserState>()(
       })),
     }),
     {
-      name: "beatbloom-user-profile",
+      name: "EasyBeats-user-profile",
     }
   )
 );

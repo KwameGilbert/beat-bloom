@@ -40,14 +40,14 @@ const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
 const App = () => {
   const [showSplash, setShowSplash] = useState(() => {
     // Only show splash if it hasn't been shown in this session
-    return sessionStorage.getItem('hasShownSplash') !== 'true';
+    return sessionStorage.getItem("hasShownSplash") !== "true";
   });
 
   useEffect(() => {
     // Apply dark mode based on system preference or saved theme
-    const authData = localStorage.getItem('beatbloom-auth');
+    const authData = localStorage.getItem("EasyBeats-auth");
     let userTheme: string | null = null;
-    
+
     if (authData) {
       try {
         const parsed = JSON.parse(authData);
@@ -57,8 +57,8 @@ const App = () => {
       }
     }
 
-    if (userTheme === 'dark' || userTheme === 'light') {
-      document.documentElement.classList.toggle('dark', userTheme === 'dark');
+    if (userTheme === "dark" || userTheme === "light") {
+      document.documentElement.classList.toggle("dark", userTheme === "dark");
     } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       document.documentElement.classList.add("dark");
     }
@@ -67,7 +67,7 @@ const App = () => {
     if (showSplash) {
       const timer = setTimeout(() => {
         setShowSplash(false);
-        sessionStorage.setItem('hasShownSplash', 'true');
+        sessionStorage.setItem("hasShownSplash", "true");
       }, 2500);
       return () => clearTimeout(timer);
     }

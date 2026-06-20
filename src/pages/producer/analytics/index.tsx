@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { AreaChart, BarChart } from "@/components/ui/analytics-charts";
-import { BarChart3, TrendingUp, Music, Play, Heart } from "lucide-react";
+import { BarChart3, TrendingUp, Music, Play, Heart, DollarSign } from "lucide-react";
 import { Table, type TableColumn } from "@/components/ui/table";
+import { StatsCard } from "@/components/ui/stats-card";
 
 interface TopBeatData {
   id: string;
@@ -9,13 +10,14 @@ interface TopBeatData {
   plays: number;
   likes: number;
   revenue: number;
+  cover: string;
 }
 
 const mockTopBeats: TopBeatData[] = [
-  { id: "1", title: "Midnight Dreams", plays: 1240, likes: 84, revenue: 749.70 },
-  { id: "2", title: "Urban Legend", plays: 850, likes: 58, revenue: 499.80 },
-  { id: "3", title: "Chill Vibes", plays: 620, likes: 45, revenue: 299.90 },
-  { id: "4", title: "Sunset Boulevard", plays: 480, likes: 32, revenue: 199.50 },
+  { id: "1", title: "Midnight Dreams", plays: 1240, likes: 84, revenue: 749.70, cover: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=120&q=80" },
+  { id: "2", title: "Urban Legend", plays: 850, likes: 58, revenue: 499.80, cover: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?w=120&q=80" },
+  { id: "3", title: "Chill Vibes", plays: 620, likes: 45, revenue: 299.90, cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=120&q=80" },
+  { id: "4", title: "Sunset Boulevard", plays: 480, likes: 32, revenue: 199.50, cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=120&q=80" },
 ];
 
 export default function ProducerAnalytics() {
@@ -45,13 +47,13 @@ export default function ProducerAnalytics() {
   const columns: TableColumn<TopBeatData>[] = [
     {
       key: "title",
-      header: "Beat",
+      header: "Beat Track",
       sortable: true,
       searchable: true,
       render: (row) => (
         <div className="flex items-center gap-3 text-left">
-          <Music className="h-4 w-4 text-orange-500 shrink-0" />
-          <span className="font-semibold text-foreground">{row.title}</span>
+          <img src={row.cover} alt="" className="h-9 w-9 rounded-lg object-cover border border-border/80 shadow-sm shrink-0" />
+          <span className="font-bold text-foreground truncate">{row.title}</span>
         </div>
       ),
     },
@@ -80,11 +82,11 @@ export default function ProducerAnalytics() {
   ];
 
   return (
-    <div className="space-y-8 p-6 md:p-8 pb-20">
+    <div className="space-y-8 p-6 md:p-8 pb-20 text-left">
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
+          <h1 className="font-display text-2xl font-black text-foreground sm:text-3xl tracking-tight">
             Detailed Analytics
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -104,36 +106,30 @@ export default function ProducerAnalytics() {
 
       {/* Grid of stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-xl border border-border bg-card p-6 space-y-2">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <Play className="h-4 w-4 text-orange-500" />
-            Total Plays
-          </div>
-          <p className="text-3xl font-black text-foreground">2,090</p>
-          <p className="text-xs text-green-500 font-medium flex items-center gap-0.5">
-            <TrendingUp className="h-3 w-3" /> +15.4% this week
-          </p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-6 space-y-2">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <Heart className="h-4 w-4 text-orange-500" />
-            New Likes
-          </div>
-          <p className="text-3xl font-black text-foreground">142</p>
-          <p className="text-xs text-green-500 font-medium flex items-center gap-0.5">
-            <TrendingUp className="h-3 w-3" /> +8.1% this week
-          </p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-6 space-y-2">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <BarChart3 className="h-4 w-4 text-orange-500" />
-            Total Sales
-          </div>
-          <p className="text-3xl font-black text-foreground">$345.00</p>
-          <p className="text-xs text-green-500 font-medium flex items-center gap-0.5">
-            <TrendingUp className="h-3 w-3" /> +24.3% this week
-          </p>
-        </div>
+        <StatsCard
+          title="Total Plays"
+          value="2,090"
+          change={15.4}
+          changeLabel="vs last week"
+          icon={<Play className="h-4 w-4" />}
+          variant="compact"
+        />
+        <StatsCard
+          title="New Likes"
+          value="142"
+          change={8.1}
+          changeLabel="vs last week"
+          icon={<Heart className="h-4 w-4" />}
+          variant="compact"
+        />
+        <StatsCard
+          title="Total Sales"
+          value="$345.00"
+          change={24.3}
+          changeLabel="vs last week"
+          icon={<DollarSign className="h-4 w-4" />}
+          variant="compact"
+        />
       </div>
 
       {/* Charts section */}

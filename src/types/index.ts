@@ -1,5 +1,5 @@
 /**
- * Centralized Type Definitions for BeatBloom Frontend
+ * Centralized Type Definitions for EasyBeats Frontend
  */
 
 // --- Base API Types ---

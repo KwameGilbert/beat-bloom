@@ -539,7 +539,7 @@ export default function ProducerOverview() {
           <div className="rounded-2xl border border-border/80 bg-card/40 backdrop-blur-md p-6 shadow-md space-y-4">
             <h3 className="font-bold text-foreground text-md">Creator Toolkit</h3>
             <div className="grid grid-cols-2 gap-3">
-              <Link to="/upload" className="flex flex-col items-center justify-center p-3 rounded-xl border border-border/60 bg-secondary/15 hover:bg-secondary/40 text-center transition-all group">
+              <Link to="/producer/upload" className="flex flex-col items-center justify-center p-3 rounded-xl border border-border/60 bg-secondary/15 hover:bg-secondary/40 text-center transition-all group">
                 <UploadCloud className="h-5 w-5 text-orange-500 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-bold text-foreground mt-2">Upload Beat</span>
                 <span className="text-[10px] text-muted-foreground mt-0.5">Add audio stems</span>

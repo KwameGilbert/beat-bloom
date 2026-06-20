@@ -108,7 +108,7 @@ export const useLikesStore = create<LikesState>()(
       },
     }),
     {
-      name: "beatbloom-likes",
+      name: "EasyBeats-likes",
     }
   )
 );

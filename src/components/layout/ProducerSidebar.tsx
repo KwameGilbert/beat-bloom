@@ -1,14 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
-import { 
-  Home, 
-  Music2, 
-  DollarSign, 
-  Wallet, 
-  BarChart2, 
-  Settings, 
+import {
+  Home,
+  Music2,
+  DollarSign,
+  Wallet,
+  BarChart2,
+  Settings,
   ArrowLeft,
   X,
-  UploadCloud
+  UploadCloud,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,19 +32,19 @@ export const ProducerSidebar = ({ isOpen, onClose }: ProducerSidebarProps) => {
   return (
     <>
       {/* Mobile Backdrop */}
-      <div 
+      <div
         className={cn(
           "fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm transition-opacity md:hidden",
-          isOpen ? "opacity-100" : "pointer-events-none opacity-0"
+          isOpen ? "opacity-100" : "pointer-events-none opacity-0",
         )}
         onClick={onClose}
       />
 
       {/* Sidebar Container */}
-      <aside 
+      <aside
         className={cn(
           "fixed inset-y-0 left-0 z-[65] flex w-64 flex-col border-r border-border bg-background px-6 py-8 transition-transform duration-300 md:static md:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         {/* Brand Logo & Close Button */}
@@ -54,12 +54,16 @@ export const ProducerSidebar = ({ isOpen, onClose }: ProducerSidebarProps) => {
               <Music2 className="h-6 w-6 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-bold tracking-tight text-foreground leading-none">BeatBloom</span>
-              <span className="text-[10px] font-bold text-orange-500 uppercase tracking-widest mt-1">Producer Studio</span>
+              <span className="text-lg font-bold tracking-tight text-foreground leading-none">
+                EasyBeats
+              </span>
+              <span className="text-[10px] font-bold text-orange-500 uppercase tracking-widest mt-1">
+                Producer Studio
+              </span>
             </div>
           </div>
-          
-          <button 
+
+          <button
             onClick={onClose}
             className="rounded-full p-1 hover:bg-secondary md:hidden"
           >
@@ -71,7 +75,7 @@ export const ProducerSidebar = ({ isOpen, onClose }: ProducerSidebarProps) => {
           {/* Action Button: Upload */}
           <div>
             <Link
-              to="/upload"
+              to="/producer/upload"
               onClick={onClose}
               className="group flex w-full items-center gap-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-orange-600/10 px-4 py-3 text-sm font-bold text-orange-500 transition-all hover:from-orange-500 hover:to-orange-600 hover:text-white shadow-sm shadow-orange-500/5 active:scale-[0.98]"
             >
@@ -90,7 +94,7 @@ export const ProducerSidebar = ({ isOpen, onClose }: ProducerSidebarProps) => {
             {producerNav.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
-              
+
               return (
                 <Link
                   key={item.path}
@@ -98,10 +102,19 @@ export const ProducerSidebar = ({ isOpen, onClose }: ProducerSidebarProps) => {
                   onClick={onClose}
                   className={cn(
                     "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-secondary hover:text-foreground",
-                    isActive ? "bg-secondary text-foreground animate-pulse-subtle" : "text-muted-foreground"
+                    isActive
+                      ? "bg-secondary text-foreground animate-pulse-subtle"
+                      : "text-muted-foreground",
                   )}
                 >
-                  <Icon className={cn("h-5 w-5", isActive ? "text-orange-500" : "text-muted-foreground group-hover:text-foreground")} />
+                  <Icon
+                    className={cn(
+                      "h-5 w-5",
+                      isActive
+                        ? "text-orange-500"
+                        : "text-muted-foreground group-hover:text-foreground",
+                    )}
+                  />
                   {item.name}
                 </Link>
               );

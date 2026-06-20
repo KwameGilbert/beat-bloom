@@ -1,4 +1,4 @@
-# BeatBloom PWA Setup Guide
+# EasyBeats PWA Setup Guide
 
 ## 🎯 What You Need to Do
 
@@ -19,7 +19,7 @@ You need to create two icon files in the `public/logo/` directory:
 
 **Icon Requirements:**
 
-- Use your BeatBloom logo
+- Use your EasyBeats logo
 - Square format (192x192 and 512x512)
 - PNG format
 - Clear, recognizable design
@@ -46,7 +46,7 @@ Then:
 1. Open Chrome/Edge browser
 2. Navigate to your preview URL (usually http://localhost:4173)
 3. Look for the **install icon** in the address bar
-4. Click "Install" to add BeatBloom to your home screen
+4. Click "Install" to add EasyBeats to your home screen
 
 ### 4. What You Get
 
@@ -102,4 +102,4 @@ Then:
 
 ---
 
-**That's it!** Your BeatBloom app is now a fully functional PWA! 🎉
+**That's it!** Your EasyBeats app is now a fully functional PWA! 🎉

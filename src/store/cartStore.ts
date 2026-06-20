@@ -51,10 +51,10 @@ interface CartState {
 
 // Generate a session ID for guest carts
 const getSessionId = () => {
-  let sessionId = localStorage.getItem('beatbloom-session-id');
+  let sessionId = localStorage.getItem('EasyBeats-session-id');
   if (!sessionId) {
     sessionId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem('beatbloom-session-id', sessionId);
+    localStorage.setItem('EasyBeats-session-id', sessionId);
   }
   return sessionId;
 };
@@ -216,7 +216,7 @@ export const useCartStore = create<CartState>()(
       },
     }),
     {
-      name: "beatbloom-cart",
+      name: "EasyBeats-cart",
     }
   )
 );

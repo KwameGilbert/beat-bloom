@@ -13,7 +13,7 @@ const Welcome = () => {
   const navigate = useNavigate();
 
   return (
-    <motion.div 
+    <motion.div
       key="welcome-panel"
       initial={{ y: "100%", opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -24,27 +24,27 @@ const Welcome = () => {
       <div className="absolute top-4 h-1.5 w-12 rounded-full bg-secondary md:hidden" />
 
       <div className="mb-12 flex flex-col items-center text-center">
-          <motion.div 
-              layoutId="auth-logo"
-              transition={panelTransition}
-              className="flex h-20 w-20 items-center justify-center rounded-[28px] bg-gradient-to-br from-orange-500 to-orange-600 shadow-2xl shadow-orange-500/40"
-          >
-              <Music2 className="h-12 w-12 text-white" />
-          </motion.div>
-          <motion.h1 
-              layoutId="auth-title"
-              transition={panelTransition}
-              className="mt-8 font-display text-4xl font-bold tracking-tight text-foreground"
-          >
-              BeatBloom
-          </motion.h1>
-          <motion.p 
-              layoutId="auth-subtitle"
-              transition={panelTransition}
-              className="mt-3 text-balance text-lg font-medium text-muted-foreground px-4"
-          >
-              Your journey into the future of sound starts here.
-          </motion.p>
+        <motion.div
+          layoutId="auth-logo"
+          transition={panelTransition}
+          className="flex h-20 w-20 items-center justify-center rounded-[28px] bg-gradient-to-br from-orange-500 to-orange-600 shadow-2xl shadow-orange-500/40"
+        >
+          <Music2 className="h-12 w-12 text-white" />
+        </motion.div>
+        <motion.h1
+          layoutId="auth-title"
+          transition={panelTransition}
+          className="mt-8 font-display text-4xl font-bold tracking-tight text-foreground"
+        >
+          EasyBeats
+        </motion.h1>
+        <motion.p
+          layoutId="auth-subtitle"
+          transition={panelTransition}
+          className="mt-3 text-balance text-lg font-medium text-muted-foreground px-4"
+        >
+          Your journey into the future of sound starts here.
+        </motion.p>
       </div>
 
       <div className="mt-auto w-full space-y-4">
@@ -55,7 +55,7 @@ const Welcome = () => {
           Get Started
           <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
         </button>
-        
+
         <button
           onClick={() => navigate("/login")}
           className="flex w-full items-center justify-center gap-3 rounded-2xl border border-border bg-card px-6 py-4 text-sm font-bold text-foreground transition-all hover:bg-secondary active:scale-95"
@@ -65,7 +65,7 @@ const Welcome = () => {
       </div>
 
       <p className="mt-8 text-[11px] text-center text-muted-foreground px-8 leading-relaxed opacity-60">
-          Experience premium beat delivery and discovery.
+        Experience premium beat delivery and discovery.
       </p>
     </motion.div>
   );

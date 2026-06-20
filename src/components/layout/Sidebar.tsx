@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { 
-  Home, 
-  Search, 
-  BarChart2, 
-  Heart, 
-  Clock, 
-  Library, 
-  Plus, 
+import {
+  Home,
+  Search,
+  BarChart2,
+  Heart,
+  Clock,
+  Library,
+  Plus,
   Music2,
   X,
-  UploadCloud
+  UploadCloud,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePlaylistsStore, playlistColors } from "@/store/playlistsStore";
@@ -42,7 +42,8 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const [newColor, setNewColor] = useState(playlistColors[0].value);
 
   // Check if user is a producer
-  const isProducer = isAuthenticated && (user?.role === 'producer' || user?.producer);
+  const isProducer =
+    isAuthenticated && (user?.role === "producer" || user?.producer);
 
   // Fetch playlists when authenticated
   useEffect(() => {
@@ -63,19 +64,19 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   return (
     <>
       {/* Mobile Backdrop */}
-      <div 
+      <div
         className={cn(
           "fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm transition-opacity md:hidden",
-          isOpen ? "opacity-100" : "pointer-events-none opacity-0"
+          isOpen ? "opacity-100" : "pointer-events-none opacity-0",
         )}
         onClick={onClose}
       />
 
       {/* Sidebar Container */}
-      <aside 
+      <aside
         className={cn(
           "fixed inset-y-0 left-0 z-[65] flex w-64 flex-col border-r border-border bg-background px-6 py-8 transition-transform duration-300 md:static md:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         {/* Brand Logo & Close Button */}
@@ -84,10 +85,12 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg shadow-orange-500/20">
               <Music2 className="h-6 w-6 text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-foreground">BeatBloom</span>
+            <span className="text-xl font-bold tracking-tight text-foreground">
+              EasyBeats
+            </span>
           </div>
-          
-          <button 
+
+          <button
             onClick={onClose}
             className="rounded-full p-1 hover:bg-secondary md:hidden"
           >
@@ -101,7 +104,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             {mainNav.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
-              
+
               return (
                 <Link
                   key={item.path}
@@ -109,10 +112,19 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                   onClick={onClose}
                   className={cn(
                     "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-secondary hover:text-foreground",
-                    isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
+                    isActive
+                      ? "bg-secondary text-foreground"
+                      : "text-muted-foreground",
                   )}
                 >
-                  <Icon className={cn("h-5 w-5", isActive ? "text-orange-500" : "text-muted-foreground group-hover:text-foreground")} />
+                  <Icon
+                    className={cn(
+                      "h-5 w-5",
+                      isActive
+                        ? "text-orange-500"
+                        : "text-muted-foreground group-hover:text-foreground",
+                    )}
+                  />
                   {item.name}
                 </Link>
               );
@@ -123,7 +135,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           {isProducer && (
             <div>
               <Link
-                to="/upload"
+                to="/producer/upload"
                 onClick={onClose}
                 className="group flex w-full items-center gap-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-orange-600/10 px-4 py-3 text-sm font-bold text-orange-500 transition-all hover:from-orange-500 hover:to-orange-600 hover:text-white shadow-sm shadow-orange-500/5 active:scale-[0.98]"
               >
@@ -153,10 +165,19 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                       onClick={onClose}
                       className={cn(
                         "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-secondary hover:text-foreground",
-                        isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
+                        isActive
+                          ? "bg-secondary text-foreground"
+                          : "text-muted-foreground",
                       )}
                     >
-                      <Icon className={cn("h-5 w-5", isActive ? "text-orange-500" : "text-muted-foreground group-hover:text-foreground")} />
+                      <Icon
+                        className={cn(
+                          "h-5 w-5",
+                          isActive
+                            ? "text-orange-500"
+                            : "text-muted-foreground group-hover:text-foreground",
+                        )}
+                      />
                       {item.name}
                     </Link>
                   );
@@ -165,7 +186,9 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             </div>
           ) : (
             <div className="rounded-xl bg-secondary/50 p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-3">Sign in to access your library</p>
+              <p className="text-sm text-muted-foreground mb-3">
+                Sign in to access your library
+              </p>
               <Link
                 to="/login"
                 onClick={onClose}
@@ -183,13 +206,13 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">
                   Playlists
                 </h3>
-                <button 
+                <button
                   onClick={() => setIsCreating(!isCreating)}
                   className={cn(
                     "flex h-6 w-6 items-center justify-center rounded-full transition-colors",
-                    isCreating 
-                      ? "bg-orange-500 text-white" 
-                      : "bg-secondary hover:bg-secondary/80"
+                    isCreating
+                      ? "bg-orange-500 text-white"
+                      : "bg-secondary hover:bg-secondary/80",
                   )}
                 >
                   <Plus className={cn("h-4 w-4", isCreating && "rotate-45")} />
@@ -216,7 +239,8 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                         className={cn(
                           "h-5 w-5 rounded-full transition-all",
                           color.value,
-                          newColor === color.value && "ring-2 ring-offset-1 ring-offset-secondary ring-foreground"
+                          newColor === color.value &&
+                            "ring-2 ring-offset-1 ring-offset-secondary ring-foreground",
                         )}
                       />
                     ))}
@@ -238,11 +262,12 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                   </div>
                 </div>
               )}
-              
+
               <div className="flex flex-col gap-1">
                 {playlists.map((playlist) => {
-                  const isActive = location.pathname === `/playlist/${playlist.id}`;
-                  
+                  const isActive =
+                    location.pathname === `/playlist/${playlist.id}`;
+
                   return (
                     <Link
                       key={playlist.id}
@@ -250,12 +275,21 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                       onClick={onClose}
                       className={cn(
                         "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-secondary hover:text-foreground",
-                        isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
+                        isActive
+                          ? "bg-secondary text-foreground"
+                          : "text-muted-foreground",
                       )}
                     >
-                      <div className={cn("h-4 w-4 rounded shadow-sm shrink-0", playlist.color)} />
+                      <div
+                        className={cn(
+                          "h-4 w-4 rounded shadow-sm shrink-0",
+                          playlist.color,
+                        )}
+                      />
                       <span className="truncate">{playlist.name}</span>
-                      <span className="ml-auto text-xs text-muted-foreground/60">{playlist.beatsCount || 0}</span>
+                      <span className="ml-auto text-xs text-muted-foreground/60">
+                        {playlist.beatsCount || 0}
+                      </span>
                     </Link>
                   );
                 })}

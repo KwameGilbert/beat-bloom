@@ -2,12 +2,20 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { authService, ApiError } from "@/lib/auth";
-import { Loader2, CheckCircle2, XCircle, ArrowRight, ShieldCheck } from "lucide-react";
+import {
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  ArrowRight,
+  ShieldCheck,
+} from "lucide-react";
 
 const VerifyEmail = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading",
+  );
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -16,7 +24,9 @@ const VerifyEmail = () => {
 
       if (!token) {
         setStatus("error");
-        setMessage("Invalid verification link. Please check your email and try again.");
+        setMessage(
+          "Invalid verification link. Please check your email and try again.",
+        );
         return;
       }
 
@@ -27,7 +37,9 @@ const VerifyEmail = () => {
         console.error("Email verification error:", err);
         setStatus("error");
         if (err instanceof ApiError) {
-          setMessage(err.message || "Failed to verify email. The link may have expired.");
+          setMessage(
+            err.message || "Failed to verify email. The link may have expired.",
+          );
         } else {
           setMessage("An unexpected error occurred. Please try again later.");
         }
@@ -54,8 +66,12 @@ const VerifyEmail = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">Verifying Email</h1>
-                <p className="text-muted-foreground">Please wait while we confirm your email address...</p>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                  Verifying Email
+                </h1>
+                <p className="text-muted-foreground">
+                  Please wait while we confirm your email address...
+                </p>
               </div>
             </>
           )}
@@ -73,9 +89,12 @@ const VerifyEmail = () => {
                 </div>
               </motion.div>
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">Perfect!</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                  Perfect!
+                </h1>
                 <p className="text-muted-foreground">
-                  Your email has been verified successfully. You can now access all features of BeatBloom.
+                  Your email has been verified successfully. You can now access
+                  all features of EasyBeats.
                 </p>
               </div>
               <button
@@ -101,10 +120,13 @@ const VerifyEmail = () => {
                 </div>
               </motion.div>
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">Verification Failed</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                  Verification Failed
+                </h1>
                 <p className="text-red-400 font-medium">{message}</p>
                 <p className="text-sm text-muted-foreground">
-                  If you think this is a mistake, you can request a new verification link from your profile settings.
+                  If you think this is a mistake, you can request a new
+                  verification link from your profile settings.
                 </p>
               </div>
               <div className="grid w-full grid-cols-2 gap-3">

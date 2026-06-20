@@ -29,7 +29,7 @@ const mockSales: SaleData[] = [
     orderNumber: "BB-178119-943",
     date: "Jun 12, 2026",
     beatTitle: "Chill Vibes",
-    buyerEmail: "artist@beatbloom.com",
+    buyerEmail: "artist@EasyBeats.com",
     licenseType: "WAV Lease",
     gross: 49.99,
     net: 42.49,
@@ -49,11 +49,11 @@ const mockSales: SaleData[] = [
     orderNumber: "BB-178055-110",
     date: "Jun 05, 2026",
     beatTitle: "Urban Legend",
-    buyerEmail: "hacker@beatbloom.com",
+    buyerEmail: "hacker@EasyBeats.com",
     licenseType: "Exclusive",
-    gross: 499.00,
+    gross: 499.0,
     net: 424.15,
-  }
+  },
 ];
 
 export default function ProducerSales() {
@@ -66,7 +66,9 @@ export default function ProducerSales() {
       render: (row) => (
         <div className="text-left">
           <p className="font-semibold text-foreground">{row.beatTitle}</p>
-          <p className="text-xs text-muted-foreground">Order #{row.orderNumber} • {row.date}</p>
+          <p className="text-xs text-muted-foreground">
+            Order #{row.orderNumber} • {row.date}
+          </p>
         </div>
       ),
     },
@@ -98,7 +100,9 @@ export default function ProducerSales() {
       render: (row) => (
         <p className="font-bold text-foreground text-left">
           ${row.net.toFixed(2)}{" "}
-          <span className="text-xs font-normal text-muted-foreground">(${row.gross.toFixed(2)} Gross)</span>
+          <span className="text-xs font-normal text-muted-foreground">
+            (${row.gross.toFixed(2)} Gross)
+          </span>
         </p>
       ),
     },
@@ -109,7 +113,10 @@ export default function ProducerSales() {
       className: "text-right",
       render: () => (
         <div className="flex justify-end">
-          <button className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all" aria-label="View invoice">
+          <button
+            className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
+            aria-label="View invoice"
+          >
             <FileText className="h-4 w-4" />
           </button>
         </div>

@@ -296,7 +296,7 @@ export default function ProducerBeats() {
           </p>
         </div>
         <Button
-          to="/upload"
+          to="/producer/upload"
           className="rounded-xl px-5 py-2.5 flex items-center gap-2 h-auto text-sm shrink-0 self-start sm:self-auto"
         >
           <Plus className="h-4.5 w-4.5 stroke-[2.5]" /> Upload New Beat

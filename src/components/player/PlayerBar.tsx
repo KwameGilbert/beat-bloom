@@ -19,14 +19,14 @@ const formatTime = (time: number) => {
 };
 
 export const PlayerBar = () => {
-  const { 
-    currentBeat, 
-    isPlaying, 
-    pause, 
-    resume,  
-    volume, 
-    setVolume, 
-    isLoading, 
+  const {
+    currentBeat,
+    isPlaying,
+    pause,
+    resume,
+    volume,
+    setVolume,
+    isLoading,
     setIsLoading,
     nextTrack,
     previousTrack,
@@ -34,22 +34,21 @@ export const PlayerBar = () => {
     toggleShuffle,
     repeat,
     toggleRepeat,
-    closePlayer
+    closePlayer,
   } = usePlayerStore();
-  
+
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
-  
+
   const navigate = useNavigate();
   const { addToCart, isInCart } = useCartStore();
   const { toggleLike, isLiked } = useLikesStore();
 
   // Get producer info from current beat
   const producer = useMemo(() => {
-    
     if (!currentBeat) return null;
     return {
       displayName: currentBeat.producerName,
@@ -65,7 +64,7 @@ export const PlayerBar = () => {
   // Setup audio event listeners
   useEffect(() => {
     const audio = audioManager.getAudio();
-    
+
     const handleLoadedData = () => {
       setDuration(audio.duration);
       setIsLoading(false);
@@ -74,7 +73,7 @@ export const PlayerBar = () => {
     const handleTimeUpdate = () => {
       setCurrentTime(audio.currentTime);
     };
-    
+
     const handleEnded = () => {
       const { repeat } = usePlayerStore.getState();
       if (repeat === "one") {
@@ -84,7 +83,7 @@ export const PlayerBar = () => {
         nextTrack();
       }
     };
-    
+
     const handleWaiting = () => setIsLoading(true);
     const handleCanPlay = () => setIsLoading(false);
     const handleError = () => {
@@ -114,9 +113,10 @@ export const PlayerBar = () => {
     const audioUrl = currentBeat?.previewAudioUrl;
     if (audioUrl) {
       setIsLoading(true);
-      
+
       // Use the audio manager to play - it handles stopping previous audio
-      audioManager.play(audioUrl)
+      audioManager
+        .play(audioUrl)
         .then(() => {
           // Successfully started playing
         })
@@ -150,16 +150,22 @@ export const PlayerBar = () => {
     setCurrentTime(time);
   }, []);
 
-  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVol = parseFloat(e.target.value);
-    setVolume(newVol);
-  }, [setVolume]);
+  const handleVolumeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newVol = parseFloat(e.target.value);
+      setVolume(newVol);
+    },
+    [setVolume],
+  );
 
-  const handleClose = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    audioManager.stop();
-    closePlayer();
-  }, [closePlayer]);
+  const handleClose = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      audioManager.stop();
+      closePlayer();
+    },
+    [closePlayer],
+  );
 
   const handleCloseFromFullscreen = useCallback(() => {
     audioManager.stop();
@@ -186,16 +192,20 @@ export const PlayerBar = () => {
 
   const handleShare = useCallback(async () => {
     if (!currentBeat) return;
-    
+
     const shareUrl = `${window.location.origin}/beat/${currentBeat.id}`;
     const shareData = {
       title: currentBeat.title,
-      text: `Check out "${currentBeat.title}" by ${currentBeat.producerName} on BeatBloom!`,
+      text: `Check out "${currentBeat.title}" by ${currentBeat.producerName} on EasyBeats!`,
       url: shareUrl,
     };
 
     try {
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare(shareData)
+      ) {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(shareUrl);
@@ -224,7 +234,7 @@ export const PlayerBar = () => {
   const handleAddToPlaylist = useCallback(() => {
     setIsPlaylistModalOpen(true);
   }, []);
-  
+
   // Don't render if no beat is selected
   if (!currentBeat) return null;
 
@@ -303,7 +313,7 @@ export const PlayerBar = () => {
 
       {/* Playlist Modal */}
       {currentBeat && (
-        <AddToPlaylistModal 
+        <AddToPlaylistModal
           isOpen={isPlaylistModalOpen}
           onClose={() => setIsPlaylistModalOpen(false)}
           beat={currentBeat}

@@ -32,7 +32,7 @@ export class ApiError extends Error {
  * Get stored access token
  */
 export const getAccessToken = (): string | null => {
-  const authData = localStorage.getItem('beatbloom-auth');
+  const authData = localStorage.getItem('EasyBeats-auth');
   if (!authData) return null;
   
   try {
@@ -47,7 +47,7 @@ export const getAccessToken = (): string | null => {
  * Get stored refresh token
  */
 export const getRefreshToken = (): string | null => {
-  const authData = localStorage.getItem('beatbloom-auth');
+  const authData = localStorage.getItem('EasyBeats-auth');
   if (!authData) return null;
   
   try {

@@ -12,7 +12,7 @@ import Liked from "../pages/Liked";
 import Recent from "../pages/Recent";
 import Purchases from "../pages/Purchases";
 import PlaylistDetail from "../pages/PlaylistDetail";
-import Upload from "../pages/Upload";
+import Upload from "../pages/producer/upload";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 import Welcome from "../pages/Welcome";
@@ -238,7 +238,7 @@ export const AppRoutes = () => {
         }
       >
         <Route
-          path="/upload"
+          path="/producer/upload"
           element={
             <ProtectedRoute requiredRole="producer">
               <Upload />

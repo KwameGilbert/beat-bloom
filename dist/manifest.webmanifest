@@ -1,1 +1,26 @@
-{"name":"BeatBloom - Premium Beat Marketplace","short_name":"BeatBloom","description":"Discover and purchase premium beats from top producers","start_url":"/","display":"standalone","background_color":"#000000","theme_color":"#f97316","lang":"en","scope":"/","orientation":"portrait","icons":[{"src":"/logo/favicon.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"/logo/favicon.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
+{
+  "name": "EasyBeats - Premium Beat Marketplace",
+  "short_name": "EasyBeats",
+  "description": "Discover and purchase premium beats from top producers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#f97316",
+  "lang": "en",
+  "scope": "/",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

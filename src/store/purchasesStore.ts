@@ -125,7 +125,7 @@ export const usePurchasesStore = create<PurchasesState>()(
       clearPurchases: () => set({ purchases: [] }),
     }),
     {
-      name: "beatbloom-purchases",
+      name: "EasyBeats-purchases",
     }
   )
 );

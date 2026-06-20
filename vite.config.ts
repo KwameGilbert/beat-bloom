@@ -15,8 +15,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'logo/*.png', 'logo/*.svg'],
       manifest: {
-        name: 'BeatBloom - Premium Beat Marketplace',
-        short_name: 'BeatBloom',
+        name: 'EasyBeats - Premium Beat Marketplace',
+        short_name: 'EasyBeats',
         description: 'Discover and purchase premium beats from top producers',
         theme_color: '#f97316',
         background_color: '#000000',

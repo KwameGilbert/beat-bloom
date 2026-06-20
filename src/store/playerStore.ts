@@ -224,7 +224,7 @@ export const usePlayerStore = create<PlayerState>()(
       setPlaylist: (playlist) => set({ playlist }),
     }),
     {
-      name: "beatbloom-player",
+      name: "EasyBeats-player",
       partialize: (state) => ({ 
         recentlyPlayed: state.recentlyPlayed,
         volume: state.volume,

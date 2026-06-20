@@ -2,19 +2,19 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "@/store/authStore";
 import { useThemeStore } from "@/store/themeStore";
-import { 
-  ArrowLeft, 
-  Bell, 
-  Lock, 
-  Eye, 
-  CreditCard, 
+import {
+  ArrowLeft,
+  Bell,
+  Lock,
+  Eye,
+  CreditCard,
   // ShieldCheck, // TODO: Re-enable when 2FA is implemented
   ChevronRight,
   LogOut,
   Trash2,
   Mail,
   Moon,
-  TrendingUp
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmationModal } from "@/components/shared/ConfirmationModal";
@@ -31,9 +31,10 @@ interface SettingItem {
 
 const Settings = () => {
   const navigate = useNavigate();
-  const { user, logout, deleteAccount, updateSettings, isLoading } = useAuthStore();
+  const { user, logout, deleteAccount, updateSettings, isLoading } =
+    useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
-  
+
   const [modalState, setModalState] = useState<{
     show: boolean;
     type: "logout" | "delete" | null;
@@ -47,9 +48,18 @@ const Settings = () => {
   const handleToggle = async (key: string, value: boolean) => {
     try {
       await updateSettings({ [key]: value });
-      showNotification("Settings updated", "Your preferences have been saved.", "success", 2000);
+      showNotification(
+        "Settings updated",
+        "Your preferences have been saved.",
+        "success",
+        2000,
+      );
     } catch (err: any) {
-      showNotification("Error", err.message || "Failed to update settings", "error");
+      showNotification(
+        "Error",
+        err.message || "Failed to update settings",
+        "error",
+      );
     }
   };
 
@@ -58,12 +68,16 @@ const Settings = () => {
       // themeStore handles both local state and backend sync internally now
       toggleTheme();
     } catch (err: any) {
-       console.error("Failed to toggle theme", err);
+      console.error("Failed to toggle theme", err);
     }
   };
 
   const handleItemClick = (label: string) => {
-    showNotification("Coming Soon", `${label} settings are being implemented!`, "info");
+    showNotification(
+      "Coming Soon",
+      `${label} settings are being implemented!`,
+      "info",
+    );
   };
 
   const sections: { title: string; items: SettingItem[] }[] = [
@@ -71,47 +85,63 @@ const Settings = () => {
       title: "Account",
       items: [
         { icon: Mail, label: "Email Address", value: user.email },
-        { icon: Lock, label: "Password", value: "••••••••", path: "/settings/password" },
+        {
+          icon: Lock,
+          label: "Password",
+          value: "••••••••",
+          path: "/settings/password",
+        },
         // TODO: Re-enable when 2FA is fully implemented
         // { icon: ShieldCheck, label: "Two-Factor Auth", value: user.mfaEnabled ? "On" : "Off", path: "/settings/2fa" },
-      ]
+      ],
     },
     {
       title: "Payments & Billing",
       items: [
-        { icon: CreditCard, label: "Payout Methods", value: user.role === 'producer' ? "Manage" : "No methods added", path: "/settings/payouts" },
-        { icon: TrendingUp, label: "Billing History", path: "/settings/billing" },
-      ]
+        {
+          icon: CreditCard,
+          label: "Payout Methods",
+          value: user.role === "producer" ? "Manage" : "No methods added",
+          path: "/settings/payouts",
+        },
+        {
+          icon: TrendingUp,
+          label: "Billing History",
+          path: "/settings/billing",
+        },
+      ],
     },
     {
       title: "Preferences",
       items: [
-        { 
-          icon: Bell, 
-          label: "Email Notifications", 
-          state: user.emailNotifications, 
-          toggle: () => handleToggle('emailNotifications', !user.emailNotifications) 
+        {
+          icon: Bell,
+          label: "Email Notifications",
+          state: user.emailNotifications,
+          toggle: () =>
+            handleToggle("emailNotifications", !user.emailNotifications),
         },
-        { 
-          icon: Bell, 
-          label: "Push Notifications", 
-          state: user.pushNotifications, 
-          toggle: () => handleToggle('pushNotifications', !user.pushNotifications) 
+        {
+          icon: Bell,
+          label: "Push Notifications",
+          state: user.pushNotifications,
+          toggle: () =>
+            handleToggle("pushNotifications", !user.pushNotifications),
         },
-        { 
-          icon: Eye, 
-          label: "Public Profile", 
-          state: user.publicProfile, 
-          toggle: () => handleToggle('publicProfile', !user.publicProfile) 
+        {
+          icon: Eye,
+          label: "Public Profile",
+          state: user.publicProfile,
+          toggle: () => handleToggle("publicProfile", !user.publicProfile),
         },
-        { 
-          icon: Moon, 
-          label: "Dark Mode", 
-          state: theme === "dark", 
-          toggle: handleThemeToggle 
+        {
+          icon: Moon,
+          label: "Dark Mode",
+          state: theme === "dark",
+          toggle: handleThemeToggle,
         },
-      ]
-    }
+      ],
+    },
   ];
 
   const handleLogout = () => {
@@ -129,10 +159,18 @@ const Settings = () => {
     } else if (modalState.type === "delete") {
       try {
         await deleteAccount();
-        showNotification("Account Deleted", "Your account has been permanently removed.", "success");
+        showNotification(
+          "Account Deleted",
+          "Your account has been permanently removed.",
+          "success",
+        );
         navigate("/login");
       } catch (err: any) {
-        showNotification("Error", err.message || "Failed to delete account", "error");
+        showNotification(
+          "Error",
+          err.message || "Failed to delete account",
+          "error",
+        );
       }
     }
     setModalState({ show: false, type: null });
@@ -143,7 +181,7 @@ const Settings = () => {
       {/* Header */}
       <div className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-4 sm:px-6">
-          <button 
+          <button
             onClick={() => navigate("/profile")}
             className="rounded-full p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
           >
@@ -164,7 +202,7 @@ const Settings = () => {
                 {section.items.map((item, itemIdx) => {
                   const Icon = item.icon;
                   return (
-                    <div 
+                    <div
                       key={itemIdx}
                       onClick={() => {
                         if (item.toggle) return;
@@ -174,7 +212,8 @@ const Settings = () => {
                       className={cn(
                         "flex items-center justify-between px-4 py-4 transition-colors hover:bg-secondary/30",
                         !item.toggle && "cursor-pointer",
-                        itemIdx !== section.items.length - 1 && "border-b border-border"
+                        itemIdx !== section.items.length - 1 &&
+                          "border-b border-border",
                       )}
                     >
                       <div className="flex items-center gap-3">
@@ -182,13 +221,19 @@ const Settings = () => {
                           <Icon className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-foreground">{item.label}</p>
-                          {item.value && <p className="text-xs text-muted-foreground">{item.value}</p>}
+                          <p className="text-sm font-medium text-foreground">
+                            {item.label}
+                          </p>
+                          {item.value && (
+                            <p className="text-xs text-muted-foreground">
+                              {item.value}
+                            </p>
+                          )}
                         </div>
                       </div>
 
                       {item.toggle ? (
-                        <button 
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             item.toggle?.();
@@ -196,13 +241,13 @@ const Settings = () => {
                           disabled={isLoading}
                           className={cn(
                             "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50",
-                            item.state ? "bg-orange-500" : "bg-zinc-700"
+                            item.state ? "bg-orange-500" : "bg-zinc-700",
                           )}
                         >
-                          <span 
+                          <span
                             className={cn(
                               "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-                              item.state ? "translate-x-5" : "translate-x-0"
+                              item.state ? "translate-x-5" : "translate-x-0",
                             )}
                           />
                         </button>
@@ -222,7 +267,7 @@ const Settings = () => {
               Danger Zone
             </h2>
             <div className="overflow-hidden rounded-2xl border border-red-500/20 bg-card">
-              <button 
+              <button
                 onClick={handleLogout}
                 className="flex w-full items-center justify-between px-4 py-4 transition-colors hover:bg-red-500/5 text-foreground"
               >
@@ -234,7 +279,7 @@ const Settings = () => {
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
-              <button 
+              <button
                 onClick={handleDeleteAccount}
                 className="flex w-full items-center justify-between border-t border-border px-4 py-4 transition-colors hover:bg-red-500/5 text-red-500"
               >
@@ -251,8 +296,10 @@ const Settings = () => {
 
           {/* Version Info */}
           <div className="text-center pt-8">
-            <p className="text-xs text-muted-foreground">BeatBloom v1.0.4</p>
-            <p className="text-xs text-muted-foreground mt-1">© 2026 BeatBloom Inc.</p>
+            <p className="text-xs text-muted-foreground">EasyBeats v1.0.4</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              © 2026 EasyBeats Inc.
+            </p>
           </div>
         </div>
       </div>
