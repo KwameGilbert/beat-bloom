@@ -48,7 +48,7 @@ const Checkout = () => {
   const referenceParam = searchParams.get("reference");
   const statusParam = searchParams.get("status");
 
-  const { items, subtotal, processingFee, total, removeFromCart, clearCart, fetchCart, isLoading: isLoadingCart } = useCartStore();
+  const { items, subtotal, platformFee, processingFee, total, removeFromCart, clearCart, fetchCart, isLoading: isLoadingCart } = useCartStore();
   
   const [email, setEmail] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -541,6 +541,12 @@ const Checkout = () => {
                   <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
                   <span className="text-foreground">${subtotal.toFixed(2)}</span>
                 </div>
+                {platformFee > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Service Fee</span>
+                    <span className="text-foreground">${platformFee.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Processing Fee</span>
                   <span className="text-foreground">${processingFee.toFixed(2)}</span>

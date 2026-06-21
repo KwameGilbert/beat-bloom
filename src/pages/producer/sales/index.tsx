@@ -1,6 +1,8 @@
-import { FileText, DollarSign, Wallet, FileCheck2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { FileText, DollarSign, Wallet, FileCheck2, Loader2 } from "lucide-react";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { StatsCard } from "@/components/ui/stats-card";
+import producerService from "@/lib/producer";
 
 interface SaleData {
   id: string;
@@ -8,55 +10,45 @@ interface SaleData {
   date: string;
   beatTitle: string;
   buyerEmail: string;
-  licenseType: "MP3 Lease" | "WAV Lease" | "Unlimited Stems" | "Exclusive";
+  licenseType: string;
   gross: number;
   net: number;
 }
 
-const mockSales: SaleData[] = [
-  {
-    id: "1",
-    orderNumber: "BB-178146-218",
-    date: "Jun 14, 2026",
-    beatTitle: "Midnight Dreams",
-    buyerEmail: "buyer@example.com",
-    licenseType: "MP3 Lease",
-    gross: 24.99,
-    net: 21.24,
-  },
-  {
-    id: "2",
-    orderNumber: "BB-178119-943",
-    date: "Jun 12, 2026",
-    beatTitle: "Chill Vibes",
-    buyerEmail: "artist@EasyBeats.com",
-    licenseType: "WAV Lease",
-    gross: 49.99,
-    net: 42.49,
-  },
-  {
-    id: "3",
-    orderNumber: "BB-178101-512",
-    date: "Jun 10, 2026",
-    beatTitle: "Sunset Boulevard",
-    buyerEmail: "producerx@gmail.com",
-    licenseType: "Unlimited Stems",
-    gross: 99.99,
-    net: 84.99,
-  },
-  {
-    id: "4",
-    orderNumber: "BB-178055-110",
-    date: "Jun 05, 2026",
-    beatTitle: "Urban Legend",
-    buyerEmail: "hacker@EasyBeats.com",
-    licenseType: "Exclusive",
-    gross: 499.0,
-    net: 424.15,
-  },
-];
-
 export default function ProducerSales() {
+  const [sales, setSales] = useState<SaleData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSales = async () => {
+      try {
+        const response = await producerService.getSalesList();
+        if (response.success && response.data) {
+          const mapped = response.data.map((s: any) => ({
+            id: String(s.id),
+            orderNumber: s.orderNumber,
+            date: new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            beatTitle: s.beatTitle,
+            buyerEmail: s.buyerEmail,
+            licenseType: s.licenseType,
+            gross: s.gross,
+            net: s.net
+          }));
+          setSales(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch sales list:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSales();
+  }, []);
+
+  const totalGross = useMemo(() => sales.reduce((sum, s) => sum + s.gross, 0), [sales]);
+  const totalNet = useMemo(() => sales.reduce((sum, s) => sum + s.net, 0), [sales]);
+  const totalSalesCount = sales.length;
+
   const columns: TableColumn<SaleData>[] = [
     {
       key: "beatTitle",
@@ -124,6 +116,14 @@ export default function ProducerSales() {
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex h-[80vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 p-6 md:p-8 pb-20 text-left">
       {/* Title */}
@@ -140,23 +140,19 @@ export default function ProducerSales() {
       <div className="grid gap-4 sm:grid-cols-3">
         <StatsCard
           title="Gross Earnings"
-          value="$1,452.88"
-          change={10.2}
-          changeLabel="vs last month"
+          value={`$${totalGross.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={<DollarSign className="h-4 w-4" />}
           variant="compact"
         />
         <StatsCard
           title="Net Earnings"
-          value="$1,234.95"
-          change={8.7}
-          changeLabel="vs last month"
+          value={`$${totalNet.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={<Wallet className="h-4 w-4" />}
           variant="compact"
         />
         <StatsCard
           title="Active Orders"
-          value="53"
+          value={String(totalSalesCount)}
           icon={<FileCheck2 className="h-4 w-4" />}
           variant="compact"
         />
@@ -165,7 +161,7 @@ export default function ProducerSales() {
       {/* Flexible Table */}
       <Table
         columns={columns}
-        data={mockSales}
+        data={sales}
         defaultSort={{ key: "beatTitle", direction: "asc" }}
       />
     </div>

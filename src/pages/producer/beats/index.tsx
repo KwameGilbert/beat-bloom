@@ -4,17 +4,14 @@ import {
   Plus, 
   Edit2, 
   Trash2, 
-  Music, 
   Eye, 
   Download, 
   Play, 
   Share2, 
   Pause, 
-  FolderHeart,
-  TrendingUp,
-  FileCheck2,
   DollarSign,
-  X
+  X,
+  Loader2
 } from "lucide-react";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { StatsCard } from "@/components/ui/stats-card";
@@ -22,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EditBeatModal } from "./EditBeatModal";
 import { DeleteBeatModal } from "./DeleteBeatModal";
+import producerService from "@/lib/producer";
 
 interface BeatData {
   id: string;
@@ -40,80 +38,47 @@ interface BeatData {
   revenue: number;
 }
 
-const mockBeats: BeatData[] = [
-  {
-    id: "1",
-    title: "Midnight Dreams",
-    genre: "Trap",
-    bpm: 140,
-    key: "Am",
-    status: "Active",
-    basePrice: 29.99,
-    exclusivePrice: 499.00,
-    plays: 4810,
-    downloads: 120,
-    cover: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=120&q=80",
-    previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    salesCount: 18,
-    revenue: 449.82
-  },
-  {
-    id: "2",
-    title: "Urban Legend",
-    genre: "Hip Hop",
-    bpm: 95,
-    key: "Gm",
-    status: "Active",
-    basePrice: 24.99,
-    exclusivePrice: 399.00,
-    plays: 8900,
-    downloads: 45,
-    cover: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?w=120&q=80",
-    previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-    salesCount: 11,
-    revenue: 274.89
-  },
-  {
-    id: "3",
-    title: "Neon Horizon",
-    genre: "Synthwave",
-    bpm: 110,
-    key: "Em",
-    status: "Draft",
-    basePrice: 19.99,
-    exclusivePrice: 299.00,
-    plays: 0,
-    downloads: 0,
-    cover: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=120&q=80",
-    previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
-    salesCount: 0,
-    revenue: 0.00
-  },
-  {
-    id: "4",
-    title: "Sunset Boulevard",
-    genre: "R&B",
-    bpm: 85,
-    key: "F#m",
-    status: "Sold",
-    basePrice: 35.00,
-    exclusivePrice: 599.00,
-    plays: 12400,
-    downloads: 380,
-    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=120&q=80",
-    previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3",
-    salesCount: 14,
-    revenue: 419.86
-  }
-];
-
 export default function ProducerBeats() {
-  const [beatsList, setBeatsList] = useState<BeatData[]>(mockBeats);
+  const [beatsList, setBeatsList] = useState<BeatData[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editingBeat, setEditingBeat] = useState<BeatData | null>(null);
   const [deletingBeat, setDeletingBeat] = useState<BeatData | null>(null);
   const [playingBeatId, setPlayingBeatId] = useState<string | null>(null);
   const [audio] = useState(() => new Audio());
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const fetchBeats = async () => {
+    try {
+      const response = await producerService.getMyBeats();
+      if (response.success && response.data) {
+        const mapped = response.data.map((b: any) => ({
+          id: String(b.id),
+          title: b.title,
+          genre: b.genre,
+          bpm: b.bpm,
+          key: b.key,
+          status: b.status,
+          basePrice: b.basePrice,
+          exclusivePrice: b.exclusivePrice,
+          plays: b.plays,
+          downloads: b.downloads,
+          cover: b.coverImage || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=120&q=80",
+          previewUrl: b.previewAudioUrl,
+          salesCount: b.downloads,
+          revenue: b.revenue
+        }));
+        setBeatsList(mapped);
+      }
+    } catch (err) {
+      console.error("Failed to fetch beats:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBeats();
+  }, []);
 
   // Toggle audio player playback
   const togglePlay = (id: string, url: string) => {
@@ -152,24 +117,51 @@ export default function ProducerBeats() {
     });
   };
 
-  const handleSaveEdit = (updatedBeat: BeatData) => {
-    setBeatsList(prev => prev.map(b => b.id === updatedBeat.id ? updatedBeat : b));
-    setEditingBeat(null);
-    triggerToast(`"${updatedBeat.title}" updated successfully!`);
+  const handleSaveEdit = async (updatedBeat: BeatData) => {
+    try {
+      const response = await producerService.updateBeat(updatedBeat.id, {
+        title: updatedBeat.title,
+        bpm: updatedBeat.bpm,
+        musicalKey: updatedBeat.key,
+        status: updatedBeat.status,
+        coverImage: updatedBeat.cover,
+        previewAudioUrl: updatedBeat.previewUrl
+      });
+
+      if (response.success) {
+        setBeatsList(prev => prev.map(b => b.id === updatedBeat.id ? updatedBeat : b));
+        triggerToast(`"${updatedBeat.title}" updated successfully!`);
+      } else {
+        triggerToast("Failed to update beat.");
+      }
+    } catch (error) {
+      console.error("Save edit error:", error);
+      triggerToast("Failed to save beat changes.");
+    } finally {
+      setEditingBeat(null);
+    }
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deletingBeat) return;
-    
-    // If the deleted beat was playing, stop playback
-    if (playingBeatId === deletingBeat.id) {
-      audio.pause();
-      setPlayingBeatId(null);
+    try {
+      const response = await producerService.deleteBeat(deletingBeat.id);
+      if (response.success) {
+        if (playingBeatId === deletingBeat.id) {
+          audio.pause();
+          setPlayingBeatId(null);
+        }
+        setBeatsList(prev => prev.filter(b => b.id !== deletingBeat.id));
+        triggerToast(`"${deletingBeat.title}" deleted from catalog.`);
+      } else {
+        triggerToast("Failed to delete beat.");
+      }
+    } catch (error) {
+      console.error("Delete beat error:", error);
+      triggerToast("Failed to delete beat.");
+    } finally {
+      setDeletingBeat(null);
     }
-
-    setBeatsList(prev => prev.filter(b => b.id !== deletingBeat.id));
-    triggerToast(`"${deletingBeat.title}" deleted from catalog.`);
-    setDeletingBeat(null);
   };
 
   const columns: TableColumn<BeatData>[] = [
@@ -304,6 +296,14 @@ export default function ProducerBeats() {
       ),
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex h-[80vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6 md:p-8 pb-24 text-left font-sans relative">

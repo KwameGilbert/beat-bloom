@@ -19,7 +19,7 @@ import type { Beat } from "@/lib/marketplace";
 
 const Cart = () => {
   const navigate = useNavigate();
-  const { items, subtotal, processingFee, total, removeFromCart, clearCart, fetchCart, isLoading: isLoadingCart } = useCartStore();
+  const { items, subtotal, platformFee, processingFee, total, removeFromCart, clearCart, fetchCart, isLoading: isLoadingCart } = useCartStore();
   const { playBeat, currentBeat, isPlaying, togglePlay, isLoading } = usePlayerStore();
 
   // Fetch cart on mount
@@ -237,6 +237,12 @@ const Cart = () => {
                   <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
                   <span className="text-foreground">${subtotal.toFixed(2)}</span>
                 </div>
+                {platformFee > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Service Fee</span>
+                    <span className="text-foreground">${platformFee.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Processing Fee</span>
                   <span className="text-foreground">${processingFee.toFixed(2)}</span>

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   Music, 
@@ -10,167 +10,56 @@ import {
   Wallet, 
   ArrowUpRight, 
   FileText, 
-  Settings, 
-  Share2, 
-  CheckCircle2, 
   Clock, 
   TrendingUp, 
   Sparkles,
-  Info,
-  Calendar,
-  Layers,
   Percent,
-  Plus,
   Eye,
-  EyeOff
+  EyeOff,
+  Loader2
 } from "lucide-react";
 import { StatsCard } from "@/components/ui/stats-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useBalanceStore } from "@/store/balanceStore";
-
-// Mock data structures representing producer database objects
-const mockBeats = [
-  { 
-    id: 1, 
-    title: "Midnight Dreams", 
-    genre: "Trap", 
-    bpm: 140, 
-    key: "Am", 
-    plays: 12500, 
-    sales: 18, 
-    revenue: 449.82, 
-    status: "Active", 
-    cover: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=120&q=80", 
-    trend: "+15%" 
-  },
-  { 
-    id: 2, 
-    title: "Urban Legend", 
-    genre: "Hip Hop", 
-    bpm: 95, 
-    key: "Gm", 
-    plays: 8900, 
-    sales: 11, 
-    revenue: 274.89, 
-    status: "Active", 
-    cover: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?w=120&q=80", 
-    trend: "+8%" 
-  },
-  { 
-    id: 3, 
-    title: "Chill Vibes", 
-    genre: "Lo-Fi", 
-    bpm: 85, 
-    key: "Em", 
-    plays: 25400, 
-    sales: 24, 
-    revenue: 599.76, 
-    status: "Active", 
-    cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=120&q=80", 
-    trend: "+20%" 
-  },
-  { 
-    id: 4, 
-    title: "Neon Horizon", 
-    genre: "Synthwave", 
-    bpm: 128, 
-    key: "Cm", 
-    plays: 15600, 
-    sales: 14, 
-    revenue: 419.86, 
-    status: "Active", 
-    cover: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=120&q=80", 
-    trend: "+12%" 
-  },
-];
-
-const mockSales = [
-  { 
-    id: "TX-9021", 
-    buyer: "Marcus Miller", 
-    email: "marcus@studio.com", 
-    beat: "Midnight Dreams", 
-    license: "MP3 Lease", 
-    amount: 29.99, 
-    netAmount: 25.49, 
-    time: "2 hours ago", 
-    status: "Completed" 
-  },
-  { 
-    id: "TX-9022", 
-    buyer: "Sarah Jenkins", 
-    email: "sarahj@music.co", 
-    beat: "Chill Vibes", 
-    license: "WAV Lease", 
-    amount: 49.99, 
-    netAmount: 42.49, 
-    time: "5 hours ago", 
-    status: "Completed" 
-  },
-  { 
-    id: "TX-9023", 
-    buyer: "Aiden Scott", 
-    email: "aiden.beats@gmail.com", 
-    beat: "Neon Horizon", 
-    license: "Stems Lease", 
-    amount: 89.99, 
-    netAmount: 76.49, 
-    time: "1 day ago", 
-    status: "Completed" 
-  },
-  { 
-    id: "TX-9024", 
-    buyer: "Damian Cole", 
-    email: "dcole@nappyboy.com", 
-    beat: "Urban Legend", 
-    license: "Exclusive", 
-    amount: 399.99, 
-    netAmount: 339.99, 
-    time: "3 days ago", 
-    status: "Completed" 
-  },
-];
-
-const chartPointsRevenue = [
-  { label: "Jun 01", value: 120 },
-  { label: "Jun 03", value: 250 },
-  { label: "Jun 06", value: 190 },
-  { label: "Jun 09", value: 420 },
-  { label: "Jun 12", value: 380 },
-  { label: "Jun 15", value: 650 },
-  { label: "Jun 18", value: 590 },
-  { label: "Jun 21", value: 800 },
-  { label: "Jun 24", value: 720 },
-  { label: "Jun 27", value: 950 },
-  { label: "Jun 30", value: 1248 }
-];
-
-const chartPointsPlays = [
-  { label: "Jun 01", value: 800 },
-  { label: "Jun 03", value: 1500 },
-  { label: "Jun 06", value: 1200 },
-  { label: "Jun 09", value: 2400 },
-  { label: "Jun 12", value: 2100 },
-  { label: "Jun 15", value: 3800 },
-  { label: "Jun 18", value: 3200 },
-  { label: "Jun 21", value: 4500 },
-  { label: "Jun 24", value: 4100 },
-  { label: "Jun 27", value: 5600 },
-  { label: "Jun 30", value: 7200 }
-];
+import { useAuthStore } from "@/store/authStore";
+import producerService from "@/lib/producer";
+import type { DashboardOverviewResponse } from "@/lib/producer";
 
 export default function ProducerOverview() {
   const [chartMetric, setChartMetric] = useState<"revenue" | "plays">("revenue");
   const [hoveredPoint, setHoveredPoint] = useState<any | null>(null);
   const { showBalance, toggleBalance } = useBalanceStore();
+  const { user } = useAuthStore();
+
+  const [data, setData] = useState<DashboardOverviewResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        const response = await producerService.getDashboardOverview();
+        if (response.success && response.data) {
+          setData(response.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard overview:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOverview();
+  }, []);
 
   const activeChartData = useMemo(() => {
-    return chartMetric === "revenue" ? chartPointsRevenue : chartPointsPlays;
-  }, [chartMetric]);
+    if (!data) return [];
+    return chartMetric === "revenue" ? data.chartPointsRevenue : data.chartPointsPlays;
+  }, [chartMetric, data]);
 
   const maxVal = useMemo(() => {
-    return Math.max(...activeChartData.map(p => p.value)) * 1.15;
+    if (activeChartData.length === 0) return 100;
+    const max = Math.max(...activeChartData.map(p => p.value));
+    return max > 0 ? max * 1.15 : 100;
   }, [activeChartData]);
 
   // Dimension values for responsive SVG
@@ -180,6 +69,7 @@ export default function ProducerOverview() {
 
   // Generate responsive point coordinates
   const points = useMemo(() => {
+    if (activeChartData.length === 0) return [];
     return activeChartData.map((p, i) => {
       const x = padding.left + (i * (chartWidth - padding.left - padding.right)) / (activeChartData.length - 1);
       const y = chartHeight - padding.bottom - (p.value / maxVal) * (chartHeight - padding.top - padding.bottom);
@@ -195,6 +85,19 @@ export default function ProducerOverview() {
     if (points.length === 0) return "";
     return `${linePath} L ${points[points.length - 1].x} ${chartHeight - padding.bottom} L ${points[0].x} ${chartHeight - padding.bottom} Z`;
   }, [points, linePath]);
+
+  if (loading || !data) {
+    return (
+      <div className="flex h-[80vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  // Calculate threshold percentage
+  const threshold = 50;
+  const availableBal = data.stats.availableBalance;
+  const thresholdProgress = Math.min(100, Math.round((availableBal / threshold) * 100));
 
   return (
     <div className="space-y-6 p-6 md:p-8 pb-24 text-left font-sans">
@@ -214,10 +117,10 @@ export default function ProducerOverview() {
             </span>
           </div>
           <h1 className="font-display text-2xl font-black text-foreground sm:text-3xl tracking-tight">
-            Welcome back, CloudNine!
+            Welcome back, {user?.name || "Creator"}!
           </h1>
           <p className="max-w-xl text-xs sm:text-sm text-muted-foreground leading-relaxed">
-            Your beat catalog is performing exceptionally well. You've earned <span className="font-bold text-foreground text-orange-500">{showBalance ? "$624.90" : "$ *,***.**"}</span> this week across all licenses.
+            Your beat catalog is performing exceptionally well. You've earned <span className="font-bold text-foreground text-orange-500">{showBalance ? `$${availableBal.toFixed(2)}` : "$ *,***.**"}</span> cleared balance ready for payout.
           </p>
         </div>
       </div>
@@ -225,8 +128,8 @@ export default function ProducerOverview() {
       {/* 2. Key Business Metrics */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title="Total Revenue"
-          value={showBalance ? "$1,248.50" : "$ *,***.**"}
+          title="Total Revenue (Net)"
+          value={showBalance ? `$${data.stats.totalNet.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "$ *,***.**"}
           change={12.5}
           changeLabel="vs last month"
           icon={<DollarSign className="h-5 w-5" />}
@@ -234,7 +137,7 @@ export default function ProducerOverview() {
         />
         <StatsCard
           title="Beats Sold"
-          value="42"
+          value={String(data.stats.totalSales)}
           change={8.0}
           changeLabel="vs last week"
           icon={<Music className="h-5 w-5" />}
@@ -242,7 +145,7 @@ export default function ProducerOverview() {
         />
         <StatsCard
           title="Total Plays"
-          value="15.8K"
+          value={data.stats.totalPlays >= 1000 ? `${(data.stats.totalPlays / 1000).toFixed(1)}K` : String(data.stats.totalPlays)}
           change={24.3}
           changeLabel="vs last week"
           icon={<Play className="h-5 w-5" />}
@@ -250,7 +153,7 @@ export default function ProducerOverview() {
         />
         <StatsCard
           title="Active Listeners"
-          value="3,240"
+          value={data.stats.activeListeners.toLocaleString()}
           change={15.2}
           changeLabel="vs last month"
           icon={<Users className="h-5 w-5" />}
@@ -295,7 +198,7 @@ export default function ProducerOverview() {
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <Play className="h-3.5 w-3.5 animate-pulse" />
+                  <Play className="h-3.5 w-3.5" />
                   Plays
                 </button>
               </div>
@@ -303,110 +206,116 @@ export default function ProducerOverview() {
 
             {/* SVG Interactive Chart */}
             <div className="relative w-full h-[220px]">
-              <svg 
-                viewBox={`0 0 ${chartWidth} ${chartHeight}`} 
-                className="w-full h-full select-none"
-              >
-                <defs>
-                  <linearGradient id="chartGlow" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f97316" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#f97316" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-
-                {/* Y-Axis Grid Lines */}
-                {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => {
-                  const y = padding.top + ratio * (chartHeight - padding.top - padding.bottom);
-                  return (
-                    <line
-                      key={index}
-                      x1={padding.left}
-                      y1={y}
-                      x2={chartWidth - padding.right}
-                      y2={y}
-                      stroke="currentColor"
-                      className="text-border/45"
-                      strokeWidth={1}
-                      strokeDasharray="4 4"
-                    />
-                  );
-                })}
-
-                {/* Shaded Area Under Line */}
-                <path d={areaPath} fill="url(#chartGlow)" />
-
-                {/* Stroke Line */}
-                <path
-                  d={linePath}
-                  fill="none"
-                  stroke="#f97316"
-                  strokeWidth={2.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-
-                {/* Interactive Hover Dots & Invisible Trigger Zones */}
-                {points.map((p, i) => (
-                  <g key={i}>
-                    {/* Visual Dot */}
-                    <circle
-                      cx={p.x}
-                      cy={p.y}
-                      r={hoveredPoint?.label === p.label ? 6 : 4}
-                      fill={hoveredPoint?.label === p.label ? "#f97316" : "var(--background)"}
-                      stroke="#f97316"
-                      strokeWidth={2}
-                      className="transition-all duration-150"
-                    />
-                    {/* Hover hotspot */}
-                    <rect
-                      x={p.x - 20}
-                      y={padding.top}
-                      width={40}
-                      height={chartHeight - padding.top - padding.bottom}
-                      fill="transparent"
-                      className="cursor-pointer"
-                      onMouseEnter={() => setHoveredPoint(p)}
-                      onMouseLeave={() => setHoveredPoint(null)}
-                    />
-                  </g>
-                ))}
-
-                {/* X-Axis labels */}
-                {points.map((p, i) => {
-                  // Only render every second label to avoid cluttering on mobile
-                  if (i % 2 !== 0 && i !== points.length - 1) return null;
-                  return (
-                    <text
-                      key={i}
-                      x={p.x}
-                      y={chartHeight - 12}
-                      textAnchor="middle"
-                      className="text-[10px] fill-muted-foreground/80 font-semibold"
-                    >
-                      {p.label}
-                    </text>
-                  );
-                })}
-
-                {/* Y-Axis scale label indicators */}
-                <text
-                  x={padding.left - 8}
-                  y={padding.top + 4}
-                  textAnchor="end"
-                  className="text-[10px] fill-muted-foreground/85 font-semibold"
+              {points.length > 0 ? (
+                <svg 
+                  viewBox={`0 0 ${chartWidth} ${chartHeight}`} 
+                  className="w-full h-full select-none"
                 >
-                  {chartMetric === "revenue" ? `$${Math.round(maxVal)}` : Math.round(maxVal)}
-                </text>
-                <text
-                  x={padding.left - 8}
-                  y={chartHeight - padding.bottom + 4}
-                  textAnchor="end"
-                  className="text-[10px] fill-muted-foreground/85 font-semibold"
-                >
-                  0
-                </text>
-              </svg>
+                  <defs>
+                    <linearGradient id="chartGlow" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f97316" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="#f97316" stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Y-Axis Grid Lines */}
+                  {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => {
+                    const y = padding.top + ratio * (chartHeight - padding.top - padding.bottom);
+                    return (
+                      <line
+                        key={index}
+                        x1={padding.left}
+                        y1={y}
+                        x2={chartWidth - padding.right}
+                        y2={y}
+                        stroke="currentColor"
+                        className="text-border/45"
+                        strokeWidth={1}
+                        strokeDasharray="4 4"
+                      />
+                    );
+                  })}
+
+                  {/* Shaded Area Under Line */}
+                  <path d={areaPath} fill="url(#chartGlow)" />
+
+                  {/* Stroke Line */}
+                  <path
+                    d={linePath}
+                    fill="none"
+                    stroke="#f97316"
+                    strokeWidth={2.5}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {/* Interactive Hover Dots & Invisible Trigger Zones */}
+                  {points.map((p, i) => (
+                    <g key={i}>
+                      {/* Visual Dot */}
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r={hoveredPoint?.label === p.label ? 6 : 4}
+                        fill={hoveredPoint?.label === p.label ? "#f97316" : "var(--background)"}
+                        stroke="#f97316"
+                        strokeWidth={2}
+                        className="transition-all duration-150"
+                      />
+                      {/* Hover hotspot */}
+                      <rect
+                        x={p.x - 20}
+                        y={padding.top}
+                        width={40}
+                        height={chartHeight - padding.top - padding.bottom}
+                        fill="transparent"
+                        className="cursor-pointer"
+                        onMouseEnter={() => setHoveredPoint(p)}
+                        onMouseLeave={() => setHoveredPoint(null)}
+                      />
+                    </g>
+                  ))}
+
+                  {/* X-Axis labels */}
+                  {points.map((p, i) => {
+                    // Only render every second/third label to avoid cluttering
+                    if (i % 3 !== 0 && i !== points.length - 1) return null;
+                    return (
+                      <text
+                        key={i}
+                        x={p.x}
+                        y={chartHeight - 12}
+                        textAnchor="middle"
+                        className="text-[10px] fill-muted-foreground/80 font-semibold"
+                      >
+                        {p.label}
+                      </text>
+                    );
+                  })}
+
+                  {/* Y-Axis scale label indicators */}
+                  <text
+                    x={padding.left - 8}
+                    y={padding.top + 4}
+                    textAnchor="end"
+                    className="text-[10px] fill-muted-foreground/85 font-semibold"
+                  >
+                    {chartMetric === "revenue" ? `$${Math.round(maxVal)}` : Math.round(maxVal)}
+                  </text>
+                  <text
+                    x={padding.left - 8}
+                    y={chartHeight - padding.bottom + 4}
+                    textAnchor="end"
+                    className="text-[10px] fill-muted-foreground/85 font-semibold"
+                  >
+                    0
+                  </text>
+                </svg>
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  No performance analytics data available yet.
+                </div>
+              )}
 
               {/* HTML Floating Tooltip overlay */}
               {hoveredPoint && (
@@ -444,47 +353,53 @@ export default function ProducerOverview() {
 
             {/* Transactions List */}
             <div className="divide-y divide-border/40">
-              {mockSales.map((sale) => (
-                <div key={sale.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 hover:bg-secondary/10 px-2 rounded-xl transition-all">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-secondary/80 border border-border flex items-center justify-center font-bold text-foreground text-xs uppercase shadow-sm">
-                      {sale.buyer.slice(0, 2)}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-foreground">{sale.buyer}</span>
-                        <span className="text-[10px] font-semibold text-muted-foreground">({sale.email})</span>
+              {data.recentSales.length > 0 ? (
+                data.recentSales.map((sale) => (
+                  <div key={sale.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 hover:bg-secondary/10 px-2 rounded-xl transition-all">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-secondary/80 border border-border flex items-center justify-center font-bold text-foreground text-xs uppercase shadow-sm">
+                        {sale.buyerName ? sale.buyerName.slice(0, 2) : (sale.buyerEmail || 'BU').slice(0, 2)}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Purchased <span className="text-foreground font-semibold">{sale.beat}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-6 self-stretch sm:self-center">
-                    <div className="flex flex-col items-start sm:items-end">
-                      <span className={cn(
-                        "text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded border shadow-sm",
-                        sale.license === "Exclusive" ? "bg-orange-500/10 text-orange-500 border-orange-500/20" :
-                        sale.license === "Stems Lease" ? "bg-purple-500/10 text-purple-500 border-purple-500/20" :
-                        sale.license === "WAV Lease" ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
-                        "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
-                      )}>
-                        {sale.license}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground/80 mt-1 flex items-center gap-1">
-                        <Clock className="h-2.5 w-2.5" />
-                        {sale.time}
-                      </span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-foreground">{sale.buyerName || "Guest User"}</span>
+                          <span className="text-[10px] font-semibold text-muted-foreground">({sale.buyerEmail})</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Purchased <span className="text-foreground font-semibold">{sale.beatTitle}</span>
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="text-right">
-                      <p className="text-sm font-black text-orange-500">+${sale.amount.toFixed(2)}</p>
-                      <p className="text-[10px] text-muted-foreground/75 mt-0.5">Net: ${sale.netAmount.toFixed(2)}</p>
+                    <div className="flex items-center justify-between sm:justify-end gap-6 self-stretch sm:self-center">
+                      <div className="flex flex-col items-start sm:items-end">
+                        <span className={cn(
+                          "text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded border shadow-sm",
+                          sale.licenseType === "Exclusive" ? "bg-orange-500/10 text-orange-500 border-orange-500/20" :
+                          sale.licenseType === "Stems Lease" ? "bg-purple-500/10 text-purple-500 border-purple-500/20" :
+                          sale.licenseType === "WAV Lease" ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
+                          "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
+                        )}>
+                          {sale.licenseType}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground/80 mt-1 flex items-center gap-1">
+                          <Clock className="h-2.5 w-2.5" />
+                          {sale.time}
+                        </span>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="text-sm font-black text-orange-500">+${sale.gross.toFixed(2)}</p>
+                        <p className="text-[10px] text-muted-foreground/75 mt-0.5">Net: ${sale.net.toFixed(2)}</p>
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  No sales recorded yet. Keep pushing your beats!
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -521,27 +436,35 @@ export default function ProducerOverview() {
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl font-black tracking-tight text-foreground">
-                  {showBalance ? "$1,420.50" : "$ *,***.**"}
+                  {showBalance ? `$${availableBal.toFixed(2)}` : "$ *,***.**"}
                 </span>
                 <span className="text-xs text-muted-foreground">USD</span>
               </div>
               <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
                 <Clock className="h-3 w-3" />
-                Pending escrow clearances: {showBalance ? "$280.00" : "$ *,***.**"}
+                Pending escrow clearances: {showBalance ? `$${data.stats.pendingBalance.toFixed(2)}` : "$ *,***.**"}
               </p>
             </div>
 
             {/* Payout threshold progress bar */}
             <div className="space-y-2 pt-2 border-t border-border/40">
               <div className="flex justify-between text-[11px] font-semibold">
-                <span className="text-muted-foreground">Payout Threshold ($50)</span>
-                <span className="text-emerald-500 font-bold">100% Met</span>
+                <span className="text-muted-foreground">Payout Threshold (${threshold})</span>
+                <span className={cn(
+                  "font-bold",
+                  thresholdProgress === 100 ? "text-emerald-500" : "text-orange-500"
+                )}>
+                  {thresholdProgress}% Met
+                </span>
               </div>
               <div className="h-2 w-full bg-secondary/80 rounded-full overflow-hidden border border-border/50">
-                <div className="h-full bg-emerald-500 rounded-full" style={{ width: "100%" }} />
+                <div 
+                  className={cn("h-full rounded-full transition-all duration-500", thresholdProgress === 100 ? "bg-emerald-500" : "bg-orange-500")}
+                  style={{ width: `${thresholdProgress}%` }} 
+                />
               </div>
               <p className="text-[10px] text-muted-foreground/75 leading-relaxed">
-                Next automatic weekly payout runs on <span className="font-semibold text-foreground">June 21, 2026</span>.
+                Min threshold balance required for payouts is $50.
               </p>
             </div>
 
@@ -594,28 +517,34 @@ export default function ProducerOverview() {
             </div>
 
             <div className="space-y-4">
-              {mockBeats.slice(0, 3).map((beat) => (
-                <div key={beat.id} className="flex items-center justify-between gap-3 p-1 rounded-lg hover:bg-secondary/20 transition-all">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <img 
-                      src={beat.cover} 
-                      alt={beat.title} 
-                      className="h-10 w-10 rounded-lg object-cover border border-border shadow-sm shrink-0" 
-                    />
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-foreground truncate">{beat.title}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        {beat.bpm} BPM • {beat.key} • <span className="text-orange-500 font-semibold">{beat.genre}</span>
-                      </p>
+              {data.topBeats.length > 0 ? (
+                data.topBeats.slice(0, 3).map((beat) => (
+                  <div key={beat.id} className="flex items-center justify-between gap-3 p-1 rounded-lg hover:bg-secondary/20 transition-all">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <img 
+                        src={beat.cover} 
+                        alt={beat.title} 
+                        className="h-10 w-10 rounded-lg object-cover border border-border shadow-sm shrink-0" 
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-foreground truncate">{beat.title}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {beat.bpm} BPM • {beat.key} • <span className="text-orange-500 font-semibold">{beat.genre}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <p className="text-xs font-black text-foreground">${beat.revenue.toFixed(2)}</p>
+                      <p className="text-[10px] text-emerald-500 font-bold mt-0.5">{beat.sales} sales</p>
                     </div>
                   </div>
-
-                  <div className="text-right shrink-0">
-                    <p className="text-xs font-black text-foreground">${beat.revenue.toFixed(2)}</p>
-                    <p className="text-[10px] text-emerald-500 font-bold mt-0.5">{beat.trend} sales</p>
-                  </div>
+                ))
+              ) : (
+                <div className="py-6 text-center text-xs text-muted-foreground">
+                  No beats in catalog yet.
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
