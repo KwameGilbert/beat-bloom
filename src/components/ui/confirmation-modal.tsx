@@ -1,5 +1,5 @@
-import { ReactNode } from "react";
-import { X, AlertTriangle, LucideIcon } from "lucide-react";
+import { type ReactNode } from "react";
+import { X, AlertTriangle, type LucideIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

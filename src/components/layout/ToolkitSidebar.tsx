@@ -12,14 +12,140 @@ import {
   DollarSign,
   Percent,
   TrendingUp,
+  Briefcase,
+  Bell,
+  Check,
+  Wallet,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { showNotification } from "@/components/ui/custom-notification";
 
-export const ToolkitSidebar = () => {
+const menuVariants = {
+  open: {
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.02,
+    }
+  },
+  closed: {
+    transition: {
+      staggerChildren: 0.05,
+      staggerDirection: -1
+    }
+  }
+};
+
+const itemVariants = {
+  open: {
+    opacity: 1,
+    scale: 1,
+    x: 0,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 20
+    }
+  },
+  closed: (isHorizontal: boolean) => ({
+    opacity: 0,
+    scale: 0.7,
+    x: isHorizontal ? 20 : 0,
+    y: isHorizontal ? 0 : 20,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 20
+    }
+  })
+};
+
+export interface StudioNotification {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  type: "sale" | "payout" | "system" | "collab";
+  read: boolean;
+}
+
+export interface ToolkitSidebarProps {
+  layoutDirection?: "horizontal" | "vertical";
+  activePanel?: string | null;
+  setActivePanel?: (panelName: string | null) => void;
+  notifications?: StudioNotification[];
+  setNotifications?: React.Dispatch<React.SetStateAction<StudioNotification[]>>;
+}
+
+export const ToolkitSidebar = ({
+  layoutDirection = "horizontal",
+  activePanel: propActivePanel,
+  setActivePanel: propSetActivePanel,
+  notifications: propNotifications,
+  setNotifications: propSetNotifications,
+}: ToolkitSidebarProps) => {
   const navigate = useNavigate();
-  const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [internalActivePanel, setInternalActivePanel] = useState<string | null>(null);
+  const activePanel = propActivePanel !== undefined ? propActivePanel : internalActivePanel;
+  const setActivePanel = propSetActivePanel || setInternalActivePanel;
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const [internalNotifications, setInternalNotifications] = useState<StudioNotification[]>([
+    {
+      id: "1",
+      title: "New Beat Sale!",
+      message: "You sold 'Retro Wave' WAV Lease to artist Drake for $49.99.",
+      time: "2 hours ago",
+      type: "sale",
+      read: false
+    },
+    {
+      id: "2",
+      title: "Payout Processed",
+      message: "Weekly payout of $340.50 was sent to your Paypal wallet.",
+      time: "1 day ago",
+      type: "payout",
+      read: false
+    },
+    {
+      id: "3",
+      title: "Collab Invitation",
+      message: "Producer 'MetroBoomin' sent a collaboration request on 'Trap Banger'.",
+      time: "2 days ago",
+      type: "collab",
+      read: true
+    },
+    {
+      id: "4",
+      title: "Beat Approved",
+      message: "Your beat 'Chilled Out' was approved and is now live on the marketplace.",
+      time: "3 days ago",
+      type: "system",
+      read: true
+    }
+  ]);
+  const notifications = propNotifications !== undefined ? propNotifications : internalNotifications;
+  const setNotifications = propSetNotifications || setInternalNotifications;
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const handleMarkAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    showNotification("All Read", "All studio notifications marked as read.", "success", 1500);
+  };
+
+  const handleMarkRead = (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
+
+  const handleClearAll = () => {
+    if (window.confirm("Are you sure you want to clear your notifications?")) {
+      setNotifications([]);
+      showNotification("Cleared", "Your notification feed has been cleared.", "info", 1500);
+    }
+  };
 
   const handleIconClick = (panelName: string) => {
     if (activePanel === panelName) {
@@ -33,18 +159,93 @@ export const ToolkitSidebar = () => {
     setActivePanel(null);
   };
 
+  const handleMobileIconClick = (panelName: string) => {
+    handleIconClick(panelName);
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleMobileLinkClick = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  const mobileTools = [
+    {
+      id: "settings",
+      icon: Settings,
+      label: "Studio Settings",
+      type: "link",
+      path: "/producer/settings"
+    },
+    {
+      id: "help",
+      icon: HelpCircle,
+      label: "Producer Support",
+      type: "button",
+      action: () => handleIconClick("help")
+    },
+    {
+      id: "calculator",
+      icon: Calculator,
+      label: "Earnings Calculator",
+      type: "button",
+      action: () => handleIconClick("calculator")
+    },
+    {
+      id: "notes",
+      icon: FileText,
+      label: "Quick Notes",
+      type: "button",
+      action: () => handleIconClick("notes")
+    },
+    {
+      id: "notifications",
+      icon: Bell,
+      label: `Notifications (${unreadCount} new)`,
+      type: "button",
+      action: () => handleIconClick("notifications"),
+      hasBadge: unreadCount > 0
+    },
+    {
+      id: "upload",
+      icon: UploadCloud,
+      label: "Upload New Beat",
+      type: "link",
+      path: "/producer/upload"
+    }
+  ];
+
+  const isHorizontal = layoutDirection === "horizontal";
+
   return (
     <div className="flex h-full shrink-0 select-none z-30">
       <AnimatePresence>
         {activePanel && (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 280, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="h-full border-l border-border bg-card/95 backdrop-blur-md overflow-hidden shrink-0"
-          >
+          <>
+            {/* Backdrop for mobile */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black z-[70] md:hidden"
+              onClick={handleClosePanel}
+            />
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 280, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="h-full border-l border-border bg-card/95 backdrop-blur-md overflow-hidden shrink-0 fixed inset-y-0 right-0 md:relative z-[75] md:z-30 shadow-2xl md:shadow-none"
+            >
             <div className="w-[280px] h-full p-5">
+              {activePanel === "notifications" && (
+                <NotificationsPanel
+                  onClose={handleClosePanel}
+                  notifications={notifications}
+                  onMarkAllRead={handleMarkAllRead}
+                  onMarkRead={handleMarkRead}
+                  onClearAll={handleClearAll}
+                />
+              )}
               {activePanel === "notes" && (
                 <QuickNotesPanel onClose={handleClosePanel} />
               )}
@@ -56,8 +257,9 @@ export const ToolkitSidebar = () => {
               )}
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </>
+      )}
+    </AnimatePresence>
 
       <aside className="flex h-full w-12 flex-col items-center border-l border-border bg-card py-6 gap-6 z-40 hidden md:flex shrink-0">
         {/* Top tools section */}
@@ -79,6 +281,29 @@ export const ToolkitSidebar = () => {
 
           {/* Separator line */}
           <div className="w-6 h-px bg-border/60" />
+
+          {/* Studio Notifications Feed */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => handleIconClick("notifications")}
+                className={cn(
+                  "relative flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200",
+                  activePanel === "notifications"
+                    ? "bg-orange-500 text-white shadow-md shadow-orange-500/10"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-card shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse" />
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="font-sans font-bold text-xs bg-popover text-popover-foreground">
+              Notifications ({unreadCount} new)
+            </TooltipContent>
+          </Tooltip>
 
           {/* Quick Notes - Panel Toggle */}
           <Tooltip>
@@ -159,6 +384,95 @@ export const ToolkitSidebar = () => {
           </Tooltip>
         </div>
       </aside>
+
+      {/* Mobile Floating Action Button (FAB) Toolkit */}
+      <div
+        className={cn(
+          "fixed bottom-6 right-6 z-[65] md:hidden flex items-center gap-3",
+          isHorizontal ? "flex-row-reverse" : "flex-col-reverse"
+        )}
+        onMouseLeave={() => setIsMobileMenuOpen(false)}
+      >
+        {/* Main floating button */}
+        <div className="group relative">
+          <button
+            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+            onMouseEnter={() => setIsMobileMenuOpen(true)}
+            className={cn(
+              "flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/35 hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none z-50",
+              isMobileMenuOpen ? "rotate-90" : ""
+            )}
+            aria-label="Toggle Creator Toolkit"
+          >
+            {isMobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Briefcase className="h-5 w-5" />
+            )}
+          </button>
+          <span className={isHorizontal
+            ? "absolute -top-8 right-0 scale-0 group-hover:scale-100 transition-all duration-150 px-2 py-1 rounded bg-popover text-[10px] font-sans font-bold text-popover-foreground whitespace-nowrap shadow border border-border/80 pointer-events-none"
+            : "absolute right-full mr-3 top-1/2 -translate-y-1/2 scale-0 group-hover:scale-100 transition-all duration-150 px-2 py-1 rounded bg-popover text-[10px] font-sans font-bold text-popover-foreground whitespace-nowrap shadow border border-border/80 pointer-events-none"
+          }>
+            Creator Toolkit
+          </span>
+        </div>
+
+        {/* Animated list of items */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial="closed"
+              animate="open"
+              exit="closed"
+              variants={menuVariants}
+              className={cn(
+                "flex items-center gap-3",
+                isHorizontal ? "flex-row-reverse" : "flex-col-reverse"
+              )}
+            >
+              {mobileTools.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <motion.div
+                    key={item.id}
+                    custom={isHorizontal}
+                    variants={itemVariants}
+                    className="group relative"
+                  >
+                    {item.type === "link" ? (
+                      <Link
+                        to={item.path!}
+                        onClick={handleMobileLinkClick}
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:bg-orange-500/10 hover:text-orange-500 hover:border-orange-500/30 shadow-md active:scale-95 transition-all duration-200"
+                      >
+                        <Icon className="h-4 w-4" />
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => handleMobileIconClick(item.id)}
+                        className="relative flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:bg-orange-500/10 hover:text-orange-500 hover:border-orange-500/30 shadow-md active:scale-95 transition-all duration-200"
+                      >
+                        <Icon className="h-4 w-4" />
+                        {item.hasBadge && (
+                          <span className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-red-500 border border-card shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse" />
+                        )}
+                      </button>
+                    )}
+                    {/* Tooltip / Label */}
+                    <span className={isHorizontal
+                      ? "absolute -top-8 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-all duration-150 px-2 py-1 rounded bg-popover text-[10px] font-sans font-bold text-popover-foreground whitespace-nowrap shadow border border-border/80 pointer-events-none"
+                      : "absolute right-full mr-3 top-1/2 -translate-y-1/2 scale-0 group-hover:scale-100 transition-all duration-150 px-2 py-1 rounded bg-popover text-[10px] font-sans font-bold text-popover-foreground whitespace-nowrap shadow border border-border/80 pointer-events-none"
+                    }>
+                      {item.label}
+                    </span>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
@@ -422,6 +736,168 @@ export const SupportHelpPanel = ({ onClose }: { onClose: () => void }) => {
             })}
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// 4. Notifications Panel Content
+export const NotificationsPanel = ({
+  onClose,
+  notifications,
+  onMarkAllRead,
+  onMarkRead,
+  onClearAll,
+}: {
+  onClose: () => void;
+  notifications: StudioNotification[];
+  onMarkAllRead: () => void;
+  onMarkRead: (id: string) => void;
+  onClearAll: () => void;
+}) => {
+  const [filter, setFilter] = useState<"all" | "unread">("all");
+
+  const filtered = notifications.filter((n) => {
+    if (filter === "unread") return !n.read;
+    return true;
+  });
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case "sale":
+        return <DollarSign className="h-4 w-4 text-emerald-500" />;
+      case "payout":
+        return <Wallet className="h-4 w-4 text-blue-500" />;
+      case "collab":
+        return <Users className="h-4 w-4 text-purple-500" />;
+      default:
+        return <Bell className="h-4 w-4 text-orange-500" />;
+    }
+  };
+
+  const getBgColor = (type: string) => {
+    switch (type) {
+      case "sale":
+        return "bg-emerald-500/10 border-emerald-500/20";
+      case "payout":
+        return "bg-blue-500/10 border-blue-500/20";
+      case "collab":
+        return "bg-purple-500/10 border-purple-500/20";
+      default:
+        return "bg-orange-500/10 border-orange-500/20";
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col font-sans text-left">
+      <div className="flex items-center justify-between border-b border-border/40 pb-3 mb-3">
+        <div className="flex items-center gap-2">
+          <Bell className="h-4 w-4 text-orange-500" />
+          <h4 className="font-bold text-sm text-foreground">Studio Feed</h4>
+        </div>
+        <div className="flex items-center gap-1">
+          {notifications.length > 0 && (
+            <>
+              <button
+                onClick={onMarkAllRead}
+                className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                title="Mark all as read"
+              >
+                <Check className="h-4 w-4" />
+              </button>
+              <button
+                onClick={onClearAll}
+                className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-red-500 transition-colors"
+                title="Clear all notifications"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </>
+          )}
+          <button
+            onClick={onClose}
+            className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {notifications.length > 0 && (
+        <div className="flex gap-1.5 mb-3 bg-secondary/15 p-1 rounded-lg">
+          <button
+            onClick={() => setFilter("all")}
+            className={cn(
+              "flex-1 text-[10px] font-bold py-1 px-2 rounded-md transition-all",
+              filter === "all"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setFilter("unread")}
+            className={cn(
+              "flex-1 text-[10px] font-bold py-1 px-2 rounded-md transition-all",
+              filter === "unread"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Unread
+          </button>
+        </div>
+      )}
+
+      <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+        {filtered.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center p-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/40 text-muted-foreground mb-3">
+              <Bell className="h-6 w-6 opacity-40" />
+            </div>
+            <p className="text-xs font-bold text-foreground mb-1">All caught up!</p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              No new updates or alerts at the moment.
+            </p>
+          </div>
+        ) : (
+          filtered.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => !item.read && onMarkRead(item.id)}
+              className={cn(
+                "relative group flex gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer select-none text-left",
+                item.read
+                  ? "border-border/40 bg-secondary/5 hover:bg-secondary/10"
+                  : "border-orange-500/20 bg-orange-500/[0.03] hover:bg-orange-500/[0.06] shadow-sm shadow-orange-500/[0.01]"
+              )}
+            >
+              {/* Left icon badge */}
+              <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border", getBgColor(item.type))}>
+                {getIcon(item.type)}
+              </div>
+
+              {/* Middle details */}
+              <div className="flex-1 space-y-0.5 min-w-0">
+                <div className="flex justify-between items-baseline gap-1.5">
+                  <p className={cn("text-xs truncate", item.read ? "font-semibold text-foreground/90" : "font-bold text-foreground")}>
+                    {item.title}
+                  </p>
+                  <span className="text-[9px] font-bold text-muted-foreground/80 shrink-0">{item.time}</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-normal break-words">
+                  {item.message}
+                </p>
+              </div>
+
+              {/* Unread dot */}
+              {!item.read && (
+                <div className="absolute right-3.5 bottom-3.5 h-1.5 w-1.5 rounded-full bg-orange-500" />
+              )}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import type { UploadFormData, UploadLicenseTiers as LicenseTiers } from '@/types';
+export type { UploadFormData, LicenseTiers };
 
 export const INITIAL_FORM_DATA: UploadFormData = {
   title: "",

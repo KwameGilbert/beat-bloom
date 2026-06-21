@@ -201,7 +201,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
           {/* Playlists Section - Only show if authenticated */}
           {isAuthenticated && (
-            <div className="mt-auto">
+            <div>
               <div className="mb-4 flex items-center justify-between px-3">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">
                   Playlists

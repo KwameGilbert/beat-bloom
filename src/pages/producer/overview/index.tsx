@@ -20,7 +20,9 @@ import {
   Calendar,
   Layers,
   Percent,
-  Plus
+  Plus,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { StatsCard } from "@/components/ui/stats-card";
 import { Button } from "@/components/ui/button";
@@ -161,7 +163,7 @@ const chartPointsPlays = [
 export default function ProducerOverview() {
   const [chartMetric, setChartMetric] = useState<"revenue" | "plays">("revenue");
   const [hoveredPoint, setHoveredPoint] = useState<any | null>(null);
-  const { showBalance } = useBalanceStore();
+  const { showBalance, toggleBalance } = useBalanceStore();
 
   const activeChartData = useMemo(() => {
     return chartMetric === "revenue" ? chartPointsRevenue : chartPointsPlays;
@@ -503,7 +505,20 @@ export default function ProducerOverview() {
             </div>
 
             <div className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">Available Balance</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">Available Balance</span>
+                <button
+                  onClick={toggleBalance}
+                  className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all duration-200"
+                  title={showBalance ? "Hide Balance" : "Show Balance"}
+                >
+                  {showBalance ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl font-black tracking-tight text-foreground">
                   {showBalance ? "$1,420.50" : "$ *,***.**"}
