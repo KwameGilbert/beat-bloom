@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { 
-  MapPin, 
-  Calendar, 
-  Link as LinkIcon, 
-  Edit, 
-  Settings, 
-  Music, 
-  Heart, 
+import {
+  MapPin,
+  Calendar,
+  Link as LinkIcon,
+  Edit,
+  Settings,
+  Music,
+  Heart,
   BarChart3,
   Upload,
   Play,
@@ -17,7 +17,7 @@ import {
   DollarSign,
   Download,
   TrendingUp,
-  ShoppingBag
+  ShoppingBag,
 } from "lucide-react";
 import { type Beat } from "@/lib/marketplace";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,13 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState<ProfileTab>("purchases");
   const navigate = useNavigate();
   const { toggleLike, isLiked } = useLikesStore();
-  const { playBeat, currentBeat, isPlaying, togglePlay, isLoading: isPlayerLoading } = usePlayerStore();
+  const {
+    playBeat,
+    currentBeat,
+    isPlaying,
+    togglePlay,
+    isLoading: isPlayerLoading,
+  } = usePlayerStore();
   const { addToCart, removeFromCart, isInCart } = useCartStore();
   const { fetchProfile, profileData, isLoading } = useProfileStore();
   const { upgradeToProducer } = useAuthStore();
@@ -48,7 +54,11 @@ const Profile = () => {
   }, [fetchProfile]);
 
   const handleUpgrade = async () => {
-    if (window.confirm("Are you sure you want to become a producer? This will allow you to upload and sell your beats.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to become a producer? This will allow you to upload and sell your beats.",
+      )
+    ) {
       setIsUpgrading(true);
       try {
         await upgradeToProducer();
@@ -76,7 +86,6 @@ const Profile = () => {
   }
 
   if (!user) return null;
-
 
   const handlePlayClick = (beat: Beat, e: React.MouseEvent) => {
     e.preventDefault();
@@ -107,14 +116,25 @@ const Profile = () => {
   const allTabs = [
     { id: "purchases" as ProfileTab, label: "Purchases", icon: ShoppingBag },
     { id: "liked" as ProfileTab, label: "Liked", icon: Heart },
-    { id: "beats" as ProfileTab, label: "My Beats", icon: Music, producerOnly: true },
-    { id: "analytics" as ProfileTab, label: "Analytics", icon: BarChart3, producerOnly: true },
+    {
+      id: "beats" as ProfileTab,
+      label: "My Beats",
+      icon: Music,
+      producerOnly: true,
+    },
+    {
+      id: "analytics" as ProfileTab,
+      label: "Analytics",
+      icon: BarChart3,
+      producerOnly: true,
+    },
   ];
 
   // Filter tabs based on user role
-  const tabs = user?.role === 'producer' 
-    ? allTabs 
-    : allTabs.filter(tab => !tab.producerOnly);
+  const tabs =
+    user?.role === "producer"
+      ? allTabs
+      : allTabs.filter((tab) => !tab.producerOnly);
 
   const renderBeatCard = (beat: Beat, uniqueKey?: string | number) => {
     const isCurrentBeat = currentBeat?.id.toString() === beat.id.toString();
@@ -137,14 +157,14 @@ const Profile = () => {
               alt={beat.title}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
-            
+
             {/* Play Button Overlay */}
             <div
               className={cn(
                 "absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity",
                 isPlayingCurrent || isLoadingCurrent
                   ? "opacity-100"
-                  : "opacity-0 group-hover:opacity-100"
+                  : "opacity-0 group-hover:opacity-100",
               )}
             >
               <button
@@ -193,7 +213,7 @@ const Profile = () => {
                     "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
                     liked
                       ? "text-red-500"
-                      : "text-muted-foreground hover:text-red-500"
+                      : "text-muted-foreground hover:text-red-500",
                   )}
                 >
                   <Heart className={cn("h-4 w-4", liked && "fill-current")} />
@@ -204,7 +224,7 @@ const Profile = () => {
                     "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
                     inCart
                       ? "bg-green-600 text-white hover:bg-red-500"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                   )}
                 >
                   <ShoppingCart className="h-4 w-4" />
@@ -222,7 +242,10 @@ const Profile = () => {
       {/* Cover Image */}
       <div className="relative h-48 sm:h-56 md:h-64">
         <img
-          src={user.coverImage || "https://images.unsplash.com/photo-1614149162883-504ce4d13909?w=1200&q=80"}
+          src={
+            user.coverImage ||
+            "https://images.unsplash.com/photo-1614149162883-504ce4d13909?w=1200&q=80"
+          }
           alt="Cover"
           className="h-full w-full object-cover"
         />
@@ -236,7 +259,10 @@ const Profile = () => {
           <div className="mb-4">
             <div className="h-24 w-24 sm:h-28 sm:w-28 overflow-hidden rounded-xl border-4 border-background bg-secondary shadow-xl">
               <img
-                src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"}
+                src={
+                  user.avatar ||
+                  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"
+                }
                 alt={user.name}
                 className="h-full w-full object-cover"
               />
@@ -251,7 +277,9 @@ const Profile = () => {
                   {user.name}
                 </h1>
                 {user.username && (
-                  <p className="text-sm font-medium text-orange-500">@{user.username}</p>
+                  <p className="text-sm font-medium text-orange-500">
+                    @{user.username}
+                  </p>
                 )}
               </div>
               <span className="rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">
@@ -267,14 +295,17 @@ const Profile = () => {
               </span>
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                Joined {format(new Date(user.createdAt), 'MMMM yyyy')}
+                Joined {format(new Date(user.createdAt), "MMMM yyyy")}
               </span>
             </div>
 
             {/* Website */}
             <div className="mt-2 flex items-center gap-1 text-sm text-muted-foreground">
               <LinkIcon className="h-4 w-4" />
-              <a href={`https://${user.website}`} className="text-orange-500 hover:underline">
+              <a
+                href={`https://${user.website}`}
+                className="text-orange-500 hover:underline"
+              >
                 {user.website}
               </a>
             </div>
@@ -282,22 +313,22 @@ const Profile = () => {
 
           {/* Action Buttons */}
           <div className="mb-6 flex items-center gap-2">
-            <button 
+            <button
               onClick={() => navigate("/profile/edit")}
               className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
             >
               <Edit className="h-4 w-4" />
               Edit Profile
             </button>
-            <button 
+            <button
               onClick={() => navigate("/settings")}
               className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               <Settings className="h-4 w-4" />
             </button>
-            
-            {user.role === 'artist' && (
-              <button 
+
+            {user.role === "artist" && (
+              <button
                 onClick={handleUpgrade}
                 disabled={isUpgrading}
                 className="ml-auto flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-2 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
@@ -326,14 +357,18 @@ const Profile = () => {
                 <TrendingUp className="h-4 w-4" />
                 Likes
               </div>
-              <p className="text-2xl font-bold text-foreground">{stats?.likesCount || 0}</p>
+              <p className="text-2xl font-bold text-foreground">
+                {stats?.likesCount || 0}
+              </p>
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
                 <ShoppingBag className="h-4 w-4" />
                 Purchases
               </div>
-              <p className="text-2xl font-bold text-foreground">{stats?.purchasesCount || 0}</p>
+              <p className="text-2xl font-bold text-foreground">
+                {stats?.purchasesCount || 0}
+              </p>
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
@@ -358,7 +393,7 @@ const Profile = () => {
                     "flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors",
                     activeTab === tab.id
                       ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -372,18 +407,25 @@ const Profile = () => {
         {/* Tab Content */}
         {activeTab === "purchases" && (
           <div>
-            <h2 className="mb-6 text-xl font-bold text-foreground">My Purchases</h2>
-            
+            <h2 className="mb-6 text-xl font-bold text-foreground">
+              My Purchases
+            </h2>
+
             {purchases.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
-                {purchases.map((purchase, index) => 
-                  renderBeatCard(purchase.beat, purchase.id || `purchase-${index}`)
+                {purchases.map((purchase, index) =>
+                  renderBeatCard(
+                    purchase.beat,
+                    purchase.id || `purchase-${index}`,
+                  ),
                 )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-16">
                 <ShoppingBag className="mb-4 h-12 w-12 text-muted-foreground" />
-                <p className="mb-2 text-lg font-bold text-foreground">No purchases yet</p>
+                <p className="mb-2 text-lg font-bold text-foreground">
+                  No purchases yet
+                </p>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap text-center">
                   Beats you buy will appear here.{"\n"}
                   Start browsing to find your next hit!
@@ -402,9 +444,11 @@ const Profile = () => {
         {activeTab === "beats" && (
           <div>
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-foreground">Published Beats</h2>
-              {user?.role === 'producer' && (
-                <button 
+              <h2 className="text-xl font-bold text-foreground">
+                Published Beats
+              </h2>
+              {user?.role === "producer" && (
+                <button
                   onClick={() => navigate("/producer/upload")}
                   className="flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600"
                 >
@@ -417,13 +461,16 @@ const Profile = () => {
             {/* Beats Grid (Empty for now as most users are buyers) */}
             <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-16 px-4 text-center">
               <Upload className="mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="mb-2 text-lg font-bold text-foreground">No beats published</p>
-              {user?.role === 'producer' ? (
+              <p className="mb-2 text-lg font-bold text-foreground">
+                No beats published
+              </p>
+              {user?.role === "producer" ? (
                 <>
                   <p className="text-sm text-muted-foreground mb-6">
-                    You haven't uploaded any beats yet. Start sharing your sound!
+                    You haven't uploaded any beats yet. Start sharing your
+                    sound!
                   </p>
-                  <button 
+                  <button
                     onClick={() => navigate("/producer/upload")}
                     className="rounded-full bg-orange-500 px-6 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-600"
                   >
@@ -441,20 +488,24 @@ const Profile = () => {
 
         {activeTab === "liked" && (
           <div>
-            <h2 className="mb-6 text-xl font-bold text-foreground">Liked Beats</h2>
-            
+            <h2 className="mb-6 text-xl font-bold text-foreground">
+              Liked Beats
+            </h2>
+
             {liked.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
                 {liked.map((item, index) => {
-                  const beat = 'beat' in item ? item.beat : item;
-                  const id = 'id' in item ? (item as any).id : beat.id;
+                  const beat = "beat" in item ? item.beat : item;
+                  const id = "id" in item ? (item as any).id : beat.id;
                   return renderBeatCard(beat, id || `like-${index}`);
                 })}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-16">
                 <Heart className="mb-4 h-12 w-12 text-muted-foreground" />
-                <p className="mb-2 text-lg font-bold text-foreground">No liked beats yet</p>
+                <p className="mb-2 text-lg font-bold text-foreground">
+                  No liked beats yet
+                </p>
                 <p className="text-sm text-muted-foreground">
                   Beats you like will appear here
                 </p>
@@ -466,7 +517,9 @@ const Profile = () => {
         {activeTab === "analytics" && (
           <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-16">
             <BarChart3 className="mb-4 h-12 w-12 text-muted-foreground" />
-            <h2 className="mb-2 text-xl font-bold text-foreground">Analytics Dashboard</h2>
+            <h2 className="mb-2 text-xl font-bold text-foreground">
+              Analytics Dashboard
+            </h2>
             <p className="mb-6 text-center text-sm text-muted-foreground">
               Detailed analytics and insights about your beats performance
             </p>
