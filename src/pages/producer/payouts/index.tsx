@@ -33,15 +33,15 @@ export default function ProducerPayouts() {
 
   const fetchData = async () => {
     try {
-      const [historyRes, methodsRes, overviewRes] = await Promise.all([
+      const [historyRes, methodsRes, statsRes] = await Promise.all([
         producerService.getPayoutHistory(),
         producerService.getPayoutMethods(),
-        producerService.getDashboardOverview()
+        producerService.getDashboardStats()
       ]);
 
-      if (overviewRes.success && overviewRes.data) {
-        setBalance(overviewRes.data.stats.availableBalance);
-        setPendingBalance(overviewRes.data.stats.pendingBalance);
+      if (statsRes.success && statsRes.data) {
+        setBalance(statsRes.data.availableBalance);
+        setPendingBalance(statsRes.data.pendingBalance);
       }
 
       if (historyRes.success && historyRes.data) {

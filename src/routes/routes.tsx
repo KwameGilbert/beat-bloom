@@ -90,21 +90,7 @@ export const AppRoutes = () => {
       </Route>
 
       {/* Main App Routes */}
-      <Route
-        element={
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="h-full w-full"
-            >
-              <Layout />
-            </motion.div>
-          </AnimatePresence>
-        }
-      >
+      <Route element={<Layout />}>
         {/* Public Routes - Accessible to everyone */}
         <Route path="/" element={<Index />} />
         <Route path="/home" element={<Index />} />
@@ -222,21 +208,7 @@ export const AppRoutes = () => {
       </Route>
 
       {/* Producer Routes - Uses dedicated ProducerLayout */}
-      <Route
-        element={
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="h-full w-full"
-            >
-              <ProducerLayout />
-            </motion.div>
-          </AnimatePresence>
-        }
-      >
+      <Route element={<ProducerLayout />}>
         <Route
           path="/producer/upload"
           element={

@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { ProducerSidebar } from "./ProducerSidebar";
 import { ProducerHeader } from "./ProducerHeader";
 import { ToolkitSidebar, type StudioNotification } from "./ToolkitSidebar";
+import { AnimatePresence, motion } from "framer-motion";
 
 export const ProducerLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<string | null>(null);
+  const location = useLocation();
   
   const [notifications, setNotifications] = useState<StudioNotification[]>([
     {
@@ -62,7 +64,18 @@ export const ProducerLayout = () => {
         {/* Main Page Content */}
         <main className="flex-1 overflow-y-auto bg-background/50">
           <div className="mx-auto max-w-7xl">
-            <Outlet />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="h-full w-full"
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
           </div>
         </main>
       </div>

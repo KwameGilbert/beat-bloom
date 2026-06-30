@@ -4,10 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite && start-backend",
     "build": "tsc && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start-backend": "cd.. && cd beat-bloom-api && pnpm run dev"
   },
   "dependencies": {
     "react": "^18.3.1",

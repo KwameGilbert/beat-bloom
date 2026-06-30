@@ -58,6 +58,9 @@ export const getRefreshToken = (): string | null => {
   }
 };
 
+// Active promise for refreshing tokens to prevent multiple concurrent refresh requests
+let refreshPromise: Promise<boolean> | null = null;
+
 /**
  * Base fetch wrapper with auth headers and error handling
  */
@@ -98,6 +101,58 @@ async function apiFetch<T>(
 
   // Handle errors
   if (!response.ok) {
+    // If unauthorized and we have an access token, try to refresh it (exclude the refresh token endpoint itself)
+    if (response.status === 401 && !endpoint.includes('/auth/refresh-token') && getAccessToken()) {
+      try {
+        if (!refreshPromise) {
+          const { useAuthStore } = await import('../store/authStore');
+          refreshPromise = useAuthStore.getState().refreshTokens().finally(() => {
+            refreshPromise = null;
+          });
+        }
+
+        const refreshed = await refreshPromise;
+        if (refreshed) {
+          const { useAuthStore } = await import('../store/authStore');
+          const newToken = useAuthStore.getState().accessToken;
+
+          // Re-create headers with the new token
+          const retryHeaders: HeadersInit = {
+            ...options.headers,
+          };
+          if (!(options.body instanceof FormData)) {
+            (retryHeaders as Record<string, string>)['Content-Type'] = 'application/json';
+          }
+          if (newToken) {
+            (retryHeaders as Record<string, string>)['Authorization'] = `Bearer ${newToken}`;
+          }
+
+          const retryResponse = await fetch(url, {
+            ...options,
+            headers: retryHeaders,
+          });
+
+          let retryData;
+          const retryContentType = retryResponse.headers.get('content-type');
+          if (retryContentType?.includes('application/json')) {
+            retryData = await retryResponse.json();
+          } else {
+            retryData = await retryResponse.text();
+          }
+
+          if (!retryResponse.ok) {
+            const message = retryData?.message || retryData?.error || 'An error occurred';
+            const errors = retryData?.errors;
+            throw new ApiError(message, retryResponse.status, errors);
+          }
+
+          return retryData;
+        }
+      } catch (refreshError) {
+        console.error('Error during token refresh/retry:', refreshError);
+      }
+    }
+
     const message = data?.message || data?.error || 'An error occurred';
     const errors = data?.errors;
     throw new ApiError(message, response.status, errors);

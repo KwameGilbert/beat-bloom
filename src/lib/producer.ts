@@ -59,6 +59,11 @@ export const producerService = {
     return api.get<SingleResponse<DashboardOverviewResponse>>('/producers/dashboard/overview');
   },
 
+  // Dashboard stats
+  async getDashboardStats(): Promise<SingleResponse<OverviewStats>> {
+    return api.get<SingleResponse<OverviewStats>>('/producers/dashboard/stats');
+  },
+
   // Sales ledger
   async getSalesList(search?: string): Promise<SingleResponse<SalesHistoryItem[]>> {
     const query = search ? `?search=${encodeURIComponent(search)}` : '';
